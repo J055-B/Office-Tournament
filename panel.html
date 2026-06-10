@@ -1098,7 +1098,6 @@ async function showMatchDetail(p){
   }
 
   /* Load roster (all players) + stats only if match day arrived */
-  const status = matchStatus(match.date);
   const isFuture = status === 'upcoming';
   
   /* Always load full roster */
