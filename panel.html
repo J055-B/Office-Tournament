@@ -248,11 +248,12 @@
   .md-col-head{font-family:var(--font-d);font-size:13px;letter-spacing:2px;color:var(--gold);opacity:.7;
     padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:8px;}
   .md-player-list{display:flex;flex-direction:column;gap:4px;}
-  .md-p{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;
+  .md-p{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;padding:8px 12px;
     border-radius:6px;background:rgba(255,255,255,0.02);transition:background .14s;}
   .md-p:hover{background:rgba(255,255,255,0.06);}
   .md-p-name{font-size:13px;font-weight:600;color:var(--text);}
-  .md-p-sales{font-family:var(--font-d);font-size:18px;color:var(--gold);letter-spacing:1px;}
+  .md-p-pts{font-family:var(--font-d);font-size:26px;color:var(--gold);letter-spacing:1px;text-align:center;min-width:40px;}
+  .md-p-amount{font-family:var(--font-d);font-size:16px;color:var(--green-light);letter-spacing:1px;text-align:right;min-width:70px;}
 
   @media(max-width:900px){
     .pools-grid,.mvp-grid,.fx-grid{grid-template-columns:1fr;}
@@ -1019,10 +1020,17 @@ function renderPlayers(elId, players, totalId){
   el.innerHTML = '';
   let totalSales = 0, totalAmount = 0;
   players.sort((a,b)=>b.sales-a.sales || b.amount-a.amount);
+  /* Column header */
+  el.innerHTML = `<div class="md-p" style="background:none;padding:4px 12px;opacity:.4;font-size:10px;letter-spacing:1.5px;text-transform:uppercase">
+    <span>Jugador</span><span style="text-align:center;font-family:var(--font-b);font-size:10px">PTS</span><span style="text-align:right;font-family:var(--font-b);font-size:10px">Monto</span></div>`;
   players.forEach(p=>{
     totalSales += p.sales;
     totalAmount += p.amount;
-    el.innerHTML += `<div class="md-p"><span class="md-p-name">${escapeHtml(p.name)}</span><span class="md-p-sales">${p.sales} <small style="font-size:10px;opacity:.5;font-family:var(--font-b)">· ${Math.round(p.amount).toLocaleString()}€</small></span></div>`;
+    el.innerHTML += `<div class="md-p">
+      <span class="md-p-name">${escapeHtml(p.name)}</span>
+      <span class="md-p-pts">${p.sales}</span>
+      <span class="md-p-amount">${Math.round(p.amount).toLocaleString()}€</span>
+    </div>`;
   });
   totalEl.textContent = totalSales;
   if(!players.length) el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">Sin datos</div>';
