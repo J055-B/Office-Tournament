@@ -368,9 +368,13 @@
           <button class="btn" onclick="loadScheduleFromSheet()" id="btnRefreshFx">🔄 Actualizar partidos</button>
         </div>
 
-        <!-- MATCH CAROUSEL -->
-        <div class="slabel">Partidos en juego <span id="fxAutoLabel" style="margin-left:auto;font-size:8px;letter-spacing:1px;opacity:.6">⟳ Auto-rotación 30s</span></div>
-        <div class="match-carousel" id="matchCarousel"></div>
+        <!-- MATCH CAROUSEL — FTD -->
+        <div class="slabel">Pool A — FTD <span id="fxAutoLabel" style="margin-left:auto;font-size:8px;letter-spacing:1px;opacity:.6">⟳ Auto-rotación 30s</span></div>
+        <div class="match-carousel" id="carouselFTD"></div>
+
+        <!-- MATCH CAROUSEL — RET -->
+        <div class="slabel" style="margin-top:18px">Pool B — RET</div>
+        <div class="match-carousel" id="carouselRET"></div>
 
         <!-- MATCH DETAIL (players + scores) -->
         <div class="match-detail" id="matchDetail" style="display:none">
@@ -728,20 +732,7 @@ function fetchTab(tabName){
   });
 }
 
-/* Fetch player data from a team tab */
-function fetchPlayers(tabName){
-  return new Promise(resolve=>{
-    if(SHEET_DATA[tabName]) return resolve(SHEET_DATA[tabName]);
-    fetchTab(tabName).then(rows=>{
-      const players = rows.map(r=>{
-        const cells = r.c||[];
-        return { name: cells[0]?.v||'', sales: parseFloat(cells[1]?.v)||0 };
-      }).filter(r=>r.name);
-      SHEET_DATA[tabName] = players;
-      resolve(players);
-    });
-  });
-}
+/* (player data fetched by fetchPlayers below, after cellVal) */
 
 /* Map full team name → sheet tab name(s) for player data */
 function teamToTabs(name){
@@ -834,48 +825,135 @@ async function loadScheduleFromSheet(){
   renderCarousel();
 }
 
-/* Render carousel from SCHEDULE */
+/* Helper: get cell display value (handles Date objects from GViz) */
+function cellVal(cell){
+  if(!cell) return '';
+  /* For text values, prefer .v; for dates/numbers, prefer .f */
+  if(typeof cell.v === 'string') return cell.v;
+  if(cell.f) return cell.f;
+  if(typeof cell.v === 'number') return cell.v;
+  return '';
+}
+function cellNum(cell){
+  if(!cell) return 0;
+  if(typeof cell.v === 'number') return cell.v;
+  if(cell.f) return parseFloat(cell.f.replace(/,/g,''))||0;
+  return 0;
+}
+
+/* Fetch + aggregate player data from a team tab */
+function fetchPlayers(tabName){
+  return new Promise(resolve=>{
+    if(SHEET_DATA[tabName]) return resolve(SHEET_DATA[tabName]);
+    fetchTab(tabName).then(rows=>{
+      if(rows.length<2){ SHEET_DATA[tabName]=[]; return resolve([]); }
+
+      /* Detect if FTD or RET based on tab name */
+      const isRet = tabName.toUpperCase().includes('RET');
+
+      /* Skip header (row 0) — data starts at row 1 */
+      const dataRows = rows.slice(1);
+      const agg = {}; /* { name: { count, totalAmount } } */
+
+      dataRows.forEach(r=>{
+        const cells = r.c||[];
+        let name, amount;
+
+        if(isRet){
+          /* RET: col B (1) = Owner, col H (7) = SUM */
+          name = cellVal(cells[1]);
+          amount = cellNum(cells[7]) || cellNum(cells[2]); /* fallback to Charge Amount col C */
+        } else {
+          /* FTD: col A (0) = Agent Name, col J (9) = SUM, fallback col H (7) = Amount */
+          name = cellVal(cells[0]);
+          amount = cellNum(cells[9]) || cellNum(cells[7]);
+        }
+
+        if(!name || typeof name !== 'string' || name.length<2) return;
+        /* Skip if name looks like a date */
+        if(name.match(/^\d{4}-\d{2}/) || name.match(/^Date\(/i)) return;
+
+        if(!agg[name]) agg[name] = { count:0, total:0 };
+        agg[name].count++;
+        agg[name].total += amount;
+      });
+
+      const players = Object.entries(agg).map(([name,data])=>({
+        name,
+        sales: data.count,
+        amount: Math.round(data.total*100)/100
+      }));
+
+      SHEET_DATA[tabName] = players;
+      resolve(players);
+    });
+  });
+}
+
+/* Render carousel from SCHEDULE — split into FTD and RET */
 function renderCarousel(){
-  const el = document.getElementById('matchCarousel');
-  el.innerHTML = '';
+  const ftdEl = document.getElementById('carouselFTD');
+  const retEl = document.getElementById('carouselRET');
+  ftdEl.innerHTML = '';
+  retEl.innerHTML = '';
 
   if(SCHEDULE.length===0){
-    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--dim);font-size:12px;width:100%">Cargando partidos desde Google Sheets...</div>';
+    const empty = '<div style="padding:20px;text-align:center;color:var(--dim);font-size:12px;width:100%">Cargando partidos...</div>';
+    ftdEl.innerHTML = empty;
+    retEl.innerHTML = empty;
     document.getElementById('matchDetail').style.display = 'none';
     return;
   }
 
-  /* Sort: live first, then upcoming, then done; within each group by date */
-  const sorted = [...SCHEDULE].sort((a,b)=>{
+  const ftdMatches = SCHEDULE.filter(m=>m.pool==='poolA');
+  const retMatches = SCHEDULE.filter(m=>m.pool==='poolB');
+
+  /* Sort: live first, then upcoming, then done */
+  const sortFn = (a,b)=>{
     const sa = matchStatus(a.date), sb = matchStatus(b.date);
     const order = {live:0, upcoming:1, done:2};
     if(order[sa]!==order[sb]) return order[sa]-order[sb];
     return (a.date||'').localeCompare(b.date||'');
-  });
+  };
+  ftdMatches.sort(sortFn);
+  retMatches.sort(sortFn);
 
-  sorted.forEach((match, idx)=>{
-    const status = matchStatus(match.date);
-    const hFlag = findFlag(match.home);
-    const aFlag = findFlag(match.away);
-    const card = document.createElement('div');
-    card.className = 'mc-card' + (idx===carouselIndex?' active':'');
-    card.dataset.idx = idx;
-    card.innerHTML =
-      `<div class="mc-pool-tag">${match.pool==='poolA'?'FTD':'RET'}</div>`+
-      `<div class="mc-week">${match.date} · ${match.day}</div>`+
-      `<div class="mc-teams">`+
-        `<div class="mc-t"><div class="mc-flag">${hFlag}</div><div class="mc-tname">${shortName(match.home)}</div></div>`+
-        `<div class="mc-vs">VS</div>`+
-        `<div class="mc-t"><div class="mc-flag">${aFlag}</div><div class="mc-tname">${shortName(match.away)}</div></div>`+
-      `</div>`+
-      `<div class="mc-score-line" style="font-size:11px;color:${status==='live'?'#ff6b6b':'var(--dim)'};letter-spacing:2px">${ST_LABEL[status]}</div>`;
-    card.addEventListener('click', ()=>{ carouselIndex = idx; selectMatch(idx, sorted); resetCarouselTimer(); });
-    el.appendChild(card);
-  });
+  const allSorted = [...ftdMatches, ...retMatches];
+  window._sortedSchedule = allSorted;
+  window._ftdCount = ftdMatches.length;
 
-  window._sortedSchedule = sorted;
-  if(carouselIndex >= sorted.length) carouselIndex = 0;
-  selectMatch(carouselIndex, sorted);
+  function buildCards(matches, container, indexOffset){
+    if(matches.length===0){
+      container.innerHTML = '<div style="padding:16px;text-align:center;color:var(--dim);font-size:11px;width:100%">Sin partidos en este pool</div>';
+      return;
+    }
+    matches.forEach((match,i)=>{
+      const idx = indexOffset + i;
+      const status = matchStatus(match.date);
+      const hFlag = findFlag(match.home);
+      const aFlag = findFlag(match.away);
+      const card = document.createElement('div');
+      card.className = 'mc-card' + (idx===carouselIndex?' active':'');
+      card.dataset.idx = idx;
+      card.innerHTML =
+        `<div class="mc-pool-tag">${match.pool==='poolA'?'FTD':'RET'}</div>`+
+        `<div class="mc-week">${match.date} · ${match.day}</div>`+
+        `<div class="mc-teams">`+
+          `<div class="mc-t"><div class="mc-flag">${hFlag}</div><div class="mc-tname">${shortName(match.home)}</div></div>`+
+          `<div class="mc-vs">VS</div>`+
+          `<div class="mc-t"><div class="mc-flag">${aFlag}</div><div class="mc-tname">${shortName(match.away)}</div></div>`+
+        `</div>`+
+        `<div class="mc-score-line" style="font-size:11px;color:${status==='live'?'#ff6b6b':'var(--dim)'};letter-spacing:2px">${ST_LABEL[status]}</div>`;
+      card.addEventListener('click', ()=>{ carouselIndex = idx; selectMatch(idx, allSorted); resetCarouselTimer(); });
+      container.appendChild(card);
+    });
+  }
+
+  buildCards(ftdMatches, ftdEl, 0);
+  buildCards(retMatches, retEl, ftdMatches.length);
+
+  if(carouselIndex >= allSorted.length) carouselIndex = 0;
+  selectMatch(carouselIndex, allSorted);
 }
 
 /* Select a match and show detail with players */
@@ -939,13 +1017,14 @@ function renderPlayers(elId, players, totalId){
   const el = document.getElementById(elId);
   const totalEl = document.getElementById(totalId);
   el.innerHTML = '';
-  let total = 0;
-  players.sort((a,b)=>b.sales-a.sales);
+  let totalSales = 0, totalAmount = 0;
+  players.sort((a,b)=>b.sales-a.sales || b.amount-a.amount);
   players.forEach(p=>{
-    total += p.sales;
-    el.innerHTML += `<div class="md-p"><span class="md-p-name">${escapeHtml(p.name)}</span><span class="md-p-sales">${p.sales}</span></div>`;
+    totalSales += p.sales;
+    totalAmount += p.amount;
+    el.innerHTML += `<div class="md-p"><span class="md-p-name">${escapeHtml(p.name)}</span><span class="md-p-sales">${p.sales} <small style="font-size:10px;opacity:.5;font-family:var(--font-b)">· ${Math.round(p.amount).toLocaleString()}€</small></span></div>`;
   });
-  totalEl.textContent = total;
+  totalEl.textContent = totalSales;
   if(!players.length) el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">Sin datos</div>';
 }
 
