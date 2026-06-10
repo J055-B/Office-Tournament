@@ -1097,10 +1097,30 @@ async function showMatchDetail(p){
     });
   }
 
-  /* Fetch players filtered by match date */
-  const [hp, ap] = await Promise.all([fetchTeamPlayers(match.home, match.date), fetchTeamPlayers(match.away, match.date)]);
-  renderPlayers(`d${p}hPlayers`, hp, `d${p}hTotal`);
-  renderPlayers(`d${p}aPlayers`, ap, `d${p}aTotal`);
+  /* Load roster (all players) + stats only if match day arrived */
+  const status = matchStatus(match.date);
+  const isFuture = status === 'upcoming';
+  
+  /* Always load full roster */
+  const [roster_h, roster_a] = await Promise.all([fetchTeamPlayers(match.home, null), fetchTeamPlayers(match.away, null)]);
+  
+  if(isFuture){
+    /* Show roster with 0 stats */
+    const zeroOut = (list)=> list.map(p=>({...p, sales:0, amount:0}));
+    renderPlayers(`d${p}hPlayers`, zeroOut(roster_h), `d${p}hTotal`, true);
+    renderPlayers(`d${p}aPlayers`, zeroOut(roster_a), `d${p}aTotal`, true);
+  } else {
+    /* Match day arrived — show actual day stats */
+    const [hp, ap] = await Promise.all([fetchTeamPlayers(match.home, match.date), fetchTeamPlayers(match.away, match.date)]);
+    /* Merge: keep all roster names, overlay with day stats */
+    const merge = (roster, dayStats)=>{
+      const dayMap = {};
+      dayStats.forEach(p=>{ dayMap[p.name] = p; });
+      return roster.map(p=> dayMap[p.name] || {...p, sales:0, amount:0});
+    };
+    renderPlayers(`d${p}hPlayers`, merge(roster_h, hp), `d${p}hTotal`, false);
+    renderPlayers(`d${p}aPlayers`, merge(roster_a, ap), `d${p}aTotal`, false);
+  }
 
   highlightCard(p, st.selIdx);
 }
@@ -1146,26 +1166,27 @@ function startCarouselTimer(){
 }
 function resetCarouselTimer(){ startCarouselTimer(); }
 
-function renderPlayers(elId, players, totalId){
+function renderPlayers(elId, players, totalId, isFuture){
   const el = document.getElementById(elId);
   const totalEl = document.getElementById(totalId);
   el.innerHTML = '';
-  let totalSales = 0, totalAmount = 0;
+  let totalSales = 0;
   players.sort((a,b)=>b.sales-a.sales || b.amount-a.amount);
   /* Column header */
   el.innerHTML = `<div class="md-p" style="background:none;padding:4px 12px;opacity:.4;font-size:10px;letter-spacing:1.5px;text-transform:uppercase">
     <span>Jugador</span><span style="text-align:center;font-family:var(--font-b);font-size:10px">PTS</span><span style="text-align:right;font-family:var(--font-b);font-size:10px">Monto</span></div>`;
   players.forEach(p=>{
     totalSales += p.sales;
-    totalAmount += p.amount;
+    const ptsDisplay = isFuture ? '<span style="opacity:.25">–</span>' : p.sales;
+    const amtDisplay = isFuture ? '<span style="opacity:.25">–</span>' : `${Math.round(p.amount).toLocaleString()}€`;
     el.innerHTML += `<div class="md-p">
       <span class="md-p-name">${escapeHtml(p.name)}</span>
-      <span class="md-p-pts">${p.sales}</span>
-      <span class="md-p-amount">${Math.round(p.amount).toLocaleString()}€</span>
+      <span class="md-p-pts">${ptsDisplay}</span>
+      <span class="md-p-amount">${amtDisplay}</span>
     </div>`;
   });
-  totalEl.textContent = totalSales;
-  if(!players.length) el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">Sin datos</div>';
+  totalEl.textContent = isFuture ? '–' : totalSales;
+  if(!players.length) el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">Sin jugadores</div>';
 }
 
 /* ─────────────────────────────────────────────
