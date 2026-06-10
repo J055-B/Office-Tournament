@@ -641,9 +641,26 @@ const SEED_TEAMS = {
     t4:{name:'RET BS ES', flag:'🏳️'}
   }
 };
+const SEED_VERSION = 3; /* bump this to force re-seed */
 
-db.ref('teams').once('value').then(snap=>{
-  if(!snap.exists()){ db.ref('teams').set(SEED_TEAMS); }
+db.ref('seedVersion').once('value').then(snap=>{
+  if(snap.val() !== SEED_VERSION){
+    /* Preserve existing flags before overwrite */
+    db.ref('teams').once('value').then(oldSnap=>{
+      const old = oldSnap.val()||{};
+      const flagMap = {};
+      ['poolA','poolB'].forEach(p=>{
+        Object.values(old[p]||{}).forEach(t=>{ if(t.flag && t.flag!=='🏳️') flagMap[t.name]=t.flag; });
+      });
+      /* Apply preserved flags to new seed */
+      ['poolA','poolB'].forEach(p=>{
+        Object.values(SEED_TEAMS[p]).forEach(t=>{ if(flagMap[t.name]) t.flag=flagMap[t.name]; });
+      });
+      db.ref('teams').set(SEED_TEAMS);
+      db.ref('seedVersion').set(SEED_VERSION);
+      toast('Equipos actualizados (v'+SEED_VERSION+')');
+    });
+  }
 });
 
 /* ─────────────────────────────────────────────
@@ -774,12 +791,12 @@ function teamToTabs(name){
   return map[n] || [n];
 }
 
-/* Fetch players — handles multiple tabs for combined teams */
-async function fetchTeamPlayers(teamName){
+/* Fetch players — handles multiple tabs for combined teams, filtered by date */
+async function fetchTeamPlayers(teamName, matchDate){
   const tabs = teamToTabs(teamName);
   const allPlayers = [];
   for(const tab of tabs){
-    const players = await fetchPlayers(tab);
+    const players = await fetchPlayers(tab, matchDate);
     allPlayers.push(...players);
   }
   return allPlayers;
@@ -867,52 +884,58 @@ function cellNum(cell){
   return 0;
 }
 
-/* Fetch + aggregate player data from a team tab */
-function fetchPlayers(tabName){
+/* Fetch + aggregate player data, filtered by matchDate (dd.mm format) */
+let RAW_CACHE = {};
+function fetchPlayers(tabName, matchDate){
   return new Promise(resolve=>{
-    if(SHEET_DATA[tabName]) return resolve(SHEET_DATA[tabName]);
-    fetchTab(tabName).then(rows=>{
-      if(rows.length<2){ SHEET_DATA[tabName]=[]; return resolve([]); }
+    const cacheKey = tabName + (matchDate ? '_'+matchDate : '_all');
+    if(SHEET_DATA[cacheKey]) return resolve(SHEET_DATA[cacheKey]);
 
-      /* Detect if FTD or RET based on tab name */
+    const doAgg = (rows)=>{
+      if(rows.length<2){ SHEET_DATA[cacheKey]=[]; return resolve([]); }
       const isRet = tabName.toUpperCase().includes('RET');
-
-      /* Skip header (row 0) — data starts at row 1 */
       const dataRows = rows.slice(1);
-      const agg = {}; /* { name: { count, totalAmount } } */
+      const agg = {};
 
       dataRows.forEach(r=>{
         const cells = r.c||[];
-        let name, amount;
+        let name, amount, rowDate;
 
         if(isRet){
-          /* RET: col B (1) = Owner, col H (7) = SUM */
+          rowDate = cellVal(cells[0]);
           name = cellVal(cells[1]);
-          amount = cellNum(cells[7]) || cellNum(cells[2]); /* fallback to Charge Amount col C */
+          amount = cellNum(cells[7]) || cellNum(cells[2]);
         } else {
-          /* FTD: col A (0) = Agent Name, col J (9) = SUM, fallback col H (7) = Amount */
           name = cellVal(cells[0]);
+          rowDate = cellVal(cells[1]);
           amount = cellNum(cells[9]) || cellNum(cells[7]);
         }
 
-        if(!name || typeof name !== 'string' || name.length<2) return;
-        /* Skip if name looks like a date */
+        /* Filter by matchDate if provided */
+        if(matchDate && rowDate){
+          const parts = matchDate.split('.');
+          const dd = parts[0].padStart(2,'0'), mm = parts[1].padStart(2,'0');
+          const ds = String(rowDate);
+          if(!ds.includes(`-${mm}-${dd}`) && !ds.includes(`${dd}.${mm}`) && !ds.includes(`${dd}/${mm}`)) return;
+        }
+
+        if(!name || typeof name!=='string' || name.length<2) return;
         if(name.match(/^\d{4}-\d{2}/) || name.match(/^Date\(/i)) return;
 
-        if(!agg[name]) agg[name] = { count:0, total:0 };
+        if(!agg[name]) agg[name]={count:0,total:0};
         agg[name].count++;
         agg[name].total += amount;
       });
 
       const players = Object.entries(agg).map(([name,data])=>({
-        name,
-        sales: data.count,
-        amount: Math.round(data.total*100)/100
+        name, sales:data.count, amount:Math.round(data.total*100)/100
       }));
-
-      SHEET_DATA[tabName] = players;
+      SHEET_DATA[cacheKey] = players;
       resolve(players);
-    });
+    };
+
+    if(RAW_CACHE[tabName]){ doAgg(RAW_CACHE[tabName]); }
+    else { fetchTab(tabName).then(rows=>{ RAW_CACHE[tabName]=rows; doAgg(rows); }); }
   });
 }
 
@@ -1050,8 +1073,8 @@ async function showMatchDetail(p){
     });
   }
 
-  /* Fetch players */
-  const [hp, ap] = await Promise.all([fetchTeamPlayers(match.home), fetchTeamPlayers(match.away)]);
+  /* Fetch players filtered by match date */
+  const [hp, ap] = await Promise.all([fetchTeamPlayers(match.home, match.date), fetchTeamPlayers(match.away, match.date)]);
   renderPlayers(`d${p}hPlayers`, hp, `d${p}hTotal`);
   renderPlayers(`d${p}aPlayers`, ap, `d${p}aTotal`);
 
@@ -1203,7 +1226,7 @@ startCarouselTimer();
 loadScheduleFromSheet();
 
 /* Auto-refresh player data + schedule every 5 minutes */
-setInterval(()=>{ SHEET_DATA = {}; loadScheduleFromSheet(); }, 300000);
+setInterval(()=>{ SHEET_DATA = {}; RAW_CACHE = {}; loadScheduleFromSheet(); }, 300000);
 
 /* util */
 function escapeHtml(s){
