@@ -146,20 +146,11 @@
   .btn:hover{background:rgba(245,197,24,0.2);}
   .btn.danger{border-color:rgba(192,57,43,0.4);background:rgba(192,57,43,0.1);color:#e8939a;}
   .btn.danger:hover{background:rgba(192,57,43,0.2);}
-  .fx-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
-  .fx-card{background:var(--card-bg);border:1px solid var(--border);border-radius:9px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
-  .fx-wk{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);min-width:38px;flex-shrink:0;}
-  .fx-teams{flex:1;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;min-width:0;flex-wrap:wrap;}
-  .fx-score{font-family:var(--font-d);font-size:18px;letter-spacing:2px;color:var(--gold);min-width:48px;text-align:center;flex-shrink:0;}
-  .fx-score [contenteditable="true"]{display:inline-block;min-width:16px;text-align:center;}
-  .fx-status{font-size:8px;padding:3px 7px;border-radius:4px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:default;flex-shrink:0;}
+  /* (old fx-card/fx-grid classes removed — replaced by mc-card carousel) */
   .st-up{background:rgba(255,255,255,0.05);color:var(--dim);}
   .st-live{background:rgba(192,57,43,0.14);color:#e8939a;border:1px solid rgba(192,57,43,0.3);animation:pulse 1.6s ease-in-out infinite;}
   .st-done{background:rgba(37,168,82,0.13);color:var(--green);}
-  .fx-status.clickable{cursor:pointer;}
-  .fx-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px;flex-shrink:0;}
-  .fx-del:hover{color:#e8939a;background:rgba(192,57,43,0.12);}
-  .fx-empty{padding:26px;text-align:center;color:var(--dim);font-size:12px;background:var(--card-bg);border:1px dashed var(--border);border-radius:9px;grid-column:1/-1;}
+  /* (old fx status/delete classes removed) */
 
   /* ═══ AWARDS ═══ */
   .mvp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
@@ -273,7 +264,7 @@
   .md-p-amount{font-family:var(--font-d);font-size:18px;color:var(--green-light);letter-spacing:1px;text-align:right;}
 
   @media(max-width:900px){
-    .pools-grid,.mvp-grid,.fx-grid{grid-template-columns:1fr;}
+    .pools-grid,.mvp-grid{grid-template-columns:1fr;}
     .aw-grid{grid-template-columns:1fr 1fr;}
     .goal-grid{grid-template-columns:repeat(3,1fr);}
     .sb-body{grid-template-columns:1fr;gap:12px;}
@@ -748,7 +739,6 @@ function addTeam(pool){
 const SHEET_ID = '1ATNJGBhXhUPNWX0Ok7EXOdvIDSY0HG2GA61k57mt4J8';
 let SHEET_DATA = {};
 let SCHEDULE = []; // all parsed matches from both pools
-let carouselIndex = 0;
 let carouselTimer = null;
 
 function shortName(name){ return (name||'').replace(/^(FTD|RET)\s*/i,'').replace(/MADA1?-?3?-?4?\s*/i,'MADA ').trim() || name; }
@@ -868,23 +858,60 @@ async function loadScheduleFromSheet(){
   renderCarousel();
 }
 
-/* Helper: get cell display value (handles Date objects from GViz) */
+/* ─── Cell value helpers ─── */
 function cellVal(cell){
   if(!cell) return '';
-  /* For text values, prefer .v; for dates/numbers, prefer .f */
   if(typeof cell.v === 'string') return cell.v;
-  if(cell.f) return cell.f;
-  if(typeof cell.v === 'number') return cell.v;
+  if(cell.f) return String(cell.f);
+  if(typeof cell.v === 'number') return String(cell.v);
   return '';
 }
 function cellNum(cell){
   if(!cell) return 0;
   if(typeof cell.v === 'number') return cell.v;
-  if(cell.f) return parseFloat(cell.f.replace(/,/g,''))||0;
+  if(cell.f) return parseFloat(String(cell.f).replace(/,/g,''))||0;
   return 0;
 }
 
-/* Fetch + aggregate player data, filtered by matchDate (dd.mm format) */
+/* Extract {day, month(1-indexed)} from any date representation */
+function extractDayMonth(val){
+  const s = String(val||'');
+  /* GViz Date format: "Date(2026,5,12,...)" — month is 0-indexed */
+  let m = s.match(/^Date\(\d+,(\d+),(\d+)/i);
+  if(m) return { day:parseInt(m[2]), month:parseInt(m[1])+1 };
+  /* ISO format: "2026-06-12..." */
+  m = s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return { day:parseInt(m[3]), month:parseInt(m[2]) };
+  /* dd.mm or dd/mm format */
+  m = s.match(/^(\d{1,2})[\.\/](\d{1,2})/);
+  if(m) return { day:parseInt(m[1]), month:parseInt(m[2]) };
+  /* mm/dd/yyyy US format */
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m) return { day:parseInt(m[2]), month:parseInt(m[1]) };
+  return null;
+}
+
+/* Check if a cell date matches a match date (dd.mm format) */
+function dateMatches(cellValue, matchDate){
+  if(!matchDate || !cellValue) return true; /* no filter = match all */
+  const target = extractDayMonth(matchDate);
+  if(!target) return true;
+  /* Try raw value first, then formatted */
+  const raw = extractDayMonth(cellValue);
+  if(raw) return raw.day===target.day && raw.month===target.month;
+  return false;
+}
+
+/* Invalid player names — day names, headers, etc */
+const INVALID_NAMES = /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|date|agent|owner|jugador|player|nombre|name|total|sum|amount|monto|email|currency|country|business)$/i;
+function isValidName(name){
+  if(!name || typeof name!=='string' || name.length<2) return false;
+  if(name.match(/^\d/) || name.match(/^Date\(/i)) return false;
+  if(INVALID_NAMES.test(name.trim())) return false;
+  return true;
+}
+
+/* ─── Fetch + aggregate player data, filtered by matchDate ─── */
 let RAW_CACHE = {};
 function fetchPlayers(tabName, matchDate){
   return new Promise(resolve=>{
@@ -899,36 +926,33 @@ function fetchPlayers(tabName, matchDate){
 
       dataRows.forEach(r=>{
         const cells = r.c||[];
-        let name, amount, rowDate;
+        let name, amount, dateCellRaw;
 
         if(isRet){
-          rowDate = cellVal(cells[0]);
+          /* RET: col A=Date, col B=Owner, col C=Amount, col H=SUM */
+          dateCellRaw = cells[0]?.v || cells[0]?.f || '';
           name = cellVal(cells[1]);
           amount = cellNum(cells[7]) || cellNum(cells[2]);
         } else {
+          /* FTD: col A=Agent, col B=Date, col H=Amount, col J=SUM */
           name = cellVal(cells[0]);
-          rowDate = cellVal(cells[1]);
+          dateCellRaw = cells[1]?.v || cells[1]?.f || '';
           amount = cellNum(cells[9]) || cellNum(cells[7]);
         }
 
-        /* Filter by matchDate if provided */
-        if(matchDate && rowDate){
-          const parts = matchDate.split('.');
-          const dd = parts[0].padStart(2,'0'), mm = parts[1].padStart(2,'0');
-          const ds = String(rowDate);
-          if(!ds.includes(`-${mm}-${dd}`) && !ds.includes(`${dd}.${mm}`) && !ds.includes(`${dd}/${mm}`)) return;
-        }
+        /* Date filter */
+        if(matchDate && !dateMatches(dateCellRaw, matchDate)) return;
 
-        if(!name || typeof name!=='string' || name.length<2) return;
-        if(name.match(/^\d{4}-\d{2}/) || name.match(/^Date\(/i)) return;
+        /* Name validation */
+        if(!isValidName(name)) return;
 
         if(!agg[name]) agg[name]={count:0,total:0};
         agg[name].count++;
         agg[name].total += amount;
       });
 
-      const players = Object.entries(agg).map(([name,data])=>({
-        name, sales:data.count, amount:Math.round(data.total*100)/100
+      const players = Object.entries(agg).map(([n,d])=>({
+        name:n, sales:d.count, amount:Math.round(d.total*100)/100
       }));
       SHEET_DATA[cacheKey] = players;
       resolve(players);
@@ -1143,17 +1167,6 @@ function renderPlayers(elId, players, totalId){
   totalEl.textContent = totalSales;
   if(!players.length) el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">Sin datos</div>';
 }
-
-function startCarouselTimer(){
-  if(carouselTimer) clearInterval(carouselTimer);
-  carouselTimer = setInterval(()=>{
-    const sorted = window._sortedSchedule||[];
-    if(sorted.length<=1) return;
-    carouselIndex = (carouselIndex+1) % sorted.length;
-    selectMatch(carouselIndex, sorted);
-  }, 30000);
-}
-function resetCarouselTimer(){ startCarouselTimer(); }
 
 /* ─────────────────────────────────────────────
    PRIZES (editable)
