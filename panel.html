@@ -962,7 +962,9 @@ function setupPool(p, matches, carId, detId){
     if(!byDate[d]) byDate[d]=[];
     byDate[d].push(m);
   });
-  const dates = Object.keys(byDate).sort();
+  /* Sort dates as real dates, not strings */
+  const parseDate = (s)=>{ const p=s.split('.'); return new Date(2026, parseInt(p[1])-1, parseInt(p[0])); };
+  const dates = Object.keys(byDate).sort((a,b)=>parseDate(a)-parseDate(b));
   poolState[p].dates = dates;
   poolState[p].byDate = byDate;
 
@@ -977,9 +979,7 @@ function setupPool(p, matches, carId, detId){
   const today = new Date(); today.setHours(0,0,0,0);
   let bestIdx = 0;
   for(let i=0;i<dates.length;i++){
-    const parts = dates[i].split('.');
-    const d = new Date(2026, parseInt(parts[1])-1, parseInt(parts[0]));
-    if(d >= today){ bestIdx = i; break; }
+    if(parseDate(dates[i]) >= today){ bestIdx = i; break; }
     bestIdx = i;
   }
   poolState[p].dateIdx = bestIdx;
@@ -1092,10 +1092,9 @@ function buildCalendar(p){
   const el = document.getElementById('calendar'+p);
   el.innerHTML = '';
   const today = new Date(); today.setHours(0,0,0,0);
+  const parseD = (s)=>{ const pp=s.split('.'); return new Date(2026, parseInt(pp[1])-1, parseInt(pp[0])); };
   st.dates.forEach((date,i)=>{
-    const parts = date.split('.');
-    const d = new Date(2026, parseInt(parts[1])-1, parseInt(parts[0]));
-    const isToday = d.getTime()===today.getTime();
+    const isToday = parseD(date).getTime()===today.getTime();
     const chip = document.createElement('div');
     chip.className = 'dc-chip' + (i===st.dateIdx?' active':'') + (isToday?' today':'');
     chip.textContent = date;
