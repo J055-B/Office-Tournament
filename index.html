@@ -3,1501 +3,180 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FTD Cup – Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAJ98VsbqglzrF-8O32Iveh3fHjB5I762M",
-    authDomain: "r2c-ftd-cup.firebaseapp.com",
-    databaseURL: "https://r2c-ftd-cup-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "r2c-ftd-cup",
-    storageBucket: "r2c-ftd-cup.firebasestorage.app",
-    messagingSenderId: "551141872449",
-    appId: "1:551141872449:web:68af2ddd8cd5bbd62d47c0"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  // Expose Firebase functions to global scope
-  window.fbSet = (path, data) => set(ref(db, path), data);
-  window.fbListen = (path, callback) => onValue(ref(db, path), snap => callback(snap.val()));
-  window.fbGet = (path) => get(ref(db, path)).then(snap => snap.val());
-  window.firebaseReady = true;
-  if (window._fbReadyResolve) window._fbReadyResolve();
-  document.dispatchEvent(new Event('firebaseReady'));
-</script>
+<title>Callisto Mundial — The Sales Tournament Challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root {
-  --green: #1a7a3c;
-  --green-light: #25a852;
-  --gold: #f5c518;
-  --gold-dark: #c9a000;
-  --red: #c0392b;
-  --white: #f9f9f4;
-  --dark: #0d1f14;
-  --gray: #2e3d2f;
-  --card-bg: rgba(255,255,255,0.04);
-  --card-border: rgba(255,255,255,0.08);
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{
-  background:var(--dark);
-  color:var(--white);
-  font-family:'Inter',sans-serif;
-  min-height:100vh;
-  padding-bottom:38px;
-  background-image:
-    radial-gradient(ellipse at 10% 20%,rgba(26,122,60,.3) 0%,transparent 50%),
-    radial-gradient(ellipse at 90% 80%,rgba(37,168,82,.15) 0%,transparent 50%),
-    repeating-linear-gradient(45deg,transparent,transparent 60px,rgba(255,255,255,.015) 60px,rgba(255,255,255,.015) 61px);
-}
-
-/* =========== LOGIN =========== */
-#login-screen{
-  display:flex;align-items:center;justify-content:center;min-height:100vh;
-  flex-direction:column;gap:24px;
-}
-.login-box{
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(245,197,24,.3);
-  border-radius:20px;padding:40px;width:360px;
-  text-align:center;
-}
-.login-box h2{font-family:'Bebas Neue',cursive;font-size:32px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;}
-.login-box p{font-size:12px;opacity:.5;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px;}
-.login-box input{
-  width:100%;padding:12px 16px;border-radius:10px;
-  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
-  color:var(--white);font-size:14px;margin-bottom:12px;outline:none;
-}
-.login-box input:focus{border-color:var(--gold);}
-.btn-gold{
-  width:100%;padding:12px;border-radius:10px;
-  background:var(--gold);color:#000;font-weight:700;font-size:14px;
-  border:none;cursor:pointer;letter-spacing:1px;
-  transition:background .2s;
-}
-.btn-gold:hover{background:var(--gold-dark);}
-.login-error{color:#ff6b6b;font-size:12px;margin-top:8px;display:none;}
-.btn-visitor{width:100%;padding:11px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,.2);
-  color:rgba(255,255,255,.55);font-size:13px;cursor:pointer;margin-top:6px;letter-spacing:1px;transition:all .2s;}
-.btn-visitor:hover{border-color:var(--green-light);color:var(--green-light);}
-
-/* =========== MAIN APP =========== */
-#app{display:none;}
-header{text-align:center;padding:40px 20px 20px;position:relative;}
-.trophy-icon{font-size:56px;display:block;animation:bounce 2s infinite;}
-@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
-h1{font-family:'Bebas Neue',cursive;font-size:clamp(42px,8vw,80px);letter-spacing:4px;background:linear-gradient(90deg,var(--gold) 25%,#fff 50%,var(--gold) 75%);background-size:400px 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin:8px 0;animation:shimmer 3s infinite linear;}
-@keyframes goldPulse{0%,100%{text-shadow:0 0 40px rgba(245,197,24,.7),0 0 80px rgba(245,197,24,.3);}50%{text-shadow:0 0 70px rgba(245,197,24,1),0 0 140px rgba(245,197,24,.5);}}
-.subtitle{font-size:14px;letter-spacing:6px;text-transform:uppercase;color:var(--green-light);margin-bottom:6px;}
-.budget-pill{display:inline-block;background:rgba(245,197,24,.15);border:1px solid var(--gold);
-  color:var(--gold);padding:4px 18px;border-radius:20px;font-size:13px;font-weight:600;letter-spacing:1px;margin-top:8px;}
-.admin-bar{
-  background:rgba(245,197,24,.1);border-bottom:1px solid rgba(245,197,24,.2);
-  padding:8px 20px;display:flex;align-items:center;justify-content:space-between;
-  font-size:13px;
-}
-.admin-bar span{color:var(--gold);}
-.admin-bar button{background:none;border:1px solid rgba(255,255,255,.2);color:var(--white);
-  padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;}
-.admin-bar button:hover{background:rgba(255,255,255,.1);}
-body.visitor-mode .btn-add,
-body.visitor-mode .btn-remove,
-body.visitor-mode .edit-team-btn{ display:none !important; }
-body.visitor-mode .team-name-editable{ pointer-events:none; }
-
-.container{max-width:980px;margin:0 auto;padding:0 20px 60px;}
-
-.divider{display:flex;align-items:center;gap:12px;margin:32px 0 20px;}
-.divider-line{flex:1;height:1px;background:rgba(255,255,255,.1);}
-.divider-label{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:3px;color:var(--gold);}
-
-/* =========== TEAMS =========== */
-.teams-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px;}
-@media(max-width:600px){.teams-grid{grid-template-columns:1fr;}}
-
-.team-card{border-radius:16px;padding:24px;position:relative;overflow:hidden;}
-.team-a{background:linear-gradient(135deg,rgba(26,122,60,.4),rgba(13,31,20,.8));border:1px solid rgba(37,168,82,.4);}
-.team-b{background:linear-gradient(135deg,rgba(192,57,43,.3),rgba(13,31,20,.8));border:1px solid rgba(192,57,43,.4);}
-
-.team-header{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
-.team-flag{font-size:36px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5));}
-.team-name-editable{font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;
-  background:none;border:none;color:var(--white);outline:none;cursor:text;width:160px;}
-.team-name-editable:read-only{cursor:default;}
-.team-desc{font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.6;margin-bottom:12px;}
-.team-score-big{font-family:'Bebas Neue',cursive;font-size:42px;color:var(--gold);line-height:1;margin-bottom:12px;}
-
-.player{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:6px;
-  background:rgba(255,255,255,.04);transition:background .2s;}
-.player:hover{background:rgba(255,255,255,.1);}
-.player-num{font-family:'Bebas Neue',cursive;font-size:18px;color:var(--gold);width:22px;text-align:center;}
-.player-name{font-size:14px;font-weight:600;flex:1;}
-.player-ftd{font-size:13px;color:var(--gold);font-weight:700;min-width:28px;text-align:right;}
-.badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
-.badge-senior{background:rgba(245,197,24,.2);color:var(--gold);border:1px solid rgba(245,197,24,.4);}
-.badge-junior{background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);}
-.badge-cap{background:rgba(37,168,82,.2);color:var(--green-light);border:1px solid rgba(37,168,82,.4);}
-
-.btn-add{
-  display:flex;align-items:center;gap:6px;margin-top:12px;
-  background:rgba(255,255,255,.07);border:1px dashed rgba(255,255,255,.2);
-  color:rgba(255,255,255,.6);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;
-  width:100%;justify-content:center;transition:all .2s;
-}
-.btn-add:hover{background:rgba(255,255,255,.12);border-color:var(--gold);color:var(--gold);}
-
-/* ADD PLAYER MODAL */
-.modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;
-  display:none;align-items:center;justify-content:center;
-}
-.modal-overlay.open{display:flex;}
-.modal{background:#162a1e;border:1px solid rgba(245,197,24,.3);border-radius:16px;padding:28px;width:380px;max-width:95vw;}
-.modal h3{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:2px;color:var(--gold);margin-bottom:16px;}
-.modal select,.modal input{
-  width:100%;padding:10px 14px;border-radius:8px;
-  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
-  color:var(--white);font-size:14px;margin-bottom:12px;outline:none;
-}
-.modal select option{background:#162a1e;color:var(--white);}
-.modal select:focus,.modal input:focus{border-color:var(--gold);}
-.modal-buttons{display:flex;gap:10px;margin-top:4px;}
-.btn-cancel{flex:1;padding:10px;border-radius:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
-  color:var(--white);cursor:pointer;font-size:14px;}
-.btn-cancel:hover{background:rgba(255,255,255,.12);}
-.btn-confirm{flex:1;padding:10px;border-radius:8px;background:var(--gold);border:none;color:#000;font-weight:700;cursor:pointer;font-size:14px;}
-.btn-confirm:hover{background:var(--gold-dark);}
-
-/* =========== CALENDAR =========== */
-.calendar-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
-@media(max-width:600px){.calendar-grid{grid-template-columns:repeat(2,1fr);}}
-.week-card{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;
-  padding:16px 14px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
-.week-card:hover{border-color:rgba(245,197,24,.5);background:rgba(245,197,24,.05);}
-.week-card.active{border-color:var(--gold);background:rgba(245,197,24,.1);}
-.week-card.current-week{border-color:rgba(37,168,82,.6);}
-.week-num{font-family:'Bebas Neue',cursive;font-size:38px;color:var(--gold);line-height:1;}
-.week-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:.5;margin-bottom:8px;}
-.week-title{font-size:12px;font-weight:700;margin-bottom:4px;}
-.week-dates{font-size:11px;opacity:.5;}
-.week-prize{font-size:13px;color:var(--gold);font-weight:700;margin-top:6px;}
-.current-badge{
-  position:absolute;top:-8px;left:50%;transform:translateX(-50%);
-  background:var(--green-light);color:#000;font-size:9px;font-weight:700;
-  padding:2px 8px;border-radius:8px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;
-}
-
-/* =========== WEEKLY STANDINGS PANEL =========== */
-.week-panel{background:rgba(255,255,255,.04);border:1px solid var(--gold);border-radius:14px;
-  padding:22px;margin-bottom:24px;display:none;}
-.week-panel.open{display:block;}
-.week-panel h3{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:2px;color:var(--gold);margin-bottom:16px;}
-.standings-table{width:100%;border-collapse:collapse;font-size:14px;}
-.standings-table th{text-align:left;padding:8px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;
-  opacity:.5;border-bottom:1px solid rgba(255,255,255,.08);}
-.standings-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05);}
-.standings-table tr:last-child td{border:none;}
-.rank-1{color:var(--gold);font-weight:700;}
-
-/* =========== SCOREBOARD =========== */
-.scoreboard{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;margin-bottom:24px;}
-.scoreboard-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 16px;
-  font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.4;border-bottom:1px solid rgba(255,255,255,.06);}
-.score-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:14px 16px;align-items:center;
-  border-bottom:1px solid rgba(255,255,255,.04);}
-.score-row:last-child{border:none;}
-.score-team{display:flex;align-items:center;gap:10px;}
-.score-flag{font-size:22px;}
-.score-name{font-size:15px;font-weight:600;}
-.score-pts{font-family:'Bebas Neue',cursive;font-size:28px;color:var(--gold);}
-.score-ftd{font-size:15px;opacity:.7;}
-.winner-row{background:rgba(245,197,24,.07);}
-
-/* =========== PRIZES =========== */
-.prizes-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
-@media(max-width:600px){.prizes-grid{grid-template-columns:1fr;}}
-.prize-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px 20px;text-align:center;transition:transform .2s;}
-.prize-card:hover{transform:translateY(-3px);}
-.prize-icon{font-size:44px;display:block;margin-bottom:12px;}
-.prize-title{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:3px;color:rgba(255,255,255,.75);margin-bottom:8px;}
-.prize-amount{font-family:'Bebas Neue',cursive;font-size:48px;color:var(--gold);line-height:1;}
-.prize-desc{font-size:12px;opacity:.55;margin-top:8px;line-height:1.6;}
-.prize-1{
-  background:linear-gradient(135deg,rgba(245,197,24,.18),rgba(201,160,0,.08));
-  border:1.5px solid rgba(245,197,24,.5);
-  grid-column:1/-1;
-  padding:36px 28px;
-  position:relative;
-  overflow:hidden;
-}
-.prize-1::before{
-  content:'';
-  position:absolute;
-  inset:0;
-  background:repeating-linear-gradient(45deg,transparent,transparent 18px,rgba(245,197,24,.04) 18px,rgba(245,197,24,.04) 19px);
-  pointer-events:none;
-}
-.prize-1 .prize-icon{font-size:64px;animation:bounce 2s infinite;}
-.prize-1 .prize-title{font-size:26px;letter-spacing:4px;color:rgba(255,255,255,.85);}
-.prize-1 .prize-amount{font-size:72px;color:var(--gold);text-shadow:0 0 20px rgba(245,197,24,.9),0 0 40px rgba(245,197,24,.6);}
-.prize-1 .prize-desc{font-size:14px;opacity:.65;}
-@keyframes shimmer{
-  0%{background-position:-400px 0}
-  100%{background-position:400px 0}
-}
-/* shimmer for prize-1 applied via JS */
-
-.total-budget{
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
-  background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.3);
-  border-radius:12px;padding:16px 20px;margin-top:8px;
-}
-.budget-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.5;margin-bottom:4px;}
-.budget-breakdown{font-size:12px;opacity:.4;}
-.budget-total{font-family:'Bebas Neue',cursive;font-size:36px;color:var(--gold);}
-
-/* =========== RULES =========== */
-.rules-list{display:flex;flex-direction:column;gap:10px;}
-.rule-item{display:flex;gap:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px 16px;}
-.rule-icon{font-size:20px;flex-shrink:0;}
-.rule-text{font-size:13px;line-height:1.6;opacity:.8;}
-
-footer{text-align:center;padding:20px;font-size:12px;opacity:.3;letter-spacing:2px;text-transform:uppercase;}
-
-/* Remove player btn */
-.btn-remove{background:none;border:none;color:rgba(255,100,100,.5);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:4px;margin-left:4px;}
-.btn-remove:hover{color:#ff6b6b;background:rgba(255,100,100,.1);}
-
-.status-bar{
-  background:rgba(37,168,82,.1);border:1px solid rgba(37,168,82,.3);border-radius:8px;
-  padding:8px 14px;font-size:12px;color:var(--green-light);margin-bottom:16px;display:none;
-}
-
-/* month title */
-.month-title{font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:3px;color:var(--white);opacity:.7;text-align:center;margin-bottom:12px;}
+  :root{
+    --green:#1a7a3c;
+    --green-light:#25a852;
+    --gold:#f5c518;
+    --gold-dark:#c9a000;
+    --red:#c0392b;
+    --white:#f9f9f4;
+    --dark:#0d1f14;
+    --gray:#2e3d2f;
+    --card-bg:rgba(255,255,255,0.04);
+    --card-border:rgba(255,255,255,0.08);
+    --font-d:'Bebas Neue','Impact',sans-serif;
+    --font-b:'Inter',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--font-b);
+    background:var(--dark);
+    background-image:
+      radial-gradient(ellipse at 50% 30%,rgba(26,122,60,.35) 0%,transparent 50%),
+      radial-gradient(ellipse at 90% 80%,rgba(37,168,82,.15) 0%,transparent 50%),
+      repeating-linear-gradient(45deg,transparent,transparent 60px,rgba(255,255,255,.015) 60px,rgba(255,255,255,.015) 61px);
+    color:var(--white);
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;position:relative;
+  }
+  .rays{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:conic-gradient(from 0deg at 50% 38%,
+      rgba(37,168,82,0.00) 0deg, rgba(37,168,82,0.06) 12deg, rgba(37,168,82,0.00) 24deg,
+      rgba(245,197,24,0.04) 36deg, rgba(37,168,82,0.00) 48deg);
+    animation:spin 80s linear infinite;opacity:.6;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.55) 100%);}
+  .ember{position:fixed;bottom:-10px;width:3px;height:3px;border-radius:50%;
+    background:var(--gold);opacity:0;z-index:1;animation:rise linear infinite;}
+  @keyframes rise{
+    0%{transform:translateY(0) scale(1);opacity:0;}
+    10%{opacity:.7;}90%{opacity:.3;}
+    100%{transform:translateY(-100vh) scale(.3);opacity:0;}}
+  .stage{position:relative;z-index:5;text-align:center;padding:32px 24px;max-width:640px;
+    animation:fadeUp 1.1s cubic-bezier(.16,1,.3,1);}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+  .logo-wrap{margin-bottom:6px;position:relative;display:inline-block;}
+  .logo-wrap::after{content:'';position:absolute;inset:-8% -8%;
+    background:radial-gradient(circle,rgba(37,168,82,0.25) 0%,transparent 65%);
+    z-index:-1;animation:pulse 4s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:.6;transform:scale(1);}50%{opacity:1;transform:scale(1.06);}}
+  .logo{width:300px;max-width:72vw;height:auto;filter:drop-shadow(0 12px 40px rgba(0,0,0,.6));}
+  .logo-fallback{width:280px;max-width:70vw;height:280px;border-radius:50%;
+    border:4px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 35%,var(--gray),var(--dark));
+    box-shadow:0 12px 50px rgba(0,0,0,.6),inset 0 0 60px rgba(37,168,82,0.1);margin:0 auto;}
+  .logo-fallback .cup{font-size:64px;line-height:1;margin-bottom:8px;}
+  .logo-fallback .fb-name{font-family:var(--font-d);font-size:44px;letter-spacing:4px;color:var(--gold);line-height:.9;}
+  .logo-fallback .fb-sub{font-family:var(--font-d);font-size:22px;letter-spacing:8px;color:var(--green-light);}
+  .tagline{font-family:var(--font-d);font-size:clamp(18px,3.4vw,30px);letter-spacing:7px;
+    color:var(--green-light);text-transform:uppercase;margin-bottom:4px;}
+  .subtagline{font-size:12px;letter-spacing:5px;text-transform:uppercase;
+    color:rgba(255,255,255,.45);margin-bottom:38px;}
+  .divider{width:80px;height:2px;margin:0 auto 34px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .enter-btn{font-family:var(--font-d);font-size:24px;letter-spacing:5px;color:#000;
+    background:var(--gold);border:none;padding:16px 64px;border-radius:10px;cursor:pointer;
+    text-transform:uppercase;transition:transform .18s ease,box-shadow .18s ease,background .2s;
+    box-shadow:0 6px 24px rgba(245,197,24,.35);}
+  .enter-btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 10px 34px rgba(245,197,24,.5);background:var(--gold-dark);}
+  .enter-btn:active{transform:translateY(0) scale(.99);}
+  .admin-zone{margin-top:36px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .admin-circle{width:54px;height:54px;border-radius:50%;background:var(--card-bg);
+    border:1.5px solid rgba(245,197,24,.4);color:var(--gold);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s ease;}
+  .admin-circle:hover{background:rgba(245,197,24,.12);border-color:var(--gold);
+    transform:scale(1.08);box-shadow:0 0 20px rgba(245,197,24,.3);}
+  .admin-circle svg{width:22px;height:22px;}
+  .admin-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);}
+  .overlay{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.75);
+    backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px;}
+  .overlay.show{display:flex;}
+  .modal{width:100%;max-width:380px;background:var(--gray);border:1px solid rgba(245,197,24,.3);
+    border-radius:16px;padding:34px 30px;box-shadow:0 24px 80px rgba(0,0,0,.7);
+    animation:popIn .3s cubic-bezier(.16,1,.3,1);}
+  @keyframes popIn{from{opacity:0;transform:scale(.92) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+  .modal-icon{width:52px;height:52px;border-radius:50%;background:rgba(245,197,24,.12);
+    border:1px solid rgba(245,197,24,.3);display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;color:var(--gold);}
+  .modal-icon svg{width:24px;height:24px;}
+  .modal-title{font-family:var(--font-d);font-size:26px;letter-spacing:3px;text-align:center;color:var(--gold);margin-bottom:4px;}
+  .modal-sub{font-size:11px;letter-spacing:2px;text-transform:uppercase;text-align:center;color:rgba(255,255,255,.5);margin-bottom:24px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:6px;}
+  .field input{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+    border-radius:8px;padding:12px 14px;color:var(--white);font-size:15px;font-family:var(--font-b);outline:none;}
+  .field input:focus{border-color:var(--gold);background:rgba(255,255,255,.1);}
+  .modal-error{font-size:12px;color:#ff6b6b;text-align:center;min-height:18px;margin:2px 0 8px;}
+  .modal-btns{display:flex;gap:10px;margin-top:8px;}
+  .btn-login{flex:1;font-family:var(--font-d);font-size:18px;letter-spacing:3px;color:#000;
+    background:var(--gold);border:none;border-radius:8px;padding:12px;cursor:pointer;text-transform:uppercase;}
+  .btn-login:hover{background:var(--gold-dark);}
+  .btn-cancel{font-family:var(--font-b);font-size:13px;font-weight:600;color:rgba(255,255,255,.5);
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;
+    padding:12px 18px;cursor:pointer;}
+  .btn-cancel:hover{color:var(--white);background:rgba(255,255,255,.12);}
+  .footer-credit{position:fixed;bottom:14px;left:0;right:0;z-index:5;text-align:center;
+    font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.2);}
 </style>
 </head>
 <body>
-
-<!-- ====== LOGIN ====== -->
-<div id="login-screen">
-  <div style="text-align:center;margin-bottom:-8px;">
-    <div style="display:flex;align-items:center;justify-content:center;gap:0;">
-      <img src="assets/flag-left.gif" alt="" style="width:90px;margin-right:-12px;margin-top:8px;">
-      <span style="font-size:52px;">🏆</span>
-      <img src="assets/flag-right.gif" alt="" style="width:90px;margin-left:-12px;margin-top:8px;">
+  <div class="rays"></div>
+  <div class="vignette"></div>
+  <div class="stage">
+    <div class="logo-wrap">
+      <img src="assets/callisto.png" alt="Callisto Mundial" class="logo"
+           onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex';">
+      <div class="logo-fallback" id="logoFallback" style="display:none;">
+        <div class="cup">🏆</div>
+        <div class="fb-name">CALLISTO</div>
+        <div class="fb-sub">MUNDIAL</div>
+      </div>
     </div>
-    <h1 style="font-family:'Bebas Neue',cursive;font-size:52px;letter-spacing:4px;background:linear-gradient(90deg,#f5c518 25%,#fff 50%,#f5c518 75%);background-size:400px 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s infinite linear;">FTD CUP</h1>
-    <p style="font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#25a852;">Panel de Administración</p>
-  </div>
-  <div class="login-box">
-    <h2>🔐 Acceso Admin</h2>
-    <p>Ingresá tus credenciales</p>
-    <input type="text" id="login-user" placeholder="Usuario" autocomplete="username">
-    <input type="password" id="login-pass" placeholder="Contraseña" autocomplete="current-password">
-    <button class="btn-gold" onclick="doLogin()">Ingresar</button>
-    <button class="btn-visitor" onclick="enterAsVisitor()" style="display:flex;align-items:center;justify-content:center;gap:8px;position:relative;">
-      <img src="assets/msn.gif" style="width:22px;height:22px;position:absolute;left:16px;"> 
-      <span>Entrar como visitante</span>
-    </button>
-    <p class="login-error" id="login-error">Usuario o contraseña incorrectos</p>
-  </div>
-  <p style="font-size:11px;opacity:.3;letter-spacing:1px;">El Mundial de las Ventas</p>
-</div>
-
-<!-- ====== MAIN APP ====== -->
-<div id="app">
-  <div class="admin-bar" id="admin-bar" style="display:none;">
-    <span style="display:flex;align-items:center;gap:10px;">
-      <img id="music-btn" onclick="toggleMusic()" src="assets/btn-play.png" style="width:32px;height:32px;cursor:pointer;opacity:0.9;transition:opacity .2s;border-radius:50%;vertical-align:middle;display:block;" title="Música" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.9">
-      <img id="admin-avatar" src="" style="width:28px;height:28px;border-radius:50%;display:none;">
-      Admin: <strong id="admin-name"></strong>
-    </span>
-    <div style="display:flex;gap:10px;align-items:center;">
-      <button onclick="fetchSheetData()">🔄 Actualizar datos</button>
-      <label style="background:none;border:1px solid rgba(255,255,255,.2);color:var(--white);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;">
-        📂 Cargar CSV
-        <input type="file" accept=".csv" style="display:none" onchange="loadCsvManual(event)">
-      </label>
-      <img onclick="doLogout()" src="assets/btn-power.png" style="width:32px;height:32px;cursor:pointer;opacity:0.9;transition:opacity .2s;border-radius:50%;display:block;" title="Cerrar sesión" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.9">
+    <h1 class="tagline" style="margin-top:14px;">The Sales Tournament Challenge</h1>
+    <div class="subtagline">Where champions are made</div>
+    <div class="divider"></div>
+    <button class="enter-btn" onclick="enterAsVisitor()">Ingresar</button>
+    <div class="admin-zone">
+      <button class="admin-circle" onclick="openAdmin()" aria-label="Acceso administrador">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </button>
+      <span class="admin-label">Admin</span>
     </div>
   </div>
-  <div class="visitor-bar" id="visitor-bar" style="background:rgba(37,168,82,.08);border-bottom:1px solid rgba(37,168,82,.2);padding:8px 20px;display:none;align-items:center;justify-content:space-between;font-size:13px;">
-    <span style="display:flex;align-items:center;gap:8px;">
-      <img id="music-btn-visitor" onclick="toggleMusic()" src="assets/btn-play.png" style="width:32px;height:32px;cursor:pointer;opacity:0.9;transition:opacity .2s;border-radius:50%;vertical-align:middle;display:block;" title="Música" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.9">
-      <span style="color:var(--green-light);font-weight:700;letter-spacing:2px;font-size:13px;display:flex;align-items:center;gap:6px;">
-        <img src="assets/msn.gif" style="width:22px;height:22px;"> Visitante
-      </span>
-    </span>
-    <img onclick="doLogout()" src="assets/btn-power.png" style="width:32px;height:32px;cursor:pointer;opacity:0.9;transition:opacity .2s;border-radius:50%;display:block;" title="Salir" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.9">
-  </div>
-
-  <header>
-    <div style="display:flex;align-items:center;justify-content:center;gap:0px;">
-      <img src="assets/flag-left.gif" alt="" style="width:160px;margin-right:-20px;margin-top:14px;">
-      <span class="trophy-icon">🏆</span>
-      <img src="assets/flag-right.gif" alt="" style="width:160px;margin-left:-20px;margin-top:14px;">
-    </div>
-    <p class="subtitle">Competencia Interna · <span id="month-year-header"></span></p>
-    <h1>FTD CUP</h1>
-    <p class="subtitle">El Mundial de las Ventas</p>
-    <span class="budget-pill" id="budget-pill-text" data-prize-key="budget-pill" onblur="savePrizeAmount('budget-pill',this.textContent)" style="outline:none;">⚽ Presupuesto Total: 2,500 ILS</span>
-  </header>
-
-  <div class="container">
-
-    <div id="status-bar" class="status-bar"></div>
-
-    <!-- TEAMS -->
-    <div class="divider">
-      <div class="divider-line"></div>
-      <span class="divider-label">🌍 Los Equipos</span>
-      <div class="divider-line"></div>
-    </div>
-
-    <div class="teams-grid">
-      <!-- Team Paola -->
-      <div class="team-card team-a" id="team-paola-card">
-        <div class="team-header">
-          <span class="team-flag">🟢</span>
-          <div>
-            <input class="team-name-editable" id="team-paola-name" value="Team Paola" readonly>
-          </div>
-          <button onclick="editTeamName('paola')" class="edit-team-btn" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:14px;margin-left:auto;" title="Editar nombre">✏️</button>
-        </div>
-        <div class="team-score-big" id="score-paola">0 FTDs</div>
-        <div id="players-paola"></div>
-        <button class="btn-add" onclick="openAddModal('paola')">+ Agregar vendedor</button>
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
       </div>
-
-      <!-- Team Nicole -->
-      <div class="team-card team-b" id="team-nicole-card">
-        <div class="team-header">
-          <span class="team-flag">🔴</span>
-          <div>
-            <input class="team-name-editable" id="team-nicole-name" value="Team Nicole" readonly>
-          </div>
-          <button onclick="editTeamName('nicole')" class="edit-team-btn" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:14px;margin-left:auto;" title="Editar nombre">✏️</button>
-        </div>
-        <div class="team-score-big" id="score-nicole">0 FTDs</div>
-        <div id="players-nicole"></div>
-        <button class="btn-add" onclick="openAddModal('nicole')">+ Agregar vendedor</button>
+      <div class="modal-title">🔐 Acceso Admin</div>
+      <div class="modal-sub">Ingresá tus credenciales</div>
+      <div class="field"><label for="user">Usuario</label>
+        <input type="text" id="user" autocomplete="username" placeholder="Joss" onkeydown="if(event.key==='Enter')document.getElementById('pass').focus()"></div>
+      <div class="field"><label for="pass">Contraseña</label>
+        <input type="password" id="pass" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')tryLogin()"></div>
+      <div class="modal-error" id="error"></div>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeAdmin()">Cancelar</button>
+        <button class="btn-login" onclick="tryLogin()">Ingresar</button>
       </div>
-    </div>
-
-
-
-    <!-- CALENDAR -->
-    <div class="divider">
-      <div class="divider-line"></div>
-      <span class="divider-label">📅 Calendario</span>
-      <div class="divider-line"></div>
-    </div>
-    <div class="month-title" id="calendar-month-label"></div>
-
-    <div class="calendar-grid" id="calendar-grid"></div>
-
-    <!-- WEEKLY STANDINGS PANEL -->
-    <div class="week-panel" id="week-panel">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-        <h3 id="week-panel-title" style="margin:0;">Semana 1 – Posiciones</h3>
-        <div id="week-mini-scoreboard" style="display:flex;gap:10px;align-items:center;"></div>
-      </div>
-      <table class="standings-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Vendedor</th>
-            <th>Equipo</th>
-            <th>FTDs (semana)</th>
-          </tr>
-        </thead>
-        <tbody id="week-standings-body"></tbody>
-      </table>
-    </div>
-
-    <!-- LIVE SCOREBOARD -->
-    <div class="divider">
-      <div class="divider-line"></div>
-      <span class="divider-label">📊 Marcador en Vivo</span>
-      <div class="divider-line"></div>
-    </div>
-
-    <div class="scoreboard">
-      <div class="scoreboard-header" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr;">
-        <span>Equipo</span>
-        <span>FTDs Totales</span>
-        <span>Semanas ganadas</span>
-        <span>Días liderando</span>
-        <span>Estado</span>
-      </div>
-      <div class="score-row" id="scoreboard-paola" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr;">
-        <div class="score-team">
-          <span class="score-flag">🟢</span>
-          <span class="score-name" id="sb-name-paola">Team Paola</span>
-        </div>
-        <span class="score-pts" id="sb-pts-paola">0</span>
-        <span class="score-ftd" id="sb-weeks-paola">–</span>
-        <span class="score-ftd" id="sb-days-paola">0 días</span>
-        <span id="sb-status-paola">–</span>
-      </div>
-      <div class="score-row" id="scoreboard-nicole" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr;">
-        <div class="score-team">
-          <span class="score-flag">🔴</span>
-          <span class="score-name" id="sb-name-nicole">Team Nicole</span>
-        </div>
-        <span class="score-pts" id="sb-pts-nicole">0</span>
-        <span class="score-ftd" id="sb-weeks-nicole">–</span>
-        <span class="score-ftd" id="sb-days-nicole">0 días</span>
-        <span id="sb-status-nicole">–</span>
-      </div>
-    </div>
-
-    <!-- PRIZES -->
-    <div class="divider">
-      <div class="divider-line"></div>
-      <span class="divider-label">🥇 Premios</span>
-      <div class="divider-line"></div>
-    </div>
-
-    <div class="prizes-grid">
-
-      <div class="prize-card prize-1">
-        <span class="prize-icon">🏆</span>
-        <div class="prize-title">Equipo Campeón</div>
-        <div class="prize-amount" data-prize-key="campeon-amount" onblur="savePrizeAmount('campeon-amount',this.textContent)" style="font-size:72px;outline:none;">700 ILS</div>
-        <div class="prize-desc" data-prize-key="campeon-desc" onblur="savePrizeAmount('campeon-desc',this.textContent)" style="outline:none;">100 ILS por integrante del equipo ganador del mes (mayor FTDs acumulados)</div>
-      </div>
-
-      <div class="prize-card" style="background:linear-gradient(135deg,rgba(37,168,82,.2),rgba(13,31,20,.6));border:1.5px solid rgba(37,168,82,.4);">
-        <span class="prize-icon">⚽</span>
-        <div class="prize-title">MVP del Mes</div>
-        <div class="prize-amount" data-prize-key="mvp-amount" onblur="savePrizeAmount('mvp-amount',this.textContent)" style="font-size:48px;outline:none;">400 ILS</div>
-        <div class="prize-desc" data-prize-key="mvp-desc" onblur="savePrizeAmount('mvp-desc',this.textContent)" style="outline:none;">El vendedor individual con más FTDs en todo el mes, de cualquier equipo</div>
-      </div>
-
-      <div class="prize-card" style="background:linear-gradient(135deg,rgba(192,57,43,.2),rgba(13,31,20,.6));border:1.5px solid rgba(192,57,43,.4);">
-        <span class="prize-icon" style="filter:drop-shadow(0 0 8px rgba(245,197,24,.8));">⭐</span>
-        <div class="prize-title">Revelación</div>
-        <div class="prize-amount" data-prize-key="rev-amount" onblur="savePrizeAmount('rev-amount',this.textContent)" style="font-size:48px;outline:none;">200 ILS</div>
-        <div class="prize-desc" data-prize-key="rev-desc" onblur="savePrizeAmount('rev-desc',this.textContent)" style="outline:none;">Mejor vendedor Junior del mes. El que más creció vs. su promedio anterior</div>
-      </div>
-
-      <div class="prize-card" style="background:linear-gradient(135deg,rgba(26,122,60,.2),rgba(13,31,20,.6));border:1.5px solid rgba(37,168,82,.35);">
-        <span class="prize-icon">📅</span>
-        <div class="prize-title">Bonos Semanales</div>
-        <div class="prize-amount" data-prize-key="bonos-amount" onblur="savePrizeAmount('bonos-amount',this.textContent)" style="font-size:48px;outline:none;">600 ILS</div>
-        <div class="prize-desc" data-prize-key="bonos-desc" onblur="savePrizeAmount('bonos-desc',this.textContent)" style="outline:none;">200 ILS/semana (sem 1-3) para el equipo con más FTDs esa semana. Dividido entre los 7 integrantes (~28 ILS c/u)</div>
-      </div>
-
-    </div>
-
-    <!-- Fila inferior: Hat-Trick, GIF, Celebración Final -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px;">
-
-      <div class="prize-card" style="background:linear-gradient(135deg,rgba(192,57,43,.2),rgba(13,31,20,.6));border:1.5px solid rgba(192,57,43,.35);">
-        <span class="prize-icon">🎯</span>
-        <div class="prize-title">Hat-Trick</div>
-        <div class="prize-amount" data-prize-key="hat-amount" onblur="savePrizeAmount('hat-amount',this.textContent)" style="font-size:48px;outline:none;">200 ILS</div>
-        <div class="prize-desc" data-prize-key="hat-desc" onblur="savePrizeAmount('hat-desc',this.textContent)" style="outline:none;">Bono individual para quien logre 3+ FTDs en un solo día, cualquier semana</div>
-      </div>
-
-      <div class="prize-card" style="background:rgba(0,0,0,.2);border:1.5px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;padding:6px;">
-        <img src="assets/cup-run.gif" alt="FTD Cup" style="width:100%;max-width:100%;border-radius:10px;display:block;transform:scale(1.08);transform-origin:center;">
-      </div>
-
-      <div class="prize-card" style="background:linear-gradient(135deg,rgba(245,197,24,.25),rgba(201,160,0,.15));border:1.5px solid rgba(245,197,24,.6);">
-        <span class="prize-icon">🎊</span>
-        <div class="prize-title">Celebración Final</div>
-        <div class="prize-amount" data-prize-key="cel-amount" onblur="savePrizeAmount('cel-amount',this.textContent)" style="font-size:48px;outline:none;">400 ILS</div>
-        <div class="prize-desc" data-prize-key="cel-desc" onblur="savePrizeAmount('cel-desc',this.textContent)" style="outline:none;">Evento/cena de cierre para todo el equipo al final del mes (todos participan)</div>
-      </div>
-
-    </div>
-
-    <div class="total-budget">
-      <div>
-        <div class="budget-label">Presupuesto Total</div>
-        <div class="budget-breakdown" data-prize-key="budget-breakdown" onblur="savePrizeAmount('budget-breakdown',this.textContent)" style="outline:none;">Equipo (700) + MVP (400) + Revelación (200) + Semanales (600) + Hat-Trick (200) + Evento (400)</div>
-      </div>
-      <div class="budget-total" data-prize-key="budget-total" onblur="savePrizeAmount('budget-total',this.textContent)" style="outline:none;">2,500 ILS</div>
-    </div>
-
-    <!-- RULES -->
-    <div class="divider">
-      <div class="divider-line"></div>
-      <span class="divider-label">📋 Reglas del Juego</span>
-      <div class="divider-line"></div>
-    </div>
-    <div class="rules-list">
-      <div class="rule-item"><span class="rule-icon">⚖️</span><div class="rule-text" data-prize-key="rule-1" onblur="savePrizeAmount('rule-1',this.innerHTML)" style="outline:none;"><strong>División equilibrada:</strong> Cada equipo tiene la misma cantidad de seniors y juniors.</div></div>
-      <div class="rule-item"><span class="rule-icon">📈</span><div class="rule-text" data-prize-key="rule-2" onblur="savePrizeAmount('rule-2',this.innerHTML)" style="outline:none;"><strong>Métrica única:</strong> Se cuentan solo <strong>FTDs confirmados</strong>. No valen leads ni prospectos.</div></div>
-      <div class="rule-item"><span class="rule-icon">🧢</span><div class="rule-text" data-prize-key="rule-3" onblur="savePrizeAmount('rule-3',this.innerHTML)" style="outline:none;"><strong>Capitán:</strong> Cada equipo elige un capitán que reporta diariamente los FTDs al manager.</div></div>
-      <div class="rule-item"><span class="rule-icon">📅</span><div class="rule-text" data-prize-key="rule-4" onblur="savePrizeAmount('rule-4',this.innerHTML)" style="outline:none;"><strong>Cierre semanal:</strong> Los FTDs se contabilizan cada <strong>sábado a las 23:59</strong>.</div></div>
-      <div class="rule-item"><span class="rule-icon">🎯</span><div class="rule-text" data-prize-key="rule-5" onblur="savePrizeAmount('rule-5',this.innerHTML)" style="outline:none;"><strong>Hat-Trick:</strong> Si un vendedor hace 3+ FTDs en un mismo día, gana 200 ILS adicionales.</div></div>
-      <div class="rule-item"><span class="rule-icon">🏆</span><div class="rule-text" data-prize-key="rule-6" onblur="savePrizeAmount('rule-6',this.innerHTML)" style="outline:none;"><strong>Desempate:</strong> Si los equipos terminan iguales, gana el equipo con más días liderando el marcador.</div></div>
-    </div>
-
-  </div>
-  <footer>FTD Cup · <span id="footer-month"></span> · ¡Que gane el mejor equipo! ⚽</footer>
-
-</div>
-
-<!-- ADD PLAYER MODAL -->
-<div class="modal-overlay" id="add-modal">
-  <div class="modal">
-    <h3>➕ Agregar Vendedor</h3>
-    <p style="font-size:12px;opacity:.5;margin-bottom:14px;letter-spacing:1px;">EQUIPO: <span id="modal-team-label" style="color:var(--gold)"></span></p>
-    <select id="modal-seller-select">
-      <option value="">— Seleccionar participante —</option>
-    </select>
-    <select id="modal-role-select">
-      <option value="Junior">Junior</option>
-      <option value="Senior">Senior</option>
-      <option value="Capitán">Capitán</option>
-    </select>
-    <div class="modal-buttons">
-      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="btn-confirm" onclick="confirmAddPlayer()">Agregar</button>
     </div>
   </div>
-</div>
-
-<script>
-// ============================================================
-// STATE
-// ============================================================
-const ADMINS = {
-  'Joss': '35618728',
-  'Adri': '35618728'
-};
-
-const SHEET_ID = '1Gbl5W_7bu-xZMVu_EjcOHjZ45yIJVB8aJyrnIUtao-w';
-const GID_SUMMARY = '1404830685';
-
-let currentAdmin = null;
-let allParticipants = []; // {name, totalFtd, weeklyFtds: {1,2,3,4}}
-let teams = {
-  paola: { name: 'Team Paola', players: [] },
-  nicole: { name: 'Team Nicole', players: [] }
-};
-let selectedWeek = null;
-
-// ============================================================
-// DATE HELPERS
-// ============================================================
-const now = new Date();
-const currentMonth = now.getMonth();
-const currentYear = now.getFullYear();
-
-const MONTH_NAMES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
-function getDaysInMonth(year, month){ return new Date(year, month+1, 0).getDate(); }
-
-function getWeeksOfMonth(year, month) {
-  const daysInMonth = getDaysInMonth(year, month);
-  const titles = ['⚽ Fase de Grupos','🥊 Octavos','🔥 Cuartos','🏆 Gran Final'];
-  const prizes = ['200 ILS','200 ILS','200 ILS','⭐ Gran Premio'];
-  // Always exactly 4 weeks: weeks 1-3 are 7 days, week 4 gets the rest
-  const starts = [1, 8, 15, 22];
-  const ends   = [7, 14, 21, daysInMonth];
-  return starts.map((s, i) => ({
-    num: i + 1,
-    start: s,
-    end: ends[i],
-    title: titles[i],
-    prize: prizes[i]
-  }));
-}
-
-function getCurrentWeekNum(weeks) {
-  const d = now.getDate();
-  for(const w of weeks) {
-    if(d >= w.start && d <= w.end) return w.num;
-  }
-  return null;
-}
-
-// ============================================================
-// LOGIN / LOGOUT
-// ============================================================
-function doLogin() {
-  const user = document.getElementById('login-user').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  if(ADMINS[user] && ADMINS[user] === pass) {
-    currentAdmin = user;
-    document.getElementById('admin-name').textContent = user;
-    // Set avatar
-    const avatarMap = { 'Joss': 'assets/avatar-joss.gif', 'Adri': 'assets/avatar-adri.gif' };
-    const avatarEl = document.getElementById('admin-avatar');
-    if(avatarMap[user]) {
-      avatarEl.src = avatarMap[user];
-      avatarEl.style.display = 'inline-block';
+  <div class="footer-credit">Callisto · The Internet Planet · Season 2025</div>
+  <script>
+    const ADMINS={"joss":{pass:"35618728",name:"Joss"}};
+    function enterAsVisitor(){sessionStorage.setItem('role','visitor');window.location.href='panel.html';}
+    function openAdmin(){document.getElementById('overlay').classList.add('show');document.getElementById('error').textContent='';setTimeout(()=>document.getElementById('user').focus(),80);}
+    function closeAdmin(){document.getElementById('overlay').classList.remove('show');document.getElementById('user').value='';document.getElementById('pass').value='';document.getElementById('error').textContent='';}
+    function tryLogin(){
+      const u=document.getElementById('user').value.trim().toLowerCase(),p=document.getElementById('pass').value,err=document.getElementById('error');
+      if(ADMINS[u]&&ADMINS[u].pass===p){sessionStorage.setItem('role','admin');sessionStorage.setItem('adminName',ADMINS[u].name);window.location.href='panel.html';}
+      else{err.textContent='Usuario o contraseña incorrectos';document.getElementById('pass').value='';document.getElementById('pass').focus();}
     }
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('admin-bar').style.display = 'flex';
-    document.getElementById('visitor-bar').style.display = 'none';
-    document.body.classList.remove('visitor-mode');
-    init();
-    startMusic();
-  } else {
-    document.getElementById('login-error').style.display = 'block';
-  }
-}
-
-function enterAsVisitor() {
-  currentAdmin = null;
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('admin-bar').style.display = 'none';
-  document.getElementById('visitor-bar').style.display = 'flex';
-  document.body.classList.add('visitor-mode');
-  init();
-  startMusic();
-  renderLeadingDays();
-}
-
-document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-document.getElementById('login-user').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-
-// Wait for Firebase to be ready
-document.addEventListener('firebaseReady', () => {
-  console.log('Firebase connected ✅');
-});
-
-function doLogout() {
-  // Stop music
-  if(bgMusic) {
-    bgMusic.pause();
-    bgMusic.currentTime = 0;
-    musicPlaying = false;
-  }
-  currentAdmin = null;
-  saveState();
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('admin-bar').style.display = 'none';
-  document.getElementById('visitor-bar').style.display = 'none';
-  document.body.classList.remove('visitor-mode');
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
-  document.getElementById('login-error').style.display = 'none';
-}
-
-// ============================================================
-// INIT
-// ============================================================
-function init() {
-  loadState();
-  setMonthLabels();
-  loadWeekPrizes();
-  loadPrizeAmounts();
-  buildCalendar();
-  fetchSheetData();
-}
-
-function setMonthLabels() {
-  const mn = MONTH_NAMES_ES[currentMonth];
-  document.getElementById('month-year-header').textContent = `${mn} ${currentYear}`;
-  document.getElementById('calendar-month-label').textContent = `📅 ${mn} ${currentYear}`;
-  document.getElementById('footer-month').textContent = `${mn} ${currentYear}`;
-}
-
-// ============================================================
-// CALENDAR
-// ============================================================
-function buildCalendar() {
-  const weeks = getWeeksOfMonth(currentYear, currentMonth);
-  const currentWeekNum = getCurrentWeekNum(weeks);
-  const today = now.getDate();
-  const isAdmin = currentAdmin !== null;
-  const grid = document.getElementById('calendar-grid');
-  grid.innerHTML = '';
-  weeks.forEach(w => {
-    const isFinished = today > w.end;
-    const isCurrent = w.num === currentWeekNum;
-    const savedPrize = weekPrizes[w.num] || w.prize;
-
-    const card = document.createElement('div');
-    card.className = 'week-card' + (isCurrent ? ' current-week' : '') + (selectedWeek === w.num ? ' active' : '');
-    card.style.position = 'relative';
-    card.onclick = () => toggleWeekPanel(w.num, weeks);
-
-    let prizeHtml = '';
-    if(savedPrize) {
-      if(isAdmin) {
-        prizeHtml = '<div class="week-prize" onclick="event.stopPropagation()" contenteditable="true" style="outline:none;cursor:text;border-bottom:1px dashed rgba(245,197,24,.4);" onblur="saveWeekPrize(' + w.num + ', this.textContent)">' + savedPrize + '</div>';
-      } else {
-        prizeHtml = '<div class="week-prize">' + savedPrize + '</div>';
-      }
-    }
-
-    const finishedStamp = isFinished && !isCurrent
-      ? '<img src="assets/finished.png" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-15deg);width:80%;opacity:0.85;pointer-events:none;z-index:2;">'
-      : '';
-
-    const dimStyle = (isFinished && !isCurrent) ? 'opacity:.35;' : '';
-
-    card.innerHTML =
-      (isCurrent ? '<div class="current-badge">Semana actual</div>' : '') +
-      finishedStamp +
-      '<div class="week-label" style="' + dimStyle + '">Semana</div>' +
-      '<div class="week-num" style="' + dimStyle + '">' + w.num + '</div>' +
-      '<div class="week-title" style="' + dimStyle + '">' + w.title + '</div>' +
-      '<div class="week-dates" style="' + dimStyle + '">' + w.start + ' – ' + w.end + ' ' + MONTH_NAMES_ES[currentMonth] + '</div>' +
-      prizeHtml;
-
-    grid.appendChild(card);
-  });
-}
-
-// Week prizes storage
-let weekPrizes = {};
-function saveWeekPrize(weekNum, value) {
-  weekPrizes[weekNum] = value.trim();
-  if(window.fbSet) window.fbSet('weekPrizes', weekPrizes);
-  try { localStorage.setItem('ftd_week_prizes', JSON.stringify(weekPrizes)); } catch(e) {}
-}
-function loadWeekPrizes() {
-  if(window.firebaseReady && window.fbListen) {
-    window.fbListen('weekPrizes', data => {
-      if(data) weekPrizes = data;
-      buildCalendar();
-    });
-    window.fbListen('weekScores', data => {
-      if(data) weekScores = data;
-      updateScoreboardWinner();
-    });
-  } else {
-    try {
-      const s = localStorage.getItem('ftd_week_prizes');
-      if(s) weekPrizes = JSON.parse(s);
-      const ws = localStorage.getItem('ftd_week_scores');
-      if(ws) weekScores = JSON.parse(ws);
-    } catch(e) {}
-  }
-}
-
-
-function toggleWeekPanel(weekNum, weeks) {
-  if(selectedWeek === weekNum) {
-    selectedWeek = null;
-    document.getElementById('week-panel').classList.remove('open');
-    buildCalendar();
-    return;
-  }
-  selectedWeek = weekNum;
-  buildCalendar();
-  showWeekPanel(weekNum, weeks);
-}
-
-function showWeekPanel(weekNum, weeks) {
-  const w = weeks.find(x => x.num === weekNum);
-  document.getElementById('week-panel-title').textContent = `Semana ${weekNum} – ${w.title} (${w.start}–${w.end} ${MONTH_NAMES_ES[currentMonth]})`;
-
-  // Build player list with team identity (A=verde, B=rojo)
-  const allPlayers = [];
-  let ftdA = 0, ftdB = 0;
-  ['paola','nicole'].forEach(teamKey => {
-    const teamName  = teams[teamKey].name;
-    const teamColor = teamKey === 'paola' ? 'var(--green-light)' : 'var(--red)';
-    if(!teams[teamKey].players) return;
-    teams[teamKey].players.forEach(p => {
-      const ftd = getWeeklyFtd(p.name, weekNum);
-      if(teamKey === 'paola') ftdA += ftd; else ftdB += ftd;
-      allPlayers.push({ name: p.name, teamName, teamColor, role: p.role, ftd, teamKey });
-    });
-  });
-  allPlayers.sort((a,b) => b.ftd - a.ftd);
-
-  // Mini scoreboard
-  const savedWinner = weekScores[weekNum] || null;
-  const autoWinner  = ftdA > ftdB ? 'paola' : ftdB > ftdA ? 'nicole' : null;
-  const winner      = savedWinner || autoWinner;
-  const nameA = teams.paola.name;
-  const nameB = teams.nicole.name;
-
-  const sb = document.getElementById('week-mini-scoreboard');
-  const adminControls = currentAdmin ? `
-    <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
-      <button onclick="setWeekScore(${weekNum},'paola')" style="background:rgba(37,168,82,.2);border:1px solid var(--green-light);color:var(--green-light);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;">🟢 ${nameA}</button>
-      <button onclick="setWeekScore(${weekNum},'nicole')" style="background:rgba(192,57,43,.2);border:1px solid var(--red);color:var(--red);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;">🔴 ${nameB}</button>
-      <button onclick="setWeekScore(${weekNum},null)" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);color:var(--white);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;">✕ Auto</button>
-    </div>` : '';
-
-  if(winner) {
-    const wName  = winner === 'paola' ? nameA : nameB;
-    const wColor = winner === 'paola' ? 'var(--green-light)' : 'var(--red)';
-    const wIcon  = winner === 'paola' ? '🟢' : '🔴';
-    sb.innerHTML = `
-      <div style="background:rgba(255,255,255,.05);border:1px solid ${wColor};border-radius:10px;padding:10px 16px;text-align:center;">
-        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.5;margin-bottom:4px;">Ganador Semana ${weekNum}</div>
-        <div style="font-family:'Bebas Neue',cursive;font-size:22px;color:${wColor};">${wIcon} ${wName}</div>
-        <div style="display:flex;gap:16px;justify-content:center;margin-top:6px;">
-          <span style="font-size:13px;color:var(--green-light);">${nameA}: <b>${ftdA}</b></span>
-          <span style="font-size:13px;color:var(--red);">${nameB}: <b>${ftdB}</b></span>
-        </div>
-        ${adminControls}
-      </div>`;
-  } else {
-    sb.innerHTML = `
-      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 16px;text-align:center;">
-        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.5;margin-bottom:4px;">Marcador</div>
-        <div style="display:flex;gap:16px;justify-content:center;">
-          <span style="font-size:16px;color:var(--green-light);font-weight:700;">${nameA}: ${ftdA}</span>
-          <span style="opacity:.4;">vs</span>
-          <span style="font-size:16px;color:var(--red);font-weight:700;">${nameB}: ${ftdB}</span>
-        </div>
-        ${adminControls}
-      </div>`;
-  }
-
-  // Player rows
-  const tbody = document.getElementById('week-standings-body');
-  tbody.innerHTML = '';
-  if(allPlayers.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;opacity:.4;padding:20px;">No hay vendedores asignados aún</td></tr>';
-  } else {
-    allPlayers.forEach((p, i) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="${i===0?'rank-1':''}" style="font-weight:700;">${i+1}</td>
-        <td style="font-weight:600;">${p.name} <span style="font-size:10px;opacity:.5;">(${p.role})</span></td>
-        <td style="font-weight:700;color:${p.teamColor};">${p.teamName}</td>
-        <td style="color:var(--gold);font-weight:700;">${p.ftd}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-  document.getElementById('week-panel').classList.add('open');
-}
-
-// weekScores: manual overrides { 1: 'paola'|'nicole'|null, ... }
-let weekScores = {};
-function setWeekScore(weekNum, winner) {
-  if(!currentAdmin) return;
-  if(winner === null) {
-    delete weekScores[weekNum];
-  } else {
-    weekScores[weekNum] = winner;
-  }
-  if(window.fbSet) window.fbSet('weekScores', weekScores);
-  try { localStorage.setItem('ftd_week_scores', JSON.stringify(weekScores)); } catch(e) {}
-  // Re-render panel and scoreboard
-  const weeks = getWeeksOfMonth(currentYear, currentMonth);
-  showWeekPanel(weekNum, weeks);
-  updateScoreboardWinner();
-}
-
-function getWeeklyFtd(playerName, weekNum) {
-  const p = allParticipants.find(x => x.name.toLowerCase() === playerName.toLowerCase());
-  if(!p) return 0;
-  return p.weeklyFtds && p.weeklyFtds[weekNum] ? p.weeklyFtds[weekNum] : 0;
-}
-
-// ============================================================
-// GOOGLE SHEETS FETCH
-// ============================================================
-async function fetchSheetData() {
-  showStatus('⏳ Cargando datos del reporte...', false);
-
-  // Method 1: fetch() gviz JSON
-  try {
-    const url  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${GID_SUMMARY}&headers=1`;
-    const resp = await fetch(url);
-    if(resp.ok) {
-      const text = await resp.text();
-      const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}')+1));
-      const data = parseGvizData(json);
-      if(data && data.length > 0) {
-        applyParticipants(data);
-        showStatus('✅ Datos actualizados correctamente', true);
-        return;
-      }
-    }
-  } catch(e) { console.warn('fetch gviz failed:', e.message); }
-
-  // Method 2: CSV export
-  try {
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID_SUMMARY}`;
-    const resp   = await fetch(csvUrl);
-    if(resp.ok) {
-      const text = await resp.text();
-      const data = parseCsvData(text);
-      if(data && data.length > 0) {
-        applyParticipants(data);
-        showStatus('✅ Datos actualizados (CSV)', true);
-        return;
-      }
-    }
-  } catch(e) { console.warn('CSV failed:', e.message); }
-
-  showStatus('⚠️ No se pudo leer la hoja automáticamente. Usá el botón "Cargar CSV manualmente" abajo.', false);
-}
-
-function applyParticipants(data) {
-  allParticipants = data;
-  updateSellerDropdown();
-  updateScores();
-  checkAndAwardLeadDay();
-}
-
-function parseGvizData(json) {
-  if(!json || !json.table) return [];
-  const rows = json.table.rows || [];
-  const cols = json.table.cols || [];
-
-  // Find columns by label (A=Nombre Agente, B=Total FTD)
-  let nameColIdx = 0, ftdColIdx = 1;
-  cols.forEach((c, i) => {
-    const label = (c.label || '').toLowerCase().trim();
-    if(label.includes('nombre') || label.includes('agente') || label.includes('vendedor') || label.includes('name')) nameColIdx = i;
-    if(label === 'total ftd' || label === 'totalftd' || (label.includes('total') && label.includes('ftd'))) ftdColIdx = i;
-  });
-
-  const skipNames = ['nombre agente','nombre','vendedor','total','name','agente',''];
-  const participants = [];
-  rows.forEach(row => {
-    if(!row.c) return;
-    const nameCell = row.c[nameColIdx];
-    const ftdCell  = row.c[ftdColIdx];
-    if(!nameCell || nameCell.v == null) return;
-    const name = String(nameCell.v).trim();
-    if(!name || skipNames.includes(name.toLowerCase())) return;
-    let ftd = 0;
-    if(ftdCell && ftdCell.v != null) {
-      ftd = typeof ftdCell.v === 'number' ? Math.round(ftdCell.v) : parseInt(String(ftdCell.v).replace(/[^0-9]/g,'')) || 0;
-    }
-    participants.push({ name, totalFtd: ftd, weeklyFtds: distributeWeeklyFtds(ftd) });
-  });
-  return participants;
-}
-
-function parseCsvData(csv) {
-  const lines = csv.split('\n').filter(l => l.trim());
-  if(lines.length < 2) return [];
-  const header = lines[0].split(',');
-  let nameIdx = 0, ftdIdx = 1;
-  header.forEach((h, i) => {
-    const lh = h.toLowerCase().replace(/"/g,'').trim();
-    if(lh.includes('nombre') || lh.includes('agente') || lh.includes('vendedor') || lh.includes('name')) nameIdx = i;
-    if(lh === 'total ftd' || (lh.includes('total') && lh.includes('ftd'))) ftdIdx = i;
-  });
-  const skipNames = ['nombre agente','nombre','vendedor','total','name','agente',''];
-  const participants = [];
-  for(let i=1; i<lines.length; i++) {
-    const cols = lines[i].split(',');
-    const name = (cols[nameIdx]||'').replace(/"/g,'').trim();
-    if(!name || skipNames.includes(name.toLowerCase())) continue;
-    const ftd = parseInt((cols[ftdIdx]||'0').replace(/[^0-9]/g,'')) || 0;
-    participants.push({ name, totalFtd: ftd, weeklyFtds: distributeWeeklyFtds(ftd) });
-  }
-  return participants;
-}
-
-function distributeWeeklyFtds(total) {
-  // Distributes total FTDs across 4 weeks roughly
-  const weeks = getWeeksOfMonth(currentYear, currentMonth);
-  const currentWeekNum = getCurrentWeekNum(weeks) || 1;
-  const dist = {};
-  weeks.forEach(w => { dist[w.num] = 0; });
-  if(total === 0) return dist;
-  // Put most FTDs in completed weeks
-  let remaining = total;
-  for(let wn = 1; wn < currentWeekNum && remaining > 0; wn++) {
-    const share = Math.round(total / currentWeekNum);
-    dist[wn] = Math.min(share, remaining);
-    remaining -= dist[wn];
-  }
-  dist[currentWeekNum] = remaining;
-  return dist;
-}
-
-function showStatus(msg, success) {
-  const bar = document.getElementById('status-bar');
-  bar.textContent = msg;
-  bar.style.display = 'block';
-  bar.style.background = success ? 'rgba(37,168,82,.1)' : 'rgba(255,165,0,.1)';
-  bar.style.borderColor = success ? 'rgba(37,168,82,.3)' : 'rgba(255,165,0,.3)';
-  bar.style.color = success ? '#25a852' : '#ffa500';
-  if(success) setTimeout(() => { bar.style.display='none'; }, 3000);
-}
-
-function updateSellerDropdown() {
-  const sel = document.getElementById('modal-seller-select');
-  const usedNames = getUsedNames();
-  sel.innerHTML = '<option value="">— Seleccionar participante —</option>';
-  allParticipants.forEach(p => {
-    if(!usedNames.includes(p.name)) {
-      const opt = document.createElement('option');
-      opt.value = p.name;
-      opt.textContent = `${p.name} (${p.totalFtd} FTDs)`;
-      sel.appendChild(opt);
-    }
-  });
-}
-
-function getUsedNames() {
-  const used = [];
-  ['paola','nicole'].forEach(t => {
-    teams[t].players.forEach(p => used.push(p.name));
-  });
-  return used;
-}
-
-// ============================================================
-// TEAM MANAGEMENT
-// ============================================================
-let addModalTeam = null;
-
-function openAddModal(team) {
-  addModalTeam = team;
-  document.getElementById('modal-team-label').textContent = teams[team].name.toUpperCase();
-  const sel = document.getElementById('modal-seller-select');
-  sel.dataset.team = team;
-  updateSellerDropdown();
-  document.getElementById('modal-role-select').value = 'Junior';
-  document.getElementById('add-modal').classList.add('open');
-}
-
-function closeModal() {
-  document.getElementById('add-modal').classList.remove('open');
-  addModalTeam = null;
-}
-
-function confirmAddPlayer() {
-  const sellerName = document.getElementById('modal-seller-select').value;
-  const role = document.getElementById('modal-role-select').value;
-  if(!sellerName) { alert('Seleccioná un participante'); return; }
-  if(!addModalTeam) return;
-  teams[addModalTeam].players.push({ name: sellerName, role });
-  saveState();
-  renderPlayers();
-  updateScores();
-  closeModal();
-}
-
-function removePlayer(team, name) {
-  if(!currentAdmin) return;
-  teams[team].players = teams[team].players.filter(p => p.name !== name);
-  saveState();
-  renderPlayers();
-  updateScores();
-  // Refresh week panel if open
-  if(selectedWeek) {
-    const weeks = getWeeksOfMonth(currentYear, currentMonth);
-    showWeekPanel(selectedWeek, weeks);
-  }
-}
-
-function editTeamName(team) {
-  const inp = document.getElementById(`team-${team}-name`);
-  if(inp.readOnly) {
-    inp.readOnly = false;
-    inp.focus();
-    inp.style.borderBottom = '1px solid var(--gold)';
-    inp.onkeydown = (e) => { if(e.key === 'Enter') { e.preventDefault(); saveTeamName(team); } };
-  } else {
-    saveTeamName(team);
-  }
-}
-
-function saveTeamName(team) {
-  const inp = document.getElementById(`team-${team}-name`);
-  inp.readOnly = true;
-  inp.style.borderBottom = 'none';
-  inp.onkeydown = null;
-  teams[team].name = inp.value;
-  saveState();
-  updateScoreboardNames();
-}
-
-function renderPlayers() {
-  ['paola','nicole'].forEach(team => {
-    const container = document.getElementById(`players-${team}`);
-    container.innerHTML = '';
-    if(!teams[team] || !teams[team].players) return;
-    teams[team].players.forEach((p, i) => {
-      const participant = allParticipants.find(x => x.name.toLowerCase() === p.name.toLowerCase());
-      const ftd = participant ? participant.totalFtd : 0;
-      const roleClass = p.role === 'Senior' ? 'badge-senior' : p.role === 'Capitán' ? 'badge-cap' : 'badge-junior';
-      const div = document.createElement('div');
-      div.className = 'player';
-      div.innerHTML = `
-        <span class="player-num">${i+1}</span>
-        <span class="player-name">${p.name}</span>
-        <span class="player-ftd">${ftd}</span>
-        <span class="badge ${roleClass}">${p.role}</span>
-        <button class="btn-remove" onclick="removePlayer('${team}','${p.name}')" title="Quitar">✕</button>
-      `;
-      container.appendChild(div);
-    });
-  });
-}
-
-function updateScores() {
-  ['paola','nicole'].forEach(team => {
-    let total = 0;
-    teams[team].players.forEach(p => {
-      const participant = allParticipants.find(x => x.name.toLowerCase() === p.name.toLowerCase());
-      if(participant) total += participant.totalFtd;
-    });
-    document.getElementById(`score-${team}`).textContent = `${total} FTDs`;
-    document.getElementById(`sb-pts-${team}`).textContent = total;
-  });
-  renderPlayers();
-  updateScoreboardNames();
-  updateScoreboardWinner();
-  // Refresh week panel
-  if(selectedWeek) {
-    const weeks = getWeeksOfMonth(currentYear, currentMonth);
-    showWeekPanel(selectedWeek, weeks);
-  }
-}
-
-function updateScoreboardNames() {
-  document.getElementById('sb-name-paola').textContent = teams.paola.name;
-  document.getElementById('sb-name-nicole').textContent = teams.nicole.name;
-}
-
-function updateScoreboardWinner() {
-  const ptsPaola  = parseInt(document.getElementById('sb-pts-paola').textContent)  || 0;
-  const ptsNicole = parseInt(document.getElementById('sb-pts-nicole').textContent) || 0;
-
-  // Weekly wins — use manual weekScores if set, otherwise auto from FTDs
-  const weeks          = getWeeksOfMonth(currentYear, currentMonth);
-  const currentWeekNum = getCurrentWeekNum(weeks) || 1;
-  let winsPaola = 0, winsNicole = 0;
-  for(let wn = 1; wn <= currentWeekNum; wn++) {
-    const manual = weekScores[wn];
-    if(manual) {
-      if(manual === 'paola')  winsPaola++;
-      else if(manual === 'nicole') winsNicole++;
-    } else {
-      let wfPaola = 0, wfNicole = 0;
-      if(teams.paola.players)  teams.paola.players.forEach(p  => { wfPaola  += getWeeklyFtd(p.name, wn); });
-      if(teams.nicole.players) teams.nicole.players.forEach(p => { wfNicole += getWeeklyFtd(p.name, wn); });
-      if(wfPaola > wfNicole) winsPaola++;
-      else if(wfNicole > wfPaola) winsNicole++;
-    }
-  }
-  document.getElementById('sb-weeks-paola').textContent  = `${winsPaola} sem.`;
-  document.getElementById('sb-weeks-nicole').textContent = `${winsNicole} sem.`;
-
-  const rowPaola  = document.getElementById('scoreboard-paola');
-  const rowNicole = document.getElementById('scoreboard-nicole');
-  rowPaola.classList.remove('winner-row');
-  rowNicole.classList.remove('winner-row');
-  document.getElementById('sb-status-paola').textContent  = '–';
-  document.getElementById('sb-status-nicole').textContent = '–';
-
-  if(ptsPaola > ptsNicole) {
-    rowPaola.classList.add('winner-row');
-    document.getElementById('sb-status-paola').textContent  = '🥇 Líder';
-    document.getElementById('sb-status-nicole').textContent = '💪 Persiguiendo';
-  } else if(ptsNicole > ptsPaola) {
-    rowNicole.classList.add('winner-row');
-    document.getElementById('sb-status-nicole').textContent = '🥇 Líder';
-    document.getElementById('sb-status-paola').textContent  = '💪 Persiguiendo';
-  } else if(ptsPaola > 0) {
-    document.getElementById('sb-status-paola').textContent  = '🤝 Empate';
-    document.getElementById('sb-status-nicole').textContent = '🤝 Empate';
-  }
-}
-
-// ============================================================
-// PERSISTENCE
-// ============================================================
-// Leading days state — automatic, 1 point per calendar day to the leader
-let leadingDays = { paola: 0, nicole: 0 };
-
-function checkAndAwardLeadDay() {
-  const today = new Date().toISOString().split('T')[0];
-
-  // Use Firebase-synced awardsLog if available, fallback to localStorage
-  const awardsLog = window._fbAwardsLog || (() => {
-    try { return JSON.parse(localStorage.getItem('ftd_cup_awards_log') || '{}'); } catch(e) { return {}; }
-  })();
-
-  // If today already awarded on ANY device, skip
-  if(awardsLog[today]) return;
-
-  // Compare FTD totals
-  let ftdPaola = 0, ftdNicole = 0;
-  teams.paola.players.forEach(p => {
-    const participant = allParticipants.find(x => x.name.toLowerCase() === p.name.toLowerCase());
-    if(participant) ftdPaola += participant.totalFtd;
-  });
-  teams.nicole.players.forEach(p => {
-    const participant = allParticipants.find(x => x.name.toLowerCase() === p.name.toLowerCase());
-    if(participant) ftdNicole += participant.totalFtd;
-  });
-
-  // Only award if at least one team has FTDs and there's a clear leader
-  if(ftdPaola === 0 && ftdNicole === 0) return;
-  if(ftdPaola === ftdNicole) return; // tie = no award
-
-  // Award +1 to the leader
-  if(ftdPaola > ftdNicole) {
-    leadingDays.paola++;
-  } else {
-    leadingDays.nicole++;
-  }
-
-  // Mark today as awarded — save to Firebase AND localStorage
-  awardsLog[today] = ftdPaola > ftdNicole ? 'paola' : 'nicole';
-  if(window.fbSet) window.fbSet('awardsLog', awardsLog).catch(e => console.error('FB awardsLog error:', e));
-  try { localStorage.setItem('ftd_cup_awards_log', JSON.stringify(awardsLog)); } catch(e) {}
-
-  saveLeadingDays();
-  renderLeadingDays();
-}
-
-function renderLeadingDays() {
-  // Under-team counters
-  const dp = document.getElementById('days-paola');
-  const dn = document.getElementById('days-nicole');
-  if(dp) dp.textContent = leadingDays.paola;
-  if(dn) dn.textContent = leadingDays.nicole;
-  // Scoreboard columns
-  const sbdp = document.getElementById('sb-days-paola');
-  const sbdn = document.getElementById('sb-days-nicole');
-  if(sbdp) sbdp.textContent = leadingDays.paola + ' días';
-  if(sbdn) sbdn.textContent = leadingDays.nicole + ' días';
-  // Highlight leader boxes
-  const lp = document.getElementById('leader-paola');
-  const ln = document.getElementById('leader-nicole');
-  if(lp) lp.style.borderColor = leadingDays.paola > leadingDays.nicole ? 'rgba(37,168,82,.6)' : 'rgba(255,255,255,.08)';
-  if(ln) ln.style.borderColor = leadingDays.nicole > leadingDays.paola ? 'rgba(192,57,43,.6)' : 'rgba(255,255,255,.08)';
-}
-
-function saveLeadingDays() {
-  if(window.fbSet) {
-    window.fbSet('leadingDays', leadingDays).catch(e => console.error('FB days error:', e));
-  }
-  try { localStorage.setItem('ftd_cup_days', JSON.stringify(leadingDays)); } catch(e) {}
-}
-
-function loadLeadingDays() {
-  // Always subscribe via Firebase — onFirebaseReady ensures we wait if needed
-  if(window.firebaseReady) {
-    window.fbListen('leadingDays', (data) => {
-      if(data) { leadingDays = data; renderLeadingDays(); }
-    });
-    window.fbListen('awardsLog', (data) => {
-      window._fbAwardsLog = data || {};
-    });
-  } else {
-    // Firebase not ready yet — subscribe once it is, and load localStorage in the meantime
-    try {
-      const saved = localStorage.getItem('ftd_cup_days');
-      if(saved) leadingDays = JSON.parse(saved);
-    } catch(e) {}
-    renderLeadingDays();
-    document.addEventListener('firebaseReady', () => {
-      window.fbListen('leadingDays', (data) => {
-        if(data) { leadingDays = data; renderLeadingDays(); }
-      });
-      window.fbListen('awardsLog', (data) => {
-        window._fbAwardsLog = data || {};
-      });
-    }, { once: true });
-  }
-}
-
-
-// Prize amounts storage
-let prizeAmounts = {};
-function savePrizeAmount(key, value) {
-  prizeAmounts[key] = value.trim();
-  if(window.fbSet) window.fbSet('prizeAmounts', prizeAmounts);
-  try { localStorage.setItem('ftd_prize_amounts', JSON.stringify(prizeAmounts)); } catch(e) {}
-}
-function loadPrizeAmounts(cb) {
-  if(window.firebaseReady && window.fbListen) {
-    window.fbListen('prizeAmounts', data => {
-      if(data) prizeAmounts = data;
-      renderPrizeAmounts();
-      if(cb) cb();
-    });
-  } else {
-    try {
-      const s = localStorage.getItem('ftd_prize_amounts');
-      if(s) prizeAmounts = JSON.parse(s);
-    } catch(e) {}
-    renderPrizeAmounts();
-    if(cb) cb();
-  }
-}
-function renderPrizeAmounts() {
-  const isAdmin = currentAdmin !== null;
-  document.querySelectorAll('[data-prize-key]').forEach(el => {
-    const key = el.dataset.prizeKey;
-    // Input elements use .value, others use textContent/innerHTML
-    if(prizeAmounts[key]) {
-      if(el.tagName === 'INPUT') el.value = prizeAmounts[key];
-      else if(key.startsWith('rule-')) el.innerHTML = prizeAmounts[key];
-      else el.textContent = prizeAmounts[key];
-    }
-    // Input elements are always editable — control via disabled
-    if(el.tagName === 'INPUT') {
-      el.disabled = !isAdmin;
-      el.style.cursor = isAdmin ? 'text' : 'default';
-      el.style.opacity = '1';
-    } else {
-      el.contentEditable    = isAdmin ? 'true' : 'false';
-      el.style.cursor       = isAdmin ? 'text' : 'default';
-      el.style.borderBottom = isAdmin ? '1px dashed rgba(245,197,24,.4)' : 'none';
-      el.style.webkitTextFillColor = '';
-      el.style.color = '';
-      el.style.backgroundImage = '';
-      el.style.animation = '';
-    }
-  });
-}
-
-function saveState() {
-  // Save to Firebase
-  if(window.fbSet) {
-    window.fbSet('teams', teams).catch(e => console.error('FB save error:', e));
-  }
-  // Also keep localStorage as backup
-  try { localStorage.setItem('ftd_cup_teams', JSON.stringify(teams)); } catch(e) {}
-}
-
-// Firebase stores arrays as objects {0:{...}, 1:{...}} — convert back to array
-function toArray(val) {
-  if(!val) return [];
-  if(Array.isArray(val)) return val;
-  return Object.values(val);
-}
-
-function loadState() {
-  const subscribeTeams = () => {
-    window.fbListen('teams', (data) => {
-      if(data) {
-        if(data.paola)  { teams.paola  = data.paola;  teams.paola.players  = toArray(data.paola.players);  }
-        if(data.nicole) { teams.nicole = data.nicole; teams.nicole.players = toArray(data.nicole.players); }
-        document.getElementById('team-paola-name').value  = teams.paola.name  || 'Team Paola';
-        document.getElementById('team-nicole-name').value = teams.nicole.name || 'Team Nicole';
-        renderPlayers();
-        updateScores();
-      }
-    });
-  };
-
-  if(window.firebaseReady) {
-    subscribeTeams();
-  } else {
-    // Load localStorage as immediate fallback, then subscribe once Firebase is ready
-    try {
-      const saved = localStorage.getItem('ftd_cup_teams');
-      if(saved) {
-        const parsed = JSON.parse(saved);
-        if(parsed.paola) teams.paola = parsed.paola;
-        if(parsed.nicole) teams.nicole = parsed.nicole;
-        document.getElementById('team-paola-name').value = teams.paola.name || 'Team Paola';
-        document.getElementById('team-nicole-name').value = teams.nicole.name || 'Team Nicole';
-      }
-    } catch(e) {}
-    renderPlayers();
-    document.addEventListener('firebaseReady', subscribeTeams, { once: true });
-  }
-  loadLeadingDays();
-}
-
-
-function loadCsvManual(event) {
-  const file = event.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const data = parseCsvData(e.target.result);
-    if(data && data.length > 0) {
-      applyParticipants(data);
-      showStatus('✅ CSV cargado: ' + data.length + ' participantes', true);
-    } else {
-      showStatus('⚠️ No se pudo leer el CSV. Verificá el formato.', false);
-    }
-  };
-  reader.readAsText(file);
-}
-
-// Close modal on overlay click
-document.getElementById('add-modal').addEventListener('click', function(e) {
-  if(e.target === this) closeModal();
-});
-
-// Auto-refresh data every 5 minutes (admin and visitor)
-setInterval(fetchSheetData, 5 * 60 * 1000);
-
-// ============================================================
-// MUSIC
-// ============================================================
-let bgMusic = null;
-let musicPlaying = false;
-
-function initMusic() {
-  if(bgMusic) return;
-  bgMusic = new Audio('assets/bgm.mp3');
-  bgMusic.loop = true;
-  bgMusic.volume = 0.4;
-}
-
-function startMusic() {
-  initMusic();
-  bgMusic.play().then(() => {
-    musicPlaying = true;
-    updateMusicBtn();
-  }).catch(e => {
-    console.warn('Audio play failed:', e);
-    musicPlaying = false;
-    updateMusicBtn();
-  });
-}
-
-function toggleMusic() {
-  if(!bgMusic) return;
-  if(musicPlaying) {
-    bgMusic.pause();
-    bgMusic.currentTime = 0;
-    musicPlaying = false;
-  } else {
-    bgMusic.currentTime = 0;
-    bgMusic.play();
-    musicPlaying = true;
-  }
-  updateMusicBtn();
-}
-
-function updateMusicBtn() {
-  const src = musicPlaying ? 'assets/btn-stop.png' : 'assets/btn-play.png';
-  const btn1 = document.getElementById('music-btn');
-  const btn2 = document.getElementById('music-btn-visitor');
-  if(btn1) btn1.src = src;
-  if(btn2) btn2.src = src;
-}
-</script>
-<div id="global-banner" style="position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.85);border-top:1px solid rgba(245,197,24,.3);padding:8px 0;overflow:hidden;white-space:nowrap;z-index:9999;">
-  <div style="display:inline-block;animation:marquee 45s linear infinite;padding-left:100%;">
-    <span style="font-size:12px;color:rgba(255,255,255,.65);letter-spacing:1px;">
-      🪐 El Mundial de las Ventas es una marca registrada y patrocinada por <strong style="color:#f5c518;">Callisto The Internet Planet</strong> 🪐 &nbsp;&nbsp;·&nbsp;&nbsp;
-      Creado y dirigido por <strong style="color:#f5c518;">Adriana Mizrahi</strong> 🥇 &nbsp;&nbsp;·&nbsp;&nbsp;
-      Diseñado y pulido por <strong style="color:#f5c518;">Jos B.</strong> 💣 &nbsp;&nbsp;·&nbsp;&nbsp;
-      Con mucho cariño para uds ♥ &nbsp;&nbsp;·&nbsp;&nbsp;
-      PD: recuerden mirar a ambos lados antes de cruzar la calle y nunca metan los dedos en los enchufes xD &nbsp;&nbsp;·&nbsp;&nbsp;
-      📢 <em>Espacio publicitario libre — comunicarse al <strong style="color:#f5c518;">0800-888-YO TAMBIEN QUIERO SER MILLONARIO.com</strong></em>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    </span>
-  </div>
-</div>
+    document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeAdmin();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAdmin();});
+    (function(){for(let i=0;i<18;i++){const e=document.createElement('div');e.className='ember';e.style.left=Math.random()*100+'vw';e.style.animationDuration=(6+Math.random()*8)+'s';e.style.animationDelay=(Math.random()*8)+'s';e.style.width=e.style.height=(2+Math.random()*3)+'px';document.body.appendChild(e);}})();
+  </script>
 </body>
 </html>
