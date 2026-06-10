@@ -365,8 +365,7 @@
       <!-- ═══ FIXTURES ═══ -->
       <div class="page" id="pg-fixtures">
         <div class="fx-controls" id="fxControls" style="display:none">
-          <button class="btn" onclick="addFixture('poolA')">+ Partido Pool A</button>
-          <button class="btn" onclick="addFixture('poolB')">+ Partido Pool B</button>
+          <button class="btn" onclick="loadScheduleFromSheet()" id="btnRefreshFx">🔄 Actualizar partidos</button>
         </div>
 
         <!-- MATCH CAROUSEL -->
@@ -552,7 +551,7 @@ if(isAdmin){
   document.getElementById('addTeamA').style.display = 'inline-block';
   document.getElementById('addTeamB').style.display = 'inline-block';
   document.getElementById('adminHintTeams').textContent = '✎ Modo admin: hacé click en nombre o bandera de un equipo para editar. Doble click en una fila para eliminar el equipo.';
-  document.getElementById('adminHintFx').textContent = '✎ Modo admin: editá los goles con click. Click en el estado para ciclar Próximo → En vivo → Finalizado. Las posiciones se recalculan solas con los partidos Finalizados.';
+  document.getElementById('adminHintFx').textContent = '✎ Modo admin: click en una bandera del detalle para cambiarla. Los partidos se cargan automáticamente del Google Sheet.';
   document.getElementById('adminHintAw').textContent = '✎ Modo admin: click en "Por definir" o en los montos para editar.';
   document.getElementById('adminHintRl').textContent = '✎ Modo admin: click en el texto de reglas para editarlo.';
 }
@@ -596,22 +595,20 @@ function toast(msg){
 ───────────────────────────────────────────── */
 const SEED_TEAMS = {
   poolA: {
-    t1:{name:'FTD BG IT', flag:'🇮🇹'},
-    t2:{name:'FTD BG ES', flag:'🇪🇸'},
-    t3:{name:'FTD BG EN', flag:'🇬🇧'},
-    t4:{name:'FTD IL ES', flag:'🇮🇱'},
-    t5:{name:'FTD BS ES', flag:'🏳️'},
-    t6:{name:'FTD MADA FR', flag:'🇲🇬'},
-    t7:{name:'FTD IL FR', flag:'🇫🇷'}
+    t1:{name:'FTD BG IT', flag:'🏳️'},
+    t2:{name:'FTD BG ES', flag:'🏳️'},
+    t3:{name:'FTD BG EN', flag:'🏳️'},
+    t4:{name:'FTD BG Canva', flag:'🏳️'},
+    t5:{name:'FTD IL ES', flag:'🏳️'},
+    t6:{name:'FTD BS ES', flag:'🏳️'},
+    t7:{name:'FTD MADA1-3-4 FR', flag:'🏳️'},
+    t8:{name:'FTD IL FR', flag:'🏳️'}
   },
   poolB: {
-    t1:{name:'RET BG IT', flag:'🇮🇹'},
-    t2:{name:'RET BG ES', flag:'🇪🇸'},
-    t3:{name:'RET BG EN', flag:'🇬🇧'},
-    t4:{name:'RET IL ES', flag:'🇮🇱'},
-    t5:{name:'RET IL FR', flag:'🇫🇷'},
-    t6:{name:'RET BS ES', flag:'🏳️'},
-    t7:{name:'RET — Por definir', flag:'🏳️'}
+    t1:{name:'RET BG', flag:'🏳️'},
+    t2:{name:'RET IL ES', flag:'🏳️'},
+    t3:{name:'RET IL FR', flag:'🏳️'},
+    t4:{name:'RET BS ES', flag:'🏳️'}
   }
 };
 
@@ -699,149 +696,241 @@ function addTeam(pool){
 }
 
 /* ─────────────────────────────────────────────
-   FIXTURES — CAROUSEL + MATCH DETAIL
+   FIXTURES — AUTO-LOADED FROM GOOGLE SHEETS
 ───────────────────────────────────────────── */
-const ST_CYCLE = {upcoming:'live', live:'done', done:'upcoming'};
-const ST_LABEL = {upcoming:'Próximo', live:'En vivo', done:'Final'};
-const ST_CLASS = {upcoming:'st-up', live:'st-live', done:'st-done'};
-
 const SHEET_ID = '1ATNJGBhXhUPNWX0Ok7EXOdvIDSY0HG2GA61k57mt4J8';
-let SHEET_DATA = {}; // cached player data per team tab
+let SHEET_DATA = {};
+let SCHEDULE = []; // all parsed matches from both pools
 let carouselIndex = 0;
 let carouselTimer = null;
-let allFixtureKeys = []; // flat list of {pool, id} for carousel
 
-/* Build short name from team name (e.g. "FTD BG IT" → "BG IT") */
-function shortName(name){ return (name||'').replace(/^(FTD|RET)\s*/i,'').trim() || name; }
+function shortName(name){ return (name||'').replace(/^(FTD|RET)\s*/i,'').replace(/MADA1?-?3?-?4?\s*/i,'MADA ').trim() || name; }
 
-/* Fetch players from a Google Sheet tab */
-function fetchSheetTab(tabName){
+/* Find team flag from Firebase TEAMS by matching name */
+function findFlag(teamName){
+  const clean = (teamName||'').trim().toUpperCase();
+  for(const pool of ['poolA','poolB']){
+    for(const id of Object.keys(TEAMS[pool]||{})){
+      if((TEAMS[pool][id].name||'').toUpperCase() === clean) return TEAMS[pool][id].flag||'🏳️';
+    }
+  }
+  return '🏳️';
+}
+
+/* Fetch a sheet tab as JSON */
+function fetchTab(tabName){
   return new Promise(resolve=>{
-    if(SHEET_DATA[tabName]) return resolve(SHEET_DATA[tabName]);
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
-    fetch(url)
-      .then(r=>r.text())
-      .then(txt=>{
-        const json = JSON.parse(txt.replace(/^[^(]*\(/,'').replace(/\);?\s*$/,''));
-        const rows = (json.table.rows||[]).map(r=>{
-          const cells = r.c||[];
-          return { name: cells[0]?.v||'', sales: parseFloat(cells[1]?.v)||0 };
-        }).filter(r=>r.name);
-        SHEET_DATA[tabName] = rows;
-        resolve(rows);
-      })
-      .catch(()=>resolve([]));
+    fetch(url).then(r=>r.text()).then(txt=>{
+      const json = JSON.parse(txt.replace(/^[^(]*\(/,'').replace(/\);?\s*$/,''));
+      resolve(json.table.rows||[]);
+    }).catch(()=>resolve([]));
   });
 }
 
-/* Map team name → sheet tab name */
-function teamToTab(teamName){
-  const n = (teamName||'').trim();
-  /* Try exact tab names first, then common aliases */
-  const map = {
-    'FTD BG EN': 'FTD BG EN', 'FTD BG ES': 'FTD BG ES', 'FTD BG IT': 'FTD BG IT',
-    'FTD IL ES': 'FTD IL ES', 'FTD BS ES': 'FTD BS ES', 'FTD MADA FR': 'MADA', 'FTD IL FR': 'FTD IL FR',
-    'RET BG EN': 'RET BG EN', 'RET BG ES': 'RET BG ES', 'RET BG IT': 'RET BG IT',
-    'RET IL ES': 'RET IL ES', 'RET IL FR': 'RET IL FR', 'RET BS ES': 'RET BS ES'
-  };
-  return map[n] || n;
+/* Fetch player data from a team tab */
+function fetchPlayers(tabName){
+  return new Promise(resolve=>{
+    if(SHEET_DATA[tabName]) return resolve(SHEET_DATA[tabName]);
+    fetchTab(tabName).then(rows=>{
+      const players = rows.map(r=>{
+        const cells = r.c||[];
+        return { name: cells[0]?.v||'', sales: parseFloat(cells[1]?.v)||0 };
+      }).filter(r=>r.name);
+      SHEET_DATA[tabName] = players;
+      resolve(players);
+    });
+  });
 }
 
-/* Render carousel cards from all fixtures */
+/* Map full team name → sheet tab name(s) for player data */
+function teamToTabs(name){
+  const n = (name||'').trim();
+  const map = {
+    'FTD BG EN':['FTD BG EN'],'FTD BG ES':['FTD BG ES'],'FTD BG IT':['FTD BG IT'],
+    'FTD BG Canva':['FTD BG EN'], /* Canva team shares BG EN tab */
+    'FTD IL ES':['FTD IL ES'],'FTD BS ES':['FTD BS ES'],'FTD IL FR':['FTD IL FR'],
+    'FTD MADA1-3-4 FR':['MADA'],'FTD MADA FR':['MADA'],'MADA':['MADA'],
+    'RET BG':['RET BG EN','RET BG ES','RET BG IT'], /* combined */
+    'RET IL ES':['RET IL ES'],'RET IL FR':['RET IL FR'],'RET BS ES':['RET BS ES']
+  };
+  return map[n] || [n];
+}
+
+/* Fetch players — handles multiple tabs for combined teams */
+async function fetchTeamPlayers(teamName){
+  const tabs = teamToTabs(teamName);
+  const allPlayers = [];
+  for(const tab of tabs){
+    const players = await fetchPlayers(tab);
+    allPlayers.push(...players);
+  }
+  return allPlayers;
+}
+
+/* Parse "FTD BS ES vs FTD BG ES" → {home, away} */
+function parseVs(text){
+  if(!text || text.trim()==='—' || text.trim()==='') return null;
+  const parts = text.split(/\s+vs\s+/i);
+  if(parts.length!==2) return null;
+  return { home: parts[0].trim(), away: parts[1].trim() };
+}
+
+/* Determine match status from date string */
+function matchStatus(dateStr){
+  if(!dateStr) return 'upcoming';
+  /* dateStr like "12.06" or "12.06.2026" */
+  const parts = dateStr.split('.');
+  const d = parseInt(parts[0]), m = parseInt(parts[1])-1;
+  const y = parts[2] ? parseInt(parts[2]) : 2026;
+  const matchDate = new Date(y, m, d);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+  if(matchDate < today) return 'done';
+  if(matchDate < tomorrow) return 'live';
+  return 'upcoming';
+}
+const ST_LABEL = {upcoming:'Próximo', live:'En vivo', done:'Finalizado'};
+
+/* Load schedule from Pool A / Pool B Schedule tabs */
+async function loadScheduleFromSheet(){
+  SCHEDULE = [];
+  toast('Cargando partidos del Sheet...');
+
+  /* Pool A */
+  const rowsA = await fetchTab('Pool A Schedule');
+  rowsA.forEach(r=>{
+    const cells = r.c||[];
+    const dateRaw = cells[0]?.v;
+    if(!dateRaw || typeof dateRaw!=='string' && typeof dateRaw!=='number') return;
+    const dateStr = typeof dateRaw==='string' ? dateRaw.replace(/\//g,'.') :
+      (cells[0]?.f || String(dateRaw));
+    const day = cells[1]?.v||'';
+    const leg = cells[2]?.v||1;
+    /* Columns D, E, F, G = Match 1-4 */
+    for(let col=3; col<=6; col++){
+      const match = parseVs(cells[col]?.v);
+      if(match) SCHEDULE.push({...match, date:dateStr, day, leg, pool:'poolA'});
+    }
+  });
+
+  /* Pool B */
+  const rowsB = await fetchTab('Pool B Schedule');
+  rowsB.forEach(r=>{
+    const cells = r.c||[];
+    const dateRaw = cells[0]?.v;
+    if(!dateRaw || typeof dateRaw==='string' && dateRaw.includes('POOL')) return;
+    const dateStr = typeof dateRaw==='string' ? dateRaw.replace(/\//g,'.') :
+      (cells[0]?.f || String(dateRaw));
+    const day = cells[1]?.v||'';
+    const leg = cells[2]?.v||1;
+    for(let col=3; col<=4; col++){
+      const match = parseVs(cells[col]?.v);
+      if(match) SCHEDULE.push({...match, date:dateStr, day, leg, pool:'poolB'});
+    }
+  });
+
+  toast(`${SCHEDULE.length} partidos cargados`);
+  renderCarousel();
+}
+
+/* Render carousel from SCHEDULE */
 function renderCarousel(){
   const el = document.getElementById('matchCarousel');
   el.innerHTML = '';
-  allFixtureKeys = [];
-  ['poolA','poolB'].forEach(pool=>{
-    const fxs = FIXTURES[pool]||{};
-    const teams = TEAMS[pool]||{};
-    const keys = Object.keys(fxs).sort((a,b)=>(fxs[a].week||0)-(fxs[b].week||0));
-    keys.forEach(id=>{
-      const fx = fxs[id];
-      const h = teams[fx.home]||{name:'?',flag:'🏳️'};
-      const a = teams[fx.away]||{name:'?',flag:'🏳️'};
-      const idx = allFixtureKeys.length;
-      allFixtureKeys.push({pool, id});
-      const card = document.createElement('div');
-      card.className = 'mc-card' + (idx===carouselIndex?' active':'');
-      card.dataset.idx = idx;
-      card.innerHTML =
-        `<div class="mc-pool-tag">${pool==='poolA'?'FTD':'RET'}</div>`+
-        `<div class="mc-week">Sem ${fx.week||1}</div>`+
-        `<div class="mc-teams">`+
-          `<div class="mc-t"><div class="mc-flag">${h.flag||'🏳️'}</div><div class="mc-tname">${shortName(h.name)}</div></div>`+
-          `<div class="mc-vs">VS</div>`+
-          `<div class="mc-t"><div class="mc-flag">${a.flag||'🏳️'}</div><div class="mc-tname">${shortName(a.name)}</div></div>`+
-        `</div>`+
-        `<div class="mc-score-line">${fx.homeGoals??'–'} : ${fx.awayGoals??'–'}</div>`;
-      card.addEventListener('click', ()=>{ carouselIndex = idx; selectMatch(idx); resetCarouselTimer(); });
-      el.appendChild(card);
-    });
-  });
-  if(allFixtureKeys.length===0){
-    el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--dim);font-size:12px;width:100%">Sin partidos cargados todavía${isAdmin?' — usá "+ Partido" para crear fixture':''}</div>`;
+
+  if(SCHEDULE.length===0){
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--dim);font-size:12px;width:100%">Cargando partidos desde Google Sheets...</div>';
     document.getElementById('matchDetail').style.display = 'none';
-  } else {
-    if(carouselIndex >= allFixtureKeys.length) carouselIndex = 0;
-    selectMatch(carouselIndex);
+    return;
   }
+
+  /* Sort: live first, then upcoming, then done; within each group by date */
+  const sorted = [...SCHEDULE].sort((a,b)=>{
+    const sa = matchStatus(a.date), sb = matchStatus(b.date);
+    const order = {live:0, upcoming:1, done:2};
+    if(order[sa]!==order[sb]) return order[sa]-order[sb];
+    return (a.date||'').localeCompare(b.date||'');
+  });
+
+  sorted.forEach((match, idx)=>{
+    const status = matchStatus(match.date);
+    const hFlag = findFlag(match.home);
+    const aFlag = findFlag(match.away);
+    const card = document.createElement('div');
+    card.className = 'mc-card' + (idx===carouselIndex?' active':'');
+    card.dataset.idx = idx;
+    card.innerHTML =
+      `<div class="mc-pool-tag">${match.pool==='poolA'?'FTD':'RET'}</div>`+
+      `<div class="mc-week">${match.date} · ${match.day}</div>`+
+      `<div class="mc-teams">`+
+        `<div class="mc-t"><div class="mc-flag">${hFlag}</div><div class="mc-tname">${shortName(match.home)}</div></div>`+
+        `<div class="mc-vs">VS</div>`+
+        `<div class="mc-t"><div class="mc-flag">${aFlag}</div><div class="mc-tname">${shortName(match.away)}</div></div>`+
+      `</div>`+
+      `<div class="mc-score-line" style="font-size:11px;color:${status==='live'?'#ff6b6b':'var(--dim)'};letter-spacing:2px">${ST_LABEL[status]}</div>`;
+    card.addEventListener('click', ()=>{ carouselIndex = idx; selectMatch(idx, sorted); resetCarouselTimer(); });
+    el.appendChild(card);
+  });
+
+  window._sortedSchedule = sorted;
+  if(carouselIndex >= sorted.length) carouselIndex = 0;
+  selectMatch(carouselIndex, sorted);
 }
 
-/* Select a match and show detail */
-async function selectMatch(idx){
+/* Select a match and show detail with players */
+async function selectMatch(idx, sorted){
+  sorted = sorted || window._sortedSchedule || [];
+  const match = sorted[idx];
+  if(!match) return;
+
   document.querySelectorAll('.mc-card').forEach(c=>c.classList.toggle('active', parseInt(c.dataset.idx)===idx));
-  const ref = allFixtureKeys[idx];
-  if(!ref) return;
-  const {pool, id} = ref;
-  const fx = (FIXTURES[pool]||{})[id];
-  if(!fx) return;
-  const teams = TEAMS[pool]||{};
-  const h = teams[fx.home]||{name:'?',flag:'🏳️'};
-  const a = teams[fx.away]||{name:'?',flag:'🏳️'};
+
+  const hFlag = findFlag(match.home);
+  const aFlag = findFlag(match.away);
+  const status = matchStatus(match.date);
 
   document.getElementById('matchDetail').style.display = 'block';
-  document.getElementById('mdHomeFlag').textContent = h.flag||'🏳️';
-  document.getElementById('mdHomeName').textContent = shortName(h.name);
-  document.getElementById('mdAwayFlag').textContent = a.flag||'🏳️';
-  document.getElementById('mdAwayName').textContent = shortName(a.name);
-  document.getElementById('mdHomeGoals').textContent = fx.homeGoals??'–';
-  document.getElementById('mdAwayGoals').textContent = fx.awayGoals??'–';
-  document.getElementById('mdStatus').textContent = ST_LABEL[fx.status||'upcoming'];
-  document.getElementById('mdHomeColHead').textContent = shortName(h.name) + ' — Jugadores';
-  document.getElementById('mdAwayColHead').textContent = shortName(a.name) + ' — Jugadores';
+  document.getElementById('mdHomeFlag').textContent = hFlag;
+  document.getElementById('mdHomeName').textContent = shortName(match.home);
+  document.getElementById('mdAwayFlag').textContent = aFlag;
+  document.getElementById('mdAwayName').textContent = shortName(match.away);
+  document.getElementById('mdHomeGoals').textContent = '–';
+  document.getElementById('mdAwayGoals').textContent = '–';
+  document.getElementById('mdStatus').textContent = `${ST_LABEL[status]} · ${match.date}`;
+  document.getElementById('mdHomeColHead').textContent = shortName(match.home) + ' — Jugadores';
+  document.getElementById('mdAwayColHead').textContent = shortName(match.away) + ' — Jugadores';
 
-  /* Make scores editable for admin */
+  /* Admin can edit flags by clicking on them in the detail header */
   if(isAdmin){
-    ['mdHomeGoals','mdAwayGoals'].forEach((elId,i)=>{
-      const el = document.getElementById(elId);
-      el.contentEditable = true;
-      el.onblur = ()=>{
-        const field = i===0?'homeGoals':'awayGoals';
-        const v = parseInt(el.textContent.replace(/\D/g,''));
-        db.ref(`fixtures/${pool}/${id}/${field}`).set(isNaN(v)?0:v);
-        toast('Gol actualizado');
+    ['mdHomeFlag','mdAwayFlag'].forEach((elId, i)=>{
+      const flagEl = document.getElementById(elId);
+      flagEl.style.cursor = 'pointer';
+      flagEl.title = 'Click para cambiar bandera';
+      flagEl.onclick = ()=>{
+        const teamName = i===0 ? match.home : match.away;
+        const newFlag = prompt(`Nueva bandera/emoji para ${teamName}:`, flagEl.textContent);
+        if(newFlag){
+          /* Find and update in Firebase */
+          for(const pool of ['poolA','poolB']){
+            for(const tid of Object.keys(TEAMS[pool]||{})){
+              if((TEAMS[pool][tid].name||'').toUpperCase() === teamName.toUpperCase()){
+                db.ref(`teams/${pool}/${tid}/flag`).set(newFlag.trim());
+                toast('Bandera actualizada');
+                return;
+              }
+            }
+          }
+        }
       };
-      el.onkeydown = e=>{ if(e.key==='Enter'){e.preventDefault();el.blur();} };
     });
-    /* Click status to cycle */
-    const stEl = document.getElementById('mdStatus');
-    stEl.style.cursor = 'pointer';
-    stEl.onclick = ()=>{
-      const next = ST_CYCLE[fx.status||'upcoming'];
-      db.ref(`fixtures/${pool}/${id}/status`).set(next);
-      toast('Estado: '+ST_LABEL[next]);
-    };
   }
 
-  /* Fetch player data from Google Sheets */
-  const homeTab = teamToTab(h.name);
-  const awayTab = teamToTab(a.name);
-  const [homePlayers, awayPlayers] = await Promise.all([fetchSheetTab(homeTab), fetchSheetTab(awayTab)]);
-
+  /* Fetch players from Sheet */
+  const [homePlayers, awayPlayers] = await Promise.all([fetchTeamPlayers(match.home), fetchTeamPlayers(match.away)]);
   renderPlayers('mdHomePlayers', homePlayers, 'mdHomeTotal');
   renderPlayers('mdAwayPlayers', awayPlayers, 'mdAwayTotal');
 
-  /* Scroll active card into view */
   const activeCard = document.querySelector('.mc-card.active');
   if(activeCard) activeCard.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
 }
@@ -857,37 +946,19 @@ function renderPlayers(elId, players, totalId){
     el.innerHTML += `<div class="md-p"><span class="md-p-name">${escapeHtml(p.name)}</span><span class="md-p-sales">${p.sales}</span></div>`;
   });
   totalEl.textContent = total;
-  if(players.length===0) el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">Sin datos del Sheet</div>';
+  if(!players.length) el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">Sin datos</div>';
 }
 
-/* Auto-rotation */
 function startCarouselTimer(){
   if(carouselTimer) clearInterval(carouselTimer);
   carouselTimer = setInterval(()=>{
-    if(allFixtureKeys.length<=1) return;
-    carouselIndex = (carouselIndex+1) % allFixtureKeys.length;
-    selectMatch(carouselIndex);
+    const sorted = window._sortedSchedule||[];
+    if(sorted.length<=1) return;
+    carouselIndex = (carouselIndex+1) % sorted.length;
+    selectMatch(carouselIndex, sorted);
   }, 30000);
 }
-function resetCarouselTimer(){
-  startCarouselTimer(); // restart the 30s timer on manual click
-}
-
-function addFixture(pool){
-  const teams = TEAMS[pool]||{};
-  const ids = Object.keys(teams);
-  if(ids.length<2){ alert('Necesitás al menos 2 equipos en el pool.'); return; }
-  const list = ids.map((id,i)=>`${i+1}. ${teams[id].name}`).join('\n');
-  const hi = prompt('Equipo LOCAL (número):\n'+list);
-  if(!hi) return;
-  const ai = prompt('Equipo VISITANTE (número):\n'+list);
-  if(!ai) return;
-  const wk = prompt('Semana (número):','1');
-  const home = ids[parseInt(hi)-1], away = ids[parseInt(ai)-1];
-  if(!home||!away||home===away){ alert('Selección inválida.'); return; }
-  db.ref(`fixtures/${pool}`).push({week:parseInt(wk)||1, home, away, homeGoals:null, awayGoals:null, status:'upcoming'});
-  toast('Partido creado');
-}
+function resetCarouselTimer(){ startCarouselTimer(); }
 
 /* ─────────────────────────────────────────────
    PRIZES (editable)
@@ -936,7 +1007,8 @@ function bindSettings(){
 function renderAll(){
   renderTable('poolA','tableA');
   renderTable('poolB','tableB');
-  renderCarousel();
+  /* Carousel re-renders when schedule is loaded — flags update from TEAMS */
+  if(SCHEDULE.length>0) renderCarousel();
 }
 
 db.ref('teams').on('value', snap=>{
@@ -945,12 +1017,7 @@ db.ref('teams').on('value', snap=>{
   renderAll();
   document.getElementById('syncDot').classList.add('on');
 });
-db.ref('fixtures').on('value', snap=>{
-  FIXTURES = snap.val() || {poolA:{},poolB:{}};
-  FIXTURES.poolA = FIXTURES.poolA||{}; FIXTURES.poolB = FIXTURES.poolB||{};
-  SHEET_DATA = {}; // clear cache to refresh player data
-  renderAll();
-});
+/* No longer listening to Firebase fixtures — schedule comes from Sheet */
 db.ref('.info/connected').on('value', s=>{
   document.getElementById('syncDot').classList.toggle('on', s.val()===true);
 });
@@ -959,8 +1026,11 @@ bindPrizes();
 bindSettings();
 startCarouselTimer();
 
-/* Auto-refresh Google Sheets data every 5 minutes */
-setInterval(()=>{ SHEET_DATA = {}; if(allFixtureKeys.length>0) selectMatch(carouselIndex); }, 300000);
+/* Load schedule from Google Sheets on startup */
+loadScheduleFromSheet();
+
+/* Auto-refresh player data + schedule every 5 minutes */
+setInterval(()=>{ SHEET_DATA = {}; loadScheduleFromSheet(); }, 300000);
 
 /* util */
 function escapeHtml(s){
