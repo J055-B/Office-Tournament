@@ -69,11 +69,11 @@
   .mc-main{width:42px;height:42px;background:transparent!important;border:none!important;border-radius:0;padding:0;}
   .mc-main:hover{background:transparent!important;border:none!important;transform:scale(1.1);}
   .mc-img{width:42px;height:42px;object-fit:contain;display:block;border-radius:50%;}
-  .sb-btn-img{width:26px;height:26px;object-fit:contain;flex-shrink:0;filter:brightness(0.8);transition:filter .15s;}
-  .power-btn{display:flex;align-items:center;gap:11px;padding:8px 9px;border-radius:9px;cursor:pointer;
-    white-space:nowrap;color:var(--dim);transition:all .14s;border:1px solid transparent;background:none;width:100%;font-family:var(--font-b);font-size:12px;font-weight:600;}
-  .power-btn:hover{background:rgba(192,57,43,0.12);border-color:rgba(192,57,43,0.25);color:#e8939a;}
-  .power-btn:hover .sb-btn-img{filter:brightness(1.2) sepia(1) hue-rotate(-30deg) saturate(3);}
+  .power-btn{display:flex;align-items:center;gap:11px;padding:4px 9px;border-radius:9px;cursor:pointer;
+    white-space:nowrap;color:var(--dim);transition:all .14s;border:none;background:transparent;width:100%;font-family:var(--font-b);font-size:12px;font-weight:600;}
+  .power-btn:hover{background:transparent;}
+  .power-btn:hover .sb-btn-img{transform:scale(1.1);}
+  .sb-btn-img{width:32px;height:32px;object-fit:contain;flex-shrink:0;transition:transform .15s;}
   .sidebar.collapsed .power-btn .nav-lb{opacity:0;pointer-events:none;}
 
   /* ═══ MAIN ═══ */
