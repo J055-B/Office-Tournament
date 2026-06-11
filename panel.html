@@ -1043,7 +1043,7 @@ async function loadScheduleFromSheet(){
     }
   });
 
-  toast(`${SCHEDULE.length} matches loaded`);
+  toast(`${SCHEDULE.length} matches | 1st: "${SCHEDULE[0]?.date}" | Last: "${SCHEDULE[SCHEDULE.length-1]?.date}"`);
   console.log('[Schedule]', SCHEDULE.length, 'matches. Dates:', [...new Set(SCHEDULE.map(s=>s.date))].sort());
   renderCarousel();
   renderYesterdayResults();
@@ -1201,8 +1201,9 @@ function setupPool(p, matches, carId, detId){
     if(!byDate[d]) byDate[d]=[];
     byDate[d].push(m);
   });
-  const parseDate = (s)=>{ const pp=s.split('.'); return new Date(2026, parseInt(pp[1])-1, parseInt(pp[0])); };
-  const allDates = Object.keys(byDate).sort((a,b)=>parseDate(a)-parseDate(b));
+  /* Sort dates chronologically */
+  const toNum = (s)=>{ const pp=s.split('.'); return parseInt(pp[1])*100+parseInt(pp[0]); }; /* mmdd as number */
+  const allDates = Object.keys(byDate).sort((a,b)=>toNum(a)-toNum(b));
 
   poolState[p].allDates = allDates;
   poolState[p].byDate = byDate;
@@ -1215,33 +1216,26 @@ function setupPool(p, matches, carId, detId){
     return;
   }
 
-  /* Find today and tomorrow */
-  const today = new Date(); today.setHours(0,0,0,0);
-  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+  /* Today as mmdd number for simple comparison */
+  const now = new Date();
+  const todayNum = (now.getMonth()+1)*100 + now.getDate(); /* e.g. 611 for June 11 */
+  const tomorrowNum = todayNum + 1; /* simple, works within same month */
 
-  /* Find best date to show */
-  let bestIdx = 0;
-  let found = false;
-  for(let i=0;i<allDates.length;i++){
-    const dt = parseDate(allDates[i]);
-    /* Exact match for today */
-    if(dt.getTime()===today.getTime()){ bestIdx=i; found=true; break; }
-    /* Exact match for tomorrow */
-    if(dt.getTime()===tomorrow.getTime()){ bestIdx=i; found=true; break; }
-    /* First future date */
-    if(dt > tomorrow && !found){ bestIdx=i; found=true; break; }
-    bestIdx=i;
+  /* Find first date >= today */
+  let bestIdx = allDates.length - 1; /* default to last */
+  for(let i=0; i<allDates.length; i++){
+    if(toNum(allDates[i]) >= todayNum){ bestIdx = i; break; }
   }
 
   poolState[p].dateIdx = bestIdx;
 
-  /* For visitors: if the nearest date is far away, show a message */
+  /* Visitor: if best date is far (not today or tomorrow), show "Next match" message */
   if(!isAdmin){
-    const bestDate = parseDate(allDates[bestIdx]);
-    if(bestDate > tomorrow){
-      document.getElementById(carId).innerHTML = `<div style="padding:20px;text-align:center;color:var(--gold);font-size:14px;font-family:var(--font-d);letter-spacing:2px">Next match: ${allDates[bestIdx]}</div>`;
-      document.getElementById(detId).style.display = 'none';
+    const bestNum = toNum(allDates[bestIdx]);
+    if(bestNum > tomorrowNum){
       document.getElementById('date'+p).textContent = allDates[bestIdx];
+      document.getElementById(carId).innerHTML = `<div style="padding:20px;text-align:center;color:var(--gold);font-size:16px;font-family:var(--font-d);letter-spacing:2px">Next match: ${allDates[bestIdx]}</div>`;
+      document.getElementById(detId).style.display = 'none';
       buildCalendar(p);
       return;
     }
