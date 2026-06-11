@@ -397,7 +397,7 @@
             </div>
             <div class="pool-yesterday" id="yesterdayA">
               <div class="yd-title">📋 Previous Day</div>
-              <div class="yd-results" id="ydResultsA"><span class="yd-empty">No previous results</span></div>
+              <div class="yd-results" id="ydResultsA"><span class="yd-empty">No information to display</span></div>
             </div>
           </div>
           <div class="match-detail" id="detailA" style="display:none">
@@ -429,7 +429,7 @@
             </div>
             <div class="pool-yesterday" id="yesterdayB">
               <div class="yd-title">📋 Previous Day</div>
-              <div class="yd-results" id="ydResultsB"><span class="yd-empty">No previous results</span></div>
+              <div class="yd-results" id="ydResultsB"><span class="yd-empty">No information to display</span></div>
             </div>
           </div>
           <div class="match-detail" id="detailB" style="display:none">
@@ -1382,7 +1382,7 @@ async function renderYesterdayResults(){
 
     const el = document.getElementById('ydResults'+p);
     if(!ydDate || !st.byDate[ydDate]){
-      el.innerHTML = '<span class="yd-empty">No previous results</span>';
+      el.innerHTML = '<span class="yd-empty">No information to display</span>';
       continue;
     }
 
