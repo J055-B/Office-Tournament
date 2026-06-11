@@ -1453,9 +1453,13 @@ setInterval(()=>{
 /* ─────────────────────────────────────────────
    BGM — Background Music
 ───────────────────────────────────────────── */
-/* Auto-generate track list — just drop bgm.mp3, bgm1.mp3...bgm20.mp3 in assets/mp3/ */
-const BGM_TRACKS = ['assets/mp3/bgm.mp3'];
-for(let i=1;i<=20;i++) BGM_TRACKS.push(`assets/mp3/bgm${i}.mp3`);
+/* Auto-generate track list — drop bgm.mp3/m4a, bgm1.mp3/m4a...bgm20 in assets/mp3/ */
+const BGM_TRACKS = [];
+for(let i=0;i<=20;i++){
+  const name = i===0 ? 'bgm' : `bgm${i}`;
+  BGM_TRACKS.push(`assets/mp3/${name}.mp3`);
+  BGM_TRACKS.push(`assets/mp3/${name}.m4a`);
+}
 let bgmAudio = null;
 let bgmPlaying = false;
 let bgmShuffled = [];
@@ -1549,6 +1553,28 @@ logout = function(){
 
 /* Start BGM on page load */
 initBGM();
+
+/* ─── Monitor Mode: auto-rotate views ─── */
+/* Default: Matches. Every 10min switch to Overview for 1min, then back. */
+/* Matches carousel: 30s rotation between matches (already in startCarouselTimer) */
+(function startMonitorMode(){
+  /* Start on Matches after short delay to let schedule load */
+  setTimeout(()=>{
+    const mNav = document.querySelector('[data-pg="fixtures"]');
+    if(mNav) go('fixtures', mNav);
+  }, 3000);
+
+  setInterval(()=>{
+    /* Switch to Overview */
+    const ovNav = document.querySelector('[data-pg="overview"]');
+    if(ovNav) go('overview', ovNav);
+    /* After 1 minute, switch back to Matches */
+    setTimeout(()=>{
+      const mNav = document.querySelector('[data-pg="fixtures"]');
+      if(mNav) go('fixtures', mNav);
+    }, 60000);
+  }, 600000); /* every 10 minutes */
+})();
 
 /* util */
 function escapeHtml(s){
