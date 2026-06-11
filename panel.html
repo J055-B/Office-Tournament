@@ -949,6 +949,31 @@ async function fetchTeamPlayers(teamName, matchDate){
   return allPlayers;
 }
 
+/* Normalize a GViz cell to "dd.mm" format */
+function normDate(cell){
+  if(!cell) return null;
+  /* Try .v first, then .f */
+  const raw = cell.v;
+  const fmt = cell.f;
+  /* If .f looks like dd.mm already, use it */
+  if(fmt && /^\d{1,2}\.\d{1,2}/.test(fmt)){
+    const m = fmt.match(/^(\d{1,2})\.(\d{1,2})/);
+    return m ? m[1].padStart(2,'0')+'.'+m[2].padStart(2,'0') : null;
+  }
+  /* Try extracting day/month from raw value */
+  const dm = extractDayMonth(raw);
+  if(dm) return String(dm.day).padStart(2,'0')+'.'+String(dm.month).padStart(2,'0');
+  /* Try extracting from formatted value */
+  const dm2 = extractDayMonth(fmt);
+  if(dm2) return String(dm2.day).padStart(2,'0')+'.'+String(dm2.month).padStart(2,'0');
+  /* If raw is a string that looks like a date text, try it */
+  if(typeof raw==='string'){
+    const m = raw.match(/(\d{1,2})[\.\/](\d{1,2})/);
+    if(m) return m[1].padStart(2,'0')+'.'+m[2].padStart(2,'0');
+  }
+  return null;
+}
+
 /* Parse "FTD BS ES vs FTD BG ES" → {home, away} */
 function parseVs(text){
   if(!text || text.trim()==='—' || text.trim()==='') return null;
@@ -982,13 +1007,10 @@ async function loadScheduleFromSheet(){
   const rowsA = await fetchTab('Pool A Schedule');
   rowsA.forEach(r=>{
     const cells = r.c||[];
-    const dateRaw = cells[0]?.v;
-    if(!dateRaw || typeof dateRaw!=='string' && typeof dateRaw!=='number') return;
-    const dateStr = typeof dateRaw==='string' ? dateRaw.replace(/\//g,'.') :
-      (cells[0]?.f || String(dateRaw));
-    const day = cells[1]?.v||'';
+    const dateStr = normDate(cells[0]);
+    if(!dateStr) return;
+    const day = cellVal(cells[1]);
     const leg = cells[2]?.v||1;
-    /* Columns D, E, F, G = Match 1-4 */
     for(let col=3; col<=6; col++){
       const match = parseVs(cells[col]?.v);
       if(match) SCHEDULE.push({...match, date:dateStr, day, leg, pool:'poolA'});
@@ -999,11 +1021,9 @@ async function loadScheduleFromSheet(){
   const rowsB = await fetchTab('Pool B Schedule');
   rowsB.forEach(r=>{
     const cells = r.c||[];
-    const dateRaw = cells[0]?.v;
-    if(!dateRaw || typeof dateRaw==='string' && dateRaw.includes('POOL')) return;
-    const dateStr = typeof dateRaw==='string' ? dateRaw.replace(/\//g,'.') :
-      (cells[0]?.f || String(dateRaw));
-    const day = cells[1]?.v||'';
+    const dateStr = normDate(cells[0]);
+    if(!dateStr) return;
+    const day = cellVal(cells[1]);
     const leg = cells[2]?.v||1;
     for(let col=3; col<=4; col++){
       const match = parseVs(cells[col]?.v);
@@ -1069,55 +1089,80 @@ function isValidName(name){
   return true;
 }
 
-/* ─── Fetch + aggregate player data, filtered by matchDate ─── */
+/* ─── Fetch player data ───
+   Roster from col L (Full Name) + col M (Status)
+   Sales: FTD col A=Agent col B=Date col J=SUM | RET col A=Date col B=Owner col H=SUM
+*/
 let RAW_CACHE = {};
 function fetchPlayers(tabName, matchDate){
   return new Promise(resolve=>{
     const cacheKey = tabName + (matchDate ? '_'+matchDate : '_all');
     if(SHEET_DATA[cacheKey]) return resolve(SHEET_DATA[cacheKey]);
 
-    const doAgg = (rows)=>{
+    const doProcess = (rows)=>{
       if(rows.length<2){ SHEET_DATA[cacheKey]=[]; return resolve([]); }
       const isRet = tabName.toUpperCase().includes('RET');
       const dataRows = rows.slice(1);
-      const agg = {};
 
+      /* 1. Build roster from col L(11) + col M(12) */
+      const roster = {};
       dataRows.forEach(r=>{
         const cells = r.c||[];
-        let name, amount, dateCellRaw;
-
-        if(isRet){
-          /* RET: col A=Date, col B=Owner, col C=Amount, col H=SUM */
-          dateCellRaw = cells[0]?.v || cells[0]?.f || '';
-          name = cellVal(cells[1]);
-          amount = cellNum(cells[7]) || cellNum(cells[2]);
-        } else {
-          /* FTD: col A=Agent, col B=Date, col H=Amount, col J=SUM */
-          name = cellVal(cells[0]);
-          dateCellRaw = cells[1]?.v || cells[1]?.f || '';
-          amount = cellNum(cells[9]) || cellNum(cells[7]);
+        const fullName = cellVal(cells[11]);
+        const status = cellVal(cells[12]);
+        if(fullName && fullName.length>1 && !INVALID_NAMES.test(fullName.trim())){
+          if(!status || status.toLowerCase().includes('active')){
+            const n = fullName.trim();
+            if(!roster[n]) roster[n] = {sales:0, amount:0};
+          }
         }
-
-        /* Date filter */
-        if(matchDate && !dateMatches(dateCellRaw, matchDate)) return;
-
-        /* Name validation */
-        if(!isValidName(name)) return;
-
-        if(!agg[name]) agg[name]={count:0,total:0};
-        agg[name].count++;
-        agg[name].total += amount;
       });
 
-      const players = Object.entries(agg).map(([n,d])=>({
-        name:n, sales:d.count, amount:Math.round(d.total*100)/100
+      /* 2. Count sales per agent for the match date */
+      dataRows.forEach(r=>{
+        const cells = r.c||[];
+        let agentName, amount, rowDate;
+        if(isRet){
+          rowDate = cells[0]?.v || cells[0]?.f || '';
+          agentName = cellVal(cells[1]);
+          amount = cellNum(cells[7]) || cellNum(cells[2]);
+        } else {
+          agentName = cellVal(cells[0]);
+          rowDate = cells[1]?.v || cells[1]?.f || '';
+          amount = cellNum(cells[9]) || cellNum(cells[7]);
+        }
+        if(matchDate && !dateMatches(rowDate, matchDate)) return;
+        if(!agentName || agentName.length<2 || INVALID_NAMES.test(agentName.trim())) return;
+
+        const clean = agentName.trim();
+        /* Match to roster by first name or partial match */
+        let matched = false;
+        for(const rName of Object.keys(roster)){
+          const rFirst = rName.split(' ')[0].toLowerCase();
+          const aFirst = clean.split(' ')[0].toLowerCase();
+          if(rName===clean || rFirst===aFirst || rName.toLowerCase().includes(aFirst)){
+            roster[rName].sales++;
+            roster[rName].amount += amount;
+            matched = true;
+            break;
+          }
+        }
+        if(!matched){
+          if(!roster[clean]) roster[clean]={sales:0, amount:0};
+          roster[clean].sales++;
+          roster[clean].amount += amount;
+        }
+      });
+
+      const players = Object.entries(roster).map(([name,d])=>({
+        name, sales:d.sales, amount:Math.round(d.amount*100)/100
       }));
       SHEET_DATA[cacheKey] = players;
       resolve(players);
     };
 
-    if(RAW_CACHE[tabName]){ doAgg(RAW_CACHE[tabName]); }
-    else { fetchTab(tabName).then(rows=>{ RAW_CACHE[tabName]=rows; doAgg(rows); }); }
+    if(RAW_CACHE[tabName]){ doProcess(RAW_CACHE[tabName]); }
+    else { fetchTab(tabName).then(rows=>{ RAW_CACHE[tabName]=rows; doProcess(rows); }); }
   });
 }
 
@@ -1259,29 +1304,15 @@ async function showMatchDetail(p){
     checkNewGoal(match.away, aGoalData.goals);
   }
 
-  /* Load roster (all players) + stats only if match day arrived */
+  /* Load players (roster from col L + day stats from transactions) */
   const isFuture = status === 'upcoming';
-  
-  /* Always load full roster */
-  const [roster_h, roster_a] = await Promise.all([fetchTeamPlayers(match.home, null), fetchTeamPlayers(match.away, null)]);
-  
-  if(isFuture){
-    /* Show roster with 0 stats */
-    const zeroOut = (list)=> list.map(p=>({...p, sales:0, amount:0}));
-    renderPlayers(`d${p}hPlayers`, zeroOut(roster_h), `d${p}hTotal`, true);
-    renderPlayers(`d${p}aPlayers`, zeroOut(roster_a), `d${p}aTotal`, true);
-  } else {
-    /* Match day arrived — show actual day stats */
-    const [hp, ap] = await Promise.all([fetchTeamPlayers(match.home, match.date), fetchTeamPlayers(match.away, match.date)]);
-    /* Merge: keep all roster names, overlay with day stats */
-    const merge = (roster, dayStats)=>{
-      const dayMap = {};
-      dayStats.forEach(p=>{ dayMap[p.name] = p; });
-      return roster.map(p=> dayMap[p.name] || {...p, sales:0, amount:0});
-    };
-    renderPlayers(`d${p}hPlayers`, merge(roster_h, hp), `d${p}hTotal`, false);
-    renderPlayers(`d${p}aPlayers`, merge(roster_a, ap), `d${p}aTotal`, false);
-  }
+  const dateFilter = isFuture ? null : match.date;
+  const [hp, ap] = await Promise.all([
+    fetchTeamPlayers(match.home, dateFilter),
+    fetchTeamPlayers(match.away, dateFilter)
+  ]);
+  renderPlayers(`d${p}hPlayers`, hp, `d${p}hTotal`, isFuture);
+  renderPlayers(`d${p}aPlayers`, ap, `d${p}aTotal`, isFuture);
 
   highlightCard(p, st.selIdx);
 
