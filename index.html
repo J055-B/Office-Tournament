@@ -122,8 +122,12 @@
   <div class="vignette"></div>
   <div class="stage">
     <div class="logo-wrap">
-      <img src="assets/callisto.png" alt="Callisto Mundial" class="logo"
-           onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex';">
+      <div style="display:flex;align-items:center;justify-content:center;gap:0;">
+        <img src="assets/flag-left.gif" alt="" style="width:120px;margin-right:-16px;margin-top:12px;" onerror="this.style.display='none'">
+        <img src="assets/callisto.png" alt="Callisto Mundial" class="logo"
+             onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex';">
+        <img src="assets/flag-right.gif" alt="" style="width:120px;margin-left:-16px;margin-top:12px;" onerror="this.style.display='none'">
+      </div>
       <div class="logo-fallback" id="logoFallback" style="display:none;">
         <div class="cup">🏆</div>
         <div class="fb-name">CALLISTO</div>
