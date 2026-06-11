@@ -1515,10 +1515,16 @@ function tryPlayCurrent(){
 function toggleMusic(){
   if(!bgmAudio) return;
   if(bgmPlaying){
+    /* STOP completely — not pause */
     bgmAudio.pause();
+    bgmAudio.currentTime = 0;
     bgmPlaying = false;
   } else {
-    bgmAudio.play().then(()=>{ bgmPlaying = true; }).catch(()=>{});
+    /* Play new random track */
+    bgmShuffled = [...BGM_TRACKS].sort(()=>Math.random()-0.5);
+    bgmCurrentIdx = 0;
+    tryPlayCurrent();
+    return; /* tryPlayCurrent handles updateMusicBtn */
   }
   updateMusicBtn();
 }
@@ -1556,24 +1562,43 @@ initBGM();
 
 /* ─── Monitor Mode: auto-rotate views ─── */
 /* Default: Matches. Every 10min switch to Overview for 1min, then back. */
-/* Matches carousel: 30s rotation between matches (already in startCarouselTimer) */
 (function startMonitorMode(){
   /* Start on Matches after short delay to let schedule load */
   setTimeout(()=>{
-    const mNav = document.querySelector('[data-pg="fixtures"]');
-    if(mNav) go('fixtures', mNav);
-  }, 3000);
-
-  setInterval(()=>{
-    /* Switch to Overview */
-    const ovNav = document.querySelector('[data-pg="overview"]');
-    if(ovNav) go('overview', ovNav);
-    /* After 1 minute, switch back to Matches */
-    setTimeout(()=>{
+    try{
       const mNav = document.querySelector('[data-pg="fixtures"]');
       if(mNav) go('fixtures', mNav);
-    }, 60000);
-  }, 600000); /* every 10 minutes */
+      console.log('[Monitor] Started on Matches');
+    }catch(e){ console.error('[Monitor]', e); }
+  }, 3000);
+
+  /* Every 10 minutes: switch to Overview for 1 minute */
+  const INTERVAL = 10 * 60 * 1000; /* 10 min */
+  const OVERVIEW_DURATION = 60 * 1000; /* 1 min */
+
+  function switchToOverview(){
+    try{
+      const ovNav = document.querySelector('[data-pg="overview"]');
+      if(ovNav){
+        go('overview', ovNav);
+        console.log('[Monitor] Switched to Overview at', new Date().toLocaleTimeString());
+      }
+      setTimeout(switchToMatches, OVERVIEW_DURATION);
+    }catch(e){ console.error('[Monitor]', e); }
+  }
+
+  function switchToMatches(){
+    try{
+      const mNav = document.querySelector('[data-pg="fixtures"]');
+      if(mNav){
+        go('fixtures', mNav);
+        console.log('[Monitor] Switched to Matches at', new Date().toLocaleTimeString());
+      }
+    }catch(e){ console.error('[Monitor]', e); }
+  }
+
+  setInterval(switchToOverview, INTERVAL);
+  console.log('[Monitor] Mode active — Overview every', INTERVAL/60000, 'min');
 })();
 
 /* util */
