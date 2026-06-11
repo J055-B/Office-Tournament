@@ -1466,88 +1466,73 @@ let bgmShuffled = [];
 let bgmCurrentIdx = 0;
 
 function initBGM(){
+  if(bgmAudio) return;
+  /* Build shuffled playlist */
   bgmShuffled = [...BGM_TRACKS].sort(()=>Math.random()-0.5);
   bgmCurrentIdx = 0;
   bgmAudio = new Audio();
-  bgmAudio.loop = false;
   bgmAudio.volume = 0.5;
-  bgmAudio.addEventListener('ended', ()=>{ skipTrack(1); });
-  tryPlayCurrent();
+  /* When track ends, play next */
+  bgmAudio.addEventListener('ended', ()=>{
+    bgmCurrentIdx = (bgmCurrentIdx + 1) % bgmShuffled.length;
+    playTrack();
+  });
 }
 
-function tryPlayCurrent(){
-  if(!bgmAudio || bgmCurrentIdx >= bgmShuffled.length){
-    /* All tracks tried, wait for user interaction */
-    bgmPlaying = false;
-    updateMusicBtn();
-    return;
-  }
+function playTrack(){
+  if(!bgmAudio || bgmShuffled.length===0) return;
   bgmAudio.src = bgmShuffled[bgmCurrentIdx];
-  
-  bgmAudio.onerror = ()=>{
-    /* File doesn't exist, skip to next */
-    bgmCurrentIdx++;
-    tryPlayCurrent();
-  };
-
-  const playPromise = bgmAudio.play();
-  if(playPromise !== undefined){
-    playPromise.then(()=>{
-      bgmPlaying = true;
-      updateMusicBtn();
-    }).catch(()=>{
-      /* Autoplay blocked — wait for any user click */
+  bgmAudio.play().then(()=>{
+    bgmPlaying = true;
+    updateMusicBtn();
+  }).catch(()=>{
+    /* File missing, try next */
+    bgmShuffled.splice(bgmCurrentIdx, 1);
+    if(bgmShuffled.length > 0){
+      bgmCurrentIdx = bgmCurrentIdx % bgmShuffled.length;
+      playTrack();
+    } else {
       bgmPlaying = false;
       updateMusicBtn();
-      document.addEventListener('click', function resumeBGM(){
-        document.removeEventListener('click', resumeBGM);
-        if(bgmAudio && !bgmPlaying){
-          bgmAudio.play().then(()=>{
-            bgmPlaying = true;
-            updateMusicBtn();
-          }).catch(()=>{});
-        }
-      });
-    });
-  }
+    }
+  });
+}
+
+function startMusic(){
+  initBGM();
+  playTrack();
 }
 
 function toggleMusic(){
-  if(!bgmAudio) return;
+  if(!bgmAudio) { startMusic(); return; }
   if(bgmPlaying){
-    /* STOP completely — not pause */
     bgmAudio.pause();
     bgmAudio.currentTime = 0;
     bgmPlaying = false;
   } else {
-    /* Play new random track */
-    bgmShuffled = [...BGM_TRACKS].sort(()=>Math.random()-0.5);
-    bgmCurrentIdx = 0;
-    tryPlayCurrent();
-    return; /* tryPlayCurrent handles updateMusicBtn */
+    bgmAudio.currentTime = 0;
+    bgmAudio.play().catch(()=>{});
+    bgmPlaying = true;
   }
   updateMusicBtn();
 }
 
 function skipTrack(dir){
-  if(!bgmAudio || bgmShuffled.length===0) return;
+  initBGM();
+  if(bgmShuffled.length===0) return;
   bgmCurrentIdx = (bgmCurrentIdx + dir + bgmShuffled.length) % bgmShuffled.length;
   bgmAudio.src = bgmShuffled[bgmCurrentIdx];
-  bgmAudio.play().then(()=>{
-    bgmPlaying = true;
-    updateMusicBtn();
-  }).catch(()=>{});
+  bgmAudio.currentTime = 0;
+  bgmAudio.play().catch(()=>{});
+  bgmPlaying = true;
+  updateMusicBtn();
 }
 
 function updateMusicBtn(){
   const icon = document.getElementById('musicIcon');
-  if(bgmPlaying){
-    icon.src = 'assets/btn-stop.png';
-    icon.alt = 'Stop';
-  } else {
-    icon.src = 'assets/btn-play.png';
-    icon.alt = 'Play';
-  }
+  if(!icon) return;
+  icon.src = bgmPlaying ? 'assets/btn-stop.png' : 'assets/btn-play.png';
+  icon.alt = bgmPlaying ? 'Stop' : 'Play';
 }
 
 /* Stop music on logout */
@@ -1558,7 +1543,7 @@ logout = function(){
 };
 
 /* Start BGM on page load */
-initBGM();
+startMusic();
 
 /* ─── Monitor Mode: auto-rotate views ─── */
 /* Default: Matches. Every 10min switch to Overview for 1min, then back. */
