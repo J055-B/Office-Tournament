@@ -275,11 +275,24 @@
   .md-p-amount{font-family:var(--font-d);font-size:18px;color:var(--green-light);letter-spacing:1px;text-align:right;}
 
   /* ═══ GOAL CELEBRATION ═══ */
-  .goal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.85);
+  .goal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.88);
     display:none;align-items:center;justify-content:center;cursor:pointer;}
-  .goal-overlay.show{display:flex;animation:fadeIn .15s ease;}
-  .goal-gif{max-width:80vw;max-height:70vh;border-radius:12px;
-    filter:drop-shadow(0 0 40px rgba(245,197,24,0.4));}
+  .goal-overlay.show{display:flex;animation:fadeIn .2s ease;}
+  .goal-stage{display:flex;flex-direction:column;align-items:center;gap:0;position:relative;}
+  .goal-crown{width:120px;height:auto;margin-bottom:-10px;z-index:2;
+    filter:drop-shadow(0 4px 20px rgba(245,197,24,0.5));animation:crownBounce 1.5s ease-in-out infinite;}
+  @keyframes crownBounce{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-8px) rotate(2deg);}}
+  .goal-center{display:flex;align-items:center;gap:0;}
+  .goal-flag{width:100px;height:auto;}
+  .goal-flag-l{margin-right:-15px;z-index:1;}
+  .goal-flag-r{margin-left:-15px;z-index:1;}
+  .goal-gif{width:min(70vw,550px);height:auto;border-radius:12px;z-index:2;
+    filter:drop-shadow(0 0 50px rgba(245,197,24,0.3));}
+  .goal-team-name{font-family:var(--font-d);font-size:clamp(36px,8vw,64px);letter-spacing:6px;
+    color:var(--gold);text-align:center;margin-top:12px;
+    text-shadow:0 0 30px rgba(245,197,24,0.5),0 4px 8px rgba(0,0,0,0.6);
+    animation:teamPulse 2s ease-in-out infinite;}
+  @keyframes teamPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.85;transform:scale(1.03);}}
 
   @media(max-width:900px){
     .pools-grid,.mvp-grid{grid-template-columns:1fr;}
@@ -332,7 +345,7 @@
     <div class="topbar">
       <div class="pg-title" id="pgTitle">Overview</div>
       <div class="top-right">
-        <button class="btn" id="testGoalBtn" style="display:none;padding:5px 14px;font-size:10px;background:rgba(192,57,43,0.2);border-color:rgba(192,57,43,0.4);color:#e8939a" onclick="showGoalCelebration()">⚽ TEST GOAL</button>
+        <button class="btn" id="testGoalBtn" style="display:none;padding:5px 14px;font-size:10px;background:rgba(192,57,43,0.2);border-color:rgba(192,57,43,0.4);color:#e8939a" onclick="showGoalCelebration('TEST TEAM')">⚽ TEST GOAL</button>
         <span class="sync-dot" id="syncDot">Sync</span>
         <span class="role-chip" id="roleChip">—</span>
       </div>
@@ -531,7 +544,15 @@
 
 <!-- GOAL CELEBRATION OVERLAY -->
 <div class="goal-overlay" id="goalOverlay" onclick="hideGoalCelebration()">
-  <img src="assets/goal_celebration.gif" alt="GOAL!" class="goal-gif" id="goalGif">
+  <div class="goal-stage">
+    <img src="assets/crown.gif" alt="" class="goal-crown">
+    <div class="goal-center">
+      <img src="assets/flag-left.gif" alt="" class="goal-flag goal-flag-l">
+      <img src="assets/goal_celebration.gif" alt="GOAL!" class="goal-gif" id="goalGif">
+      <img src="assets/flag-right.gif" alt="" class="goal-flag goal-flag-r">
+    </div>
+    <div class="goal-team-name" id="goalTeamName">TEST TEAM</div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -580,9 +601,12 @@ if(isAdmin){
 }
 
 /* ─── Goal Celebration ─── */
-function showGoalCelebration(){
+function showGoalCelebration(teamName){
   const overlay = document.getElementById('goalOverlay');
   const gif = document.getElementById('goalGif');
+  const nameEl = document.getElementById('goalTeamName');
+  /* Set team name */
+  nameEl.textContent = teamName || 'TEST TEAM';
   /* Force reload GIF to restart animation */
   gif.src = '';
   setTimeout(()=>{ gif.src = 'assets/goal_celebration.gif'; }, 50);
@@ -592,6 +616,10 @@ function showGoalCelebration(){
 }
 function hideGoalCelebration(){
   document.getElementById('goalOverlay').classList.remove('show');
+}
+/* Trigger goal for a specific team (called when goals are detected) */
+function triggerGoal(teamName){
+  showGoalCelebration(teamName);
 }
 
 function logout(){
