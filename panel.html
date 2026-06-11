@@ -60,12 +60,20 @@
   .nav-lb{font-size:12px;font-weight:600;letter-spacing:.4px;color:var(--dim);opacity:1;transition:opacity .12s;}
   .nav-it.active .nav-lb{color:var(--gold);}
   .sidebar.collapsed .nav-lb{opacity:0;pointer-events:none;}
-  .sb-bottom{padding:10px 8px 14px;border-top:1px solid var(--border);flex-shrink:0;overflow:hidden;}
-  .logout-btn{display:flex;align-items:center;gap:11px;padding:9px;border-radius:9px;cursor:pointer;white-space:nowrap;color:var(--dim);transition:all .14s;border:1px solid transparent;background:none;width:100%;font-family:var(--font-b);}
-  .logout-btn:hover{background:rgba(192,57,43,0.12);color:#e8939a;border-color:rgba(192,57,43,0.25);}
-  .logout-btn .nav-ic{font-size:14px;}
-  .logout-btn .nav-lb{transition:opacity .12s;}
-  .sidebar.collapsed .logout-btn .nav-lb{opacity:0;}
+  .sb-bottom{padding:8px;border-top:1px solid var(--border);flex-shrink:0;overflow:hidden;display:flex;flex-direction:column;gap:6px;}
+  .music-controls{display:flex;align-items:center;justify-content:center;gap:4px;padding:4px 0;}
+  .mc-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+    color:var(--gold);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;padding:0;}
+  .mc-btn:hover{background:rgba(245,197,24,0.15);border-color:rgba(245,197,24,0.4);}
+  .mc-btn svg{width:16px;height:16px;}
+  .mc-main{width:38px;height:38px;}
+  .mc-img{width:24px;height:24px;object-fit:contain;}
+  .sb-btn-img{width:26px;height:26px;object-fit:contain;flex-shrink:0;filter:brightness(0.8);transition:filter .15s;}
+  .power-btn{display:flex;align-items:center;gap:11px;padding:8px 9px;border-radius:9px;cursor:pointer;
+    white-space:nowrap;color:var(--dim);transition:all .14s;border:1px solid transparent;background:none;width:100%;font-family:var(--font-b);font-size:12px;font-weight:600;}
+  .power-btn:hover{background:rgba(192,57,43,0.12);border-color:rgba(192,57,43,0.25);color:#e8939a;}
+  .power-btn:hover .sb-btn-img{filter:brightness(1.2) sepia(1) hue-rotate(-30deg) saturate(3);}
+  .sidebar.collapsed .power-btn .nav-lb{opacity:0;pointer-events:none;}
 
   /* ═══ MAIN ═══ */
   .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
@@ -305,8 +313,14 @@
       </div>
     </nav>
     <div class="sb-bottom">
-      <button class="logout-btn" onclick="logout()" title="Logout">
-        <div class="nav-ic">⏻</div><span class="nav-lb">Logout</span>
+      <div class="music-controls">
+        <button class="mc-btn" onclick="skipTrack(-1)" title="Previous"><svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M6 6h2v12H6zm12 0l-8.5 6L18 18V6z"/></svg></button>
+        <button class="mc-btn mc-main" id="musicBtn" onclick="toggleMusic()" title="Stop music"><img src="assets/btn-stop.png" id="musicIcon" alt="stop" class="mc-img"></button>
+        <button class="mc-btn" onclick="skipTrack(1)" title="Next"><svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M6 6l8.5 6L6 18V6zm10 0h2v12h-2V6z"/></svg></button>
+      </div>
+      <button class="power-btn" onclick="logout()" title="Logout">
+        <img src="assets/btn-power.png" alt="logout" class="sb-btn-img">
+        <span class="nav-lb">Logout</span>
       </button>
     </div>
   </aside>
@@ -325,37 +339,6 @@
 
       <!-- ═══ OVERVIEW ═══ -->
       <div class="page active" id="pg-overview">
-        <div class="scoreboard">
-          <div class="sb-head">
-            <span class="sb-head-t">🏟 General Scoreboard</span>
-            <span style="font-size:10px;color:var(--dim);letter-spacing:1px" id="seasonLabel" data-setting="seasonLabel">Season 2025 · Regular League</span>
-          </div>
-          <div class="sb-body">
-            <div class="pcard pa">
-              <div class="ptag">Pool A — FTD</div>
-              <div class="pname">FTD POOL</div>
-              <div class="pstats">
-                <div class="pst"><div class="pst-v" id="paTeams">0</div><div class="pst-l">Teams</div></div>
-                <div class="pst"><div class="pst-v" id="paPlayed">0</div><div class="pst-l">Played</div></div>
-                <div class="pst"><div class="pst-v" id="paLeader">—</div><div class="pst-l">Leader</div></div>
-              </div>
-            </div>
-            <div class="vsmid">
-              <div class="vstxt">VS</div>
-              <div class="rndtag">Champions Final</div>
-            </div>
-            <div class="pcard pb">
-              <div class="ptag">Pool B — RET</div>
-              <div class="pname">RET POOL</div>
-              <div class="pstats">
-                <div class="pst"><div class="pst-v" id="pbTeams">0</div><div class="pst-l">Teams</div></div>
-                <div class="pst"><div class="pst-v" id="pbPlayed">0</div><div class="pst-l">Played</div></div>
-                <div class="pst"><div class="pst-v" id="pbLeader">—</div><div class="pst-l">Leader</div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div class="slabel">Standings</div>
         <div class="pools-grid">
           <div class="pblock pa">
@@ -741,11 +724,7 @@ function renderTable(pool, elId){
     el.appendChild(div);
   });
   /* header stats */
-  const played = Object.values(FIXTURES[pool]||{}).filter(f=>f.status==='done').length;
-  const prefix = pool==='poolA' ? 'pa' : 'pb';
-  document.getElementById(prefix+'Teams').textContent = rows.length;
-  document.getElementById(prefix+'Played').textContent = played;
-  document.getElementById(prefix+'Leader').textContent = (rows[0] && rows[0].pts>0) ? rows[0].flag : '—';
+  /* Scoreboard removed — stats computed in standings only */
 }
 
 function addTeam(pool){
@@ -1282,6 +1261,105 @@ loadScheduleFromSheet();
 
 /* Auto-refresh player data + schedule every 5 minutes */
 setInterval(()=>{ SHEET_DATA = {}; RAW_CACHE = {}; loadScheduleFromSheet(); }, 300000);
+
+/* ─────────────────────────────────────────────
+   BGM — Background Music
+───────────────────────────────────────────── */
+const BGM_TRACKS = [
+  'assets/bgm/bgm.mp3',
+  'assets/bgm/bgm1.mp3',
+  'assets/bgm/bgm2.mp3',
+  'assets/bgm/bgm3.mp3',
+  'assets/bgm/bgm4.mp3',
+  'assets/bgm/bgm5.mp3'
+];
+let bgmAudio = null;
+let bgmPlaying = false;
+let bgmShuffled = [];
+let bgmCurrentIdx = 0;
+
+function initBGM(){
+  bgmShuffled = [...BGM_TRACKS].sort(()=>Math.random()-0.5);
+  bgmCurrentIdx = 0;
+  bgmAudio = new Audio();
+  bgmAudio.loop = false;
+  bgmAudio.volume = 0.3;
+
+  /* When track ends, play next */
+  bgmAudio.addEventListener('ended', ()=>{ skipTrack(1); });
+
+  playCurrentTrack();
+}
+
+function playCurrentTrack(){
+  if(!bgmAudio || bgmShuffled.length===0) return;
+  bgmAudio.src = bgmShuffled[bgmCurrentIdx % bgmShuffled.length];
+  bgmAudio.play().then(()=>{
+    bgmPlaying = true;
+    updateMusicBtn();
+  }).catch(()=>{
+    /* Autoplay blocked or file missing — try next or wait for click */
+    bgmAudio.addEventListener('error', ()=>{
+      /* File doesn't exist, try next */
+      bgmCurrentIdx++;
+      if(bgmCurrentIdx < bgmShuffled.length) playCurrentTrack();
+    }, {once:true});
+    bgmPlaying = false;
+    updateMusicBtn();
+    document.addEventListener('click', startBGMOnce, {once:true});
+  });
+}
+
+function startBGMOnce(){
+  if(bgmAudio && !bgmPlaying){
+    bgmAudio.play().then(()=>{
+      bgmPlaying = true;
+      updateMusicBtn();
+    }).catch(()=>{});
+  }
+}
+
+function toggleMusic(){
+  if(!bgmAudio) return;
+  if(bgmPlaying){
+    bgmAudio.pause();
+    bgmPlaying = false;
+  } else {
+    bgmAudio.play().then(()=>{ bgmPlaying = true; }).catch(()=>{});
+  }
+  updateMusicBtn();
+}
+
+function skipTrack(dir){
+  if(!bgmAudio || bgmShuffled.length===0) return;
+  bgmCurrentIdx = (bgmCurrentIdx + dir + bgmShuffled.length) % bgmShuffled.length;
+  bgmAudio.src = bgmShuffled[bgmCurrentIdx];
+  bgmAudio.play().then(()=>{
+    bgmPlaying = true;
+    updateMusicBtn();
+  }).catch(()=>{});
+}
+
+function updateMusicBtn(){
+  const icon = document.getElementById('musicIcon');
+  if(bgmPlaying){
+    icon.src = 'assets/btn-stop.png';
+    icon.alt = 'Stop';
+  } else {
+    icon.src = 'assets/btn-play.png';
+    icon.alt = 'Play';
+  }
+}
+
+/* Stop music on logout */
+const _origLogout = logout;
+logout = function(){
+  if(bgmAudio){ bgmAudio.pause(); bgmAudio = null; }
+  _origLogout();
+};
+
+/* Start BGM on page load */
+initBGM();
 
 /* util */
 function escapeHtml(s){
