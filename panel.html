@@ -281,25 +281,25 @@
     <div class="sb-logo">
       <img src="assets/callisto.png" alt="" onerror="this.outerHTML='&lt;div class=&quot;sb-logo-fb&quot;&gt;🏆&lt;/div&gt;'">
       <span class="sb-title">CALLISTO MUNDIAL</span>
-      <button class="sb-toggle" onclick="toggleSB()" id="sbToggle" aria-label="Colapsar menú">‹</button>
+      <button class="sb-toggle" onclick="toggleSB()" id="sbToggle" aria-label="Collapse menu">‹</button>
     </div>
     <nav class="sb-nav">
       <div class="nav-it active" data-pg="overview" onclick="go('overview',this)" title="Overview">
         <div class="nav-ic">🏟</div><span class="nav-lb">Overview</span>
       </div>
-      <div class="nav-it" data-pg="fixtures" onclick="go('fixtures',this)" title="Partidos">
-        <div class="nav-ic">📅</div><span class="nav-lb">Partidos</span>
+      <div class="nav-it" data-pg="fixtures" onclick="go('fixtures',this)" title="Matches">
+        <div class="nav-ic">📅</div><span class="nav-lb">Matches</span>
       </div>
-      <div class="nav-it" data-pg="awards" onclick="go('awards',this)" title="Premios">
-        <div class="nav-ic">🏅</div><span class="nav-lb">Premios</span>
+      <div class="nav-it" data-pg="awards" onclick="go('awards',this)" title="Awards">
+        <div class="nav-ic">🏅</div><span class="nav-lb">Awards</span>
       </div>
-      <div class="nav-it" data-pg="rules" onclick="go('rules',this)" title="Reglas">
-        <div class="nav-ic">📖</div><span class="nav-lb">Reglas</span>
+      <div class="nav-it" data-pg="rules" onclick="go('rules',this)" title="Rules">
+        <div class="nav-ic">📖</div><span class="nav-lb">Rules</span>
       </div>
     </nav>
     <div class="sb-bottom">
-      <button class="logout-btn" onclick="logout()" title="Salir">
-        <div class="nav-ic">⏻</div><span class="nav-lb">Salir</span>
+      <button class="logout-btn" onclick="logout()" title="Logout">
+        <div class="nav-ic">⏻</div><span class="nav-lb">Logout</span>
       </button>
     </div>
   </aside>
@@ -320,17 +320,17 @@
       <div class="page active" id="pg-overview">
         <div class="scoreboard">
           <div class="sb-head">
-            <span class="sb-head-t">🏟 Marcador General</span>
-            <span style="font-size:10px;color:var(--dim);letter-spacing:1px" id="seasonLabel" data-setting="seasonLabel">Season 2025 · Liga Regular</span>
+            <span class="sb-head-t">🏟 General Scoreboard</span>
+            <span style="font-size:10px;color:var(--dim);letter-spacing:1px" id="seasonLabel" data-setting="seasonLabel">Season 2025 · Regular League</span>
           </div>
           <div class="sb-body">
             <div class="pcard pa">
               <div class="ptag">Pool A — FTD</div>
               <div class="pname">FTD POOL</div>
               <div class="pstats">
-                <div class="pst"><div class="pst-v" id="paTeams">0</div><div class="pst-l">Equipos</div></div>
-                <div class="pst"><div class="pst-v" id="paPlayed">0</div><div class="pst-l">Jugados</div></div>
-                <div class="pst"><div class="pst-v" id="paLeader">—</div><div class="pst-l">Líder</div></div>
+                <div class="pst"><div class="pst-v" id="paTeams">0</div><div class="pst-l">Teams</div></div>
+                <div class="pst"><div class="pst-v" id="paPlayed">0</div><div class="pst-l">Played</div></div>
+                <div class="pst"><div class="pst-v" id="paLeader">—</div><div class="pst-l">Leader</div></div>
               </div>
             </div>
             <div class="vsmid">
@@ -341,30 +341,30 @@
               <div class="ptag">Pool B — RET</div>
               <div class="pname">RET POOL</div>
               <div class="pstats">
-                <div class="pst"><div class="pst-v" id="pbTeams">0</div><div class="pst-l">Equipos</div></div>
-                <div class="pst"><div class="pst-v" id="pbPlayed">0</div><div class="pst-l">Jugados</div></div>
-                <div class="pst"><div class="pst-v" id="pbLeader">—</div><div class="pst-l">Líder</div></div>
+                <div class="pst"><div class="pst-v" id="pbTeams">0</div><div class="pst-l">Teams</div></div>
+                <div class="pst"><div class="pst-v" id="pbPlayed">0</div><div class="pst-l">Played</div></div>
+                <div class="pst"><div class="pst-v" id="pbLeader">—</div><div class="pst-l">Leader</div></div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="slabel">Tablas de posiciones</div>
+        <div class="slabel">Standings</div>
         <div class="pools-grid">
           <div class="pblock pa">
             <div class="pb-h">
               <div><div class="pb-t">Pool A</div><div class="pb-s">FTD Division</div></div>
-              <button class="btn" id="addTeamA" style="display:none;padding:5px 11px;font-size:10px" onclick="addTeam('poolA')">+ Equipo</button>
+              <button class="btn" id="addTeamA" style="display:none;padding:5px 11px;font-size:10px" onclick="addTeam('poolA')">+ Team</button>
             </div>
-            <div class="thead"><span>#</span><span>Equipo</span><span style="text-align:center">P</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:center">DG</span><span style="text-align:center">Pts</span></div>
+            <div class="thead"><span>#</span><span>Team</span><span style="text-align:center">P</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:center">DG</span><span style="text-align:center">Pts</span></div>
             <div id="tableA"></div>
           </div>
           <div class="pblock pb">
             <div class="pb-h">
               <div><div class="pb-t">Pool B</div><div class="pb-s">RET Division</div></div>
-              <button class="btn" id="addTeamB" style="display:none;padding:5px 11px;font-size:10px" onclick="addTeam('poolB')">+ Equipo</button>
+              <button class="btn" id="addTeamB" style="display:none;padding:5px 11px;font-size:10px" onclick="addTeam('poolB')">+ Team</button>
             </div>
-            <div class="thead"><span>#</span><span>Equipo</span><span style="text-align:center">P</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:center">DG</span><span style="text-align:center">Pts</span></div>
+            <div class="thead"><span>#</span><span>Team</span><span style="text-align:center">P</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:center">DG</span><span style="text-align:center">Pts</span></div>
             <div id="tableB"></div>
           </div>
         </div>
@@ -374,7 +374,7 @@
       <!-- ═══ FIXTURES ═══ -->
       <div class="page" id="pg-fixtures">
         <div class="fx-controls" id="fxControls" style="display:none">
-          <button class="btn" onclick="loadScheduleFromSheet()" id="btnRefreshFx">🔄 Actualizar partidos</button>
+          <button class="btn" onclick="loadScheduleFromSheet()" id="btnRefreshFx">🔄 Refresh matches</button>
         </div>
 
         <!-- ══ POOL A — FTD ══ -->
@@ -384,19 +384,19 @@
             <button class="dn-arrow" onclick="shiftDate('A',-1)">◀</button>
             <span class="dn-date" id="dateA">—</span>
             <button class="dn-arrow" onclick="shiftDate('A',1)">▶</button>
-            <button class="dn-expand" onclick="toggleCalendar('A')">📅 Más fechas</button>
+            <button class="dn-expand" onclick="toggleCalendar('A')">📅 More dates</button>
           </div>
           <div class="date-calendar" id="calendarA" style="display:none"></div>
           <div class="match-carousel" id="carouselA"></div>
           <div class="match-detail" id="detailA" style="display:none">
             <div class="md-header">
-              <div class="md-team"><div class="md-flag" id="dAhFlag">🏳️</div><div class="md-tname" id="dAhName">—</div><div class="md-total" id="dAhTotal">0</div><div class="md-total-label">VENTAS TOTAL</div></div>
+              <div class="md-team"><div class="md-flag" id="dAhFlag">🏳️</div><div class="md-tname" id="dAhName">—</div><div class="md-total" id="dAhTotal">0</div><div class="md-total-label">TOTAL SALES</div></div>
               <div class="md-vs"><div class="md-score"><span id="dAhGoals">–</span> : <span id="dAaGoals">–</span></div><div class="md-status" id="dAstatus">—</div></div>
-              <div class="md-team"><div class="md-flag" id="dAaFlag">🏳️</div><div class="md-tname" id="dAaName">—</div><div class="md-total" id="dAaTotal">0</div><div class="md-total-label">VENTAS TOTAL</div></div>
+              <div class="md-team"><div class="md-flag" id="dAaFlag">🏳️</div><div class="md-tname" id="dAaName">—</div><div class="md-total" id="dAaTotal">0</div><div class="md-total-label">TOTAL SALES</div></div>
             </div>
             <div class="md-players-wrap">
-              <div class="md-players-col"><div class="md-col-head" id="dAhHead">LOCAL</div><div id="dAhPlayers" class="md-player-list"></div></div>
-              <div class="md-players-col"><div class="md-col-head" id="dAaHead">VISITANTE</div><div id="dAaPlayers" class="md-player-list"></div></div>
+              <div class="md-players-col"><div class="md-col-head" id="dAhHead">HOME</div><div id="dAhPlayers" class="md-player-list"></div></div>
+              <div class="md-players-col"><div class="md-col-head" id="dAaHead">AWAY</div><div id="dAaPlayers" class="md-player-list"></div></div>
             </div>
           </div>
         </div>
@@ -408,19 +408,19 @@
             <button class="dn-arrow" onclick="shiftDate('B',-1)">◀</button>
             <span class="dn-date" id="dateB">—</span>
             <button class="dn-arrow" onclick="shiftDate('B',1)">▶</button>
-            <button class="dn-expand" onclick="toggleCalendar('B')">📅 Más fechas</button>
+            <button class="dn-expand" onclick="toggleCalendar('B')">📅 More dates</button>
           </div>
           <div class="date-calendar" id="calendarB" style="display:none"></div>
           <div class="match-carousel" id="carouselB"></div>
           <div class="match-detail" id="detailB" style="display:none">
             <div class="md-header">
-              <div class="md-team"><div class="md-flag" id="dBhFlag">🏳️</div><div class="md-tname" id="dBhName">—</div><div class="md-total" id="dBhTotal">0</div><div class="md-total-label">VENTAS TOTAL</div></div>
+              <div class="md-team"><div class="md-flag" id="dBhFlag">🏳️</div><div class="md-tname" id="dBhName">—</div><div class="md-total" id="dBhTotal">0</div><div class="md-total-label">TOTAL SALES</div></div>
               <div class="md-vs"><div class="md-score"><span id="dBhGoals">–</span> : <span id="dBaGoals">–</span></div><div class="md-status" id="dBstatus">—</div></div>
-              <div class="md-team"><div class="md-flag" id="dBaFlag">🏳️</div><div class="md-tname" id="dBaName">—</div><div class="md-total" id="dBaTotal">0</div><div class="md-total-label">VENTAS TOTAL</div></div>
+              <div class="md-team"><div class="md-flag" id="dBaFlag">🏳️</div><div class="md-tname" id="dBaName">—</div><div class="md-total" id="dBaTotal">0</div><div class="md-total-label">TOTAL SALES</div></div>
             </div>
             <div class="md-players-wrap">
-              <div class="md-players-col"><div class="md-col-head" id="dBhHead">LOCAL</div><div id="dBhPlayers" class="md-player-list"></div></div>
-              <div class="md-players-col"><div class="md-col-head" id="dBaHead">VISITANTE</div><div id="dBaPlayers" class="md-player-list"></div></div>
+              <div class="md-players-col"><div class="md-col-head" id="dBhHead">HOME</div><div id="dBhPlayers" class="md-player-list"></div></div>
+              <div class="md-players-col"><div class="md-col-head" id="dBaHead">AWAY</div><div id="dBaPlayers" class="md-player-list"></div></div>
             </div>
           </div>
         </div>
@@ -430,76 +430,76 @@
 
       <!-- ═══ AWARDS ═══ -->
       <div class="page" id="pg-awards">
-        <div class="slabel">MVPs — Solo agentes +3 meses</div>
+        <div class="slabel">MVPs — Agents with 3+ months only</div>
         <div class="mvp-grid">
           <div class="mvp-c">
             <div class="mvp-h" style="background:rgba(37,168,82,0.09)">
               <div class="mvp-ic" style="background:rgba(37,168,82,0.2)">🌟</div>
-              <div><div class="mvp-t">MVP — FTD</div><div class="mvp-s">Min. 3 meses</div></div>
+              <div><div class="mvp-t">MVP — FTD</div><div class="mvp-s">Min. 3 months</div></div>
             </div>
             <div class="crits">
               <div class="crit"><span class="crit-n">% Target FTD</span><span class="crit-p p40">40%</span></div>
               <div class="crit"><span class="crit-n">% Target Calls</span><span class="crit-p p15">15%</span></div>
               <div class="crit"><span class="crit-n">% Target Call Time</span><span class="crit-p p15">15%</span></div>
               <div class="crit"><span class="crit-n">Most Money (EUR)</span><span class="crit-p p30">30%</span></div>
-              <div class="crit"><span class="crit-n">🏆 Ganador</span><span class="winner-tag" data-prize="mvpFtd" data-field="winner">Por definir</span></div>
-              <div class="crit"><span class="crit-n">💰 Premio</span><span class="winner-tag" data-prize="mvpFtd" data-field="amount">—</span></div>
+              <div class="crit"><span class="crit-n">🏆 Winner</span><span class="winner-tag" data-prize="mvpFtd" data-field="winner">TBD</span></div>
+              <div class="crit"><span class="crit-n">💰 Prize</span><span class="winner-tag" data-prize="mvpFtd" data-field="amount">—</span></div>
             </div>
           </div>
           <div class="mvp-c">
             <div class="mvp-h" style="background:rgba(192,57,43,0.09)">
               <div class="mvp-ic" style="background:rgba(192,57,43,0.2)">⭐</div>
-              <div><div class="mvp-t">MVP — RET</div><div class="mvp-s">Min. 3 meses</div></div>
+              <div><div class="mvp-t">MVP — RET</div><div class="mvp-s">Min. 3 months</div></div>
             </div>
             <div class="crits">
               <div class="crit"><span class="crit-n">% Target Income</span><span class="crit-p p40">40%</span></div>
               <div class="crit"><span class="crit-n">% Target Calls</span><span class="crit-p p15">15%</span></div>
               <div class="crit"><span class="crit-n">% Target Call Time</span><span class="crit-p p15">15%</span></div>
               <div class="crit"><span class="crit-n">Most Money (EUR)</span><span class="crit-p p30">30%</span></div>
-              <div class="crit"><span class="crit-n">🏆 Ganador</span><span class="winner-tag" data-prize="mvpRet" data-field="winner">Por definir</span></div>
-              <div class="crit"><span class="crit-n">💰 Premio</span><span class="winner-tag" data-prize="mvpRet" data-field="amount">—</span></div>
+              <div class="crit"><span class="crit-n">🏆 Winner</span><span class="winner-tag" data-prize="mvpRet" data-field="winner">TBD</span></div>
+              <div class="crit"><span class="crit-n">💰 Prize</span><span class="winner-tag" data-prize="mvpRet" data-field="amount">—</span></div>
             </div>
           </div>
         </div>
 
-        <div class="slabel">Strikers, Rookie, Team Leaders y Progresión</div>
+        <div class="slabel">Strikers, Rookie, Team Leaders & Progression</div>
         <div class="aw-grid">
           <div class="aw-c" style="--ac:var(--pool-a-soft)">
             <div class="aw-ic">⚡</div><div class="aw-t">Best Striker — FTD</div>
-            <div class="aw-d">Most FTDs (50%) + Most Money (50%)<br><em>Tie rank: 1,2,2,2,5…</em> · +3 meses</div>
-            <div class="aw-foot"><span class="winner-tag" data-prize="strikerFtd" data-field="winner">Por definir</span><span class="aw-amount" data-prize="strikerFtd" data-field="amount">—</span></div>
+            <div class="aw-d">Most FTDs (50%) + Most Money (50%)<br><em>Tie rank: 1,2,2,2,5…</em> · +3 months</div>
+            <div class="aw-foot"><span class="winner-tag" data-prize="strikerFtd" data-field="winner">TBD</span><span class="aw-amount" data-prize="strikerFtd" data-field="amount">—</span></div>
           </div>
           <div class="aw-c" style="--ac:#ce93d8">
             <div class="aw-ic">🎨</div><div class="aw-t">Best Striker — Canva</div>
-            <div class="aw-d">Most Cons (30%) + Most Converted (70%) · +3 meses</div>
-            <div class="aw-foot"><span class="winner-tag" data-prize="strikerCanva" data-field="winner">Por definir</span><span class="aw-amount" data-prize="strikerCanva" data-field="amount">—</span></div>
+            <div class="aw-d">Most Cons (30%) + Most Converted (70%) · +3 months</div>
+            <div class="aw-foot"><span class="winner-tag" data-prize="strikerCanva" data-field="winner">TBD</span><span class="aw-amount" data-prize="strikerCanva" data-field="amount">—</span></div>
           </div>
           <div class="aw-c" style="--ac:var(--pool-b-soft)">
             <div class="aw-ic">💰</div><div class="aw-t">Best Striker — RET</div>
-            <div class="aw-d">Most Money — ranking directo · +3 meses</div>
-            <div class="aw-foot"><span class="winner-tag" data-prize="strikerRet" data-field="winner">Por definir</span><span class="aw-amount" data-prize="strikerRet" data-field="amount">—</span></div>
+            <div class="aw-d">Most Money — straight ranking · +3 months</div>
+            <div class="aw-foot"><span class="winner-tag" data-prize="strikerRet" data-field="winner">TBD</span><span class="aw-amount" data-prize="strikerRet" data-field="amount">—</span></div>
           </div>
           <div class="aw-c" style="--ac:var(--gold)">
             <div class="aw-ic">🌱</div><div class="aw-t">Best Rookie</div>
-            <div class="aw-d">FTD Desk · hasta 3 meses<br>Most FTDs (50%) + Most Money (50%)</div>
-            <div class="aw-foot"><span class="winner-tag" data-prize="rookie" data-field="winner">Por definir</span><span class="aw-amount" data-prize="rookie" data-field="amount">—</span></div>
+            <div class="aw-d">FTD Desk · up to 3 months<br>Most FTDs (50%) + Most Money (50%)</div>
+            <div class="aw-foot"><span class="winner-tag" data-prize="rookie" data-field="winner">TBD</span><span class="aw-amount" data-prize="rookie" data-field="amount">—</span></div>
           </div>
           <div class="aw-c" style="--ac:var(--green)">
             <div class="aw-ic">👑</div><div class="aw-t">Best Team Leader ×2</div>
-            <div class="aw-d">FTD por Team (no Lang Desk) + RET<br>Mismos criterios que MVP (40/15/15/30)</div>
-            <div class="aw-foot"><span class="winner-tag" data-prize="teamLeader" data-field="winner">Por definir</span><span class="aw-amount" data-prize="teamLeader" data-field="amount">—</span></div>
+            <div class="aw-d">FTD by Team (not Lang Desk) + RET<br>Same criteria as MVP (40/15/15/30)</div>
+            <div class="aw-foot"><span class="winner-tag" data-prize="teamLeader" data-field="winner">TBD</span><span class="aw-amount" data-prize="teamLeader" data-field="amount">—</span></div>
           </div>
           <div class="aw-c" style="--ac:var(--gold)">
             <div class="aw-ic">📈</div><div class="aw-t">Best Progression ×2</div>
-            <div class="aw-d">FTD/Canva: % Growth vs mes anterior (50%)<br>RET: % Growth Income vs mes anterior</div>
-            <div class="aw-foot"><span class="winner-tag" data-prize="progression" data-field="winner">Por definir</span><span class="aw-amount" data-prize="progression" data-field="amount">—</span></div>
+            <div class="aw-d">FTD/Canva: % Growth vs last month (50%)<br>RET: % Growth Income vs mes anterior</div>
+            <div class="aw-foot"><span class="winner-tag" data-prize="progression" data-field="winner">TBD</span><span class="aw-amount" data-prize="progression" data-field="amount">—</span></div>
           </div>
         </div>
 
         <div class="totbar">
-          <div class="totbar-t">🏆 10 premios personales</div>
+          <div class="totbar-t">🏆 10 personal awards</div>
           <div class="totbar-s">MVP ×2 · Strikers ×3 · Rookie ×1 · Team Leader ×2 · Progression ×2</div>
-          <div class="totbar-s" style="margin-left:auto">Premio Equipo Campeón: <span class="winner-tag" data-prize="champion" data-field="amount" style="display:inline-block">—</span></div>
+          <div class="totbar-s" style="margin-left:auto">Prize Champion Team: <span class="winner-tag" data-prize="champion" data-field="amount" style="display:inline-block">—</span></div>
         </div>
         <p style="font-size:10px;color:var(--dim);margin-top:12px;letter-spacing:.5px" id="adminHintAw"></p>
       </div>
@@ -507,27 +507,27 @@
       <!-- ═══ RULES ═══ -->
       <div class="page" id="pg-rules">
         <div class="rl-card">
-          <div class="rl-t">⚽ Goles por día (% del target diario)</div>
+          <div class="rl-t">⚽ Goals per day (% of daily target)</div>
           <div class="goal-grid">
-            <div class="gchip"><div class="gchip-p">&lt;100%</div><div class="gchip-g g0">0</div><div class="gchip-l">Goles</div></div>
-            <div class="gchip"><div class="gchip-p">100%</div><div class="gchip-g g1">1</div><div class="gchip-l">Gol</div></div>
-            <div class="gchip"><div class="gchip-p">120–125%</div><div class="gchip-g g2">2</div><div class="gchip-l">Goles</div></div>
-            <div class="gchip"><div class="gchip-p">140–150%</div><div class="gchip-g g3">3</div><div class="gchip-l">Goles</div></div>
-            <div class="gchip"><div class="gchip-p">160–175%</div><div class="gchip-g g4">4</div><div class="gchip-l">Goles</div></div>
-            <div class="gchip"><div class="gchip-p">180%+</div><div class="gchip-g g5">5+</div><div class="gchip-l">Goles</div></div>
+            <div class="gchip"><div class="gchip-p">&lt;100%</div><div class="gchip-g g0">0</div><div class="gchip-l">Goals</div></div>
+            <div class="gchip"><div class="gchip-p">100%</div><div class="gchip-g g1">1</div><div class="gchip-l">Goal</div></div>
+            <div class="gchip"><div class="gchip-p">120–125%</div><div class="gchip-g g2">2</div><div class="gchip-l">Goals</div></div>
+            <div class="gchip"><div class="gchip-p">140–150%</div><div class="gchip-g g3">3</div><div class="gchip-l">Goals</div></div>
+            <div class="gchip"><div class="gchip-p">160–175%</div><div class="gchip-g g4">4</div><div class="gchip-l">Goals</div></div>
+            <div class="gchip"><div class="gchip-p">180%+</div><div class="gchip-g g5">5+</div><div class="gchip-l">Goals</div></div>
           </div>
           <div class="mp-row">
-            <div class="mpchip w"><div class="mp-v">3</div><div><div class="mp-l">Victoria</div><div class="mp-s">Más goles que el rival</div></div></div>
-            <div class="mpchip d"><div class="mp-v">1</div><div><div class="mp-l">Empate</div><div class="mp-s">Mismos goles</div></div></div>
-            <div class="mpchip l"><div class="mp-v">0</div><div><div class="mp-l">Derrota</div><div class="mp-s">Menos goles</div></div></div>
+            <div class="mpchip w"><div class="mp-v">3</div><div><div class="mp-l">Win</div><div class="mp-s">More goals than opponent</div></div></div>
+            <div class="mpchip d"><div class="mp-v">1</div><div><div class="mp-l">Draw</div><div class="mp-s">Same goals</div></div></div>
+            <div class="mpchip l"><div class="mp-v">0</div><div><div class="mp-l">Loss</div><div class="mp-s">Fewer goals</div></div></div>
           </div>
         </div>
         <div class="rl-card">
-          <div class="rl-t">📋 Reglas del torneo</div>
-          <div class="rules-free" id="rulesText" data-setting="rulesText">• Liga de 2 semanas: 6 partidos vs los 6 equipos del pool + vuelta (Home – Out)
-• Los goles diarios se acumulan en la ventana de cada partido
-• El campeón de cada pool avanza a la Final de Campeones
-• Cada equipo elige su bandera o país</div>
+          <div class="rl-t">📋 Rules from tournament</div>
+          <div class="rules-free" id="rulesText" data-setting="rulesText">• 2-week league: 6 matches vs all 6 pool teams + return leg (Home – Out)
+• Daily goals accumulate within each match window
+• Each pool's champion advances to the Champions Final
+• Each team chooses their flag or country</div>
         </div>
         <p style="font-size:10px;color:var(--dim);letter-spacing:.5px" id="adminHintRl"></p>
       </div>
@@ -565,16 +565,16 @@ if(!role){ window.location.href = 'index.html'; }
 const isAdmin = role === 'admin';
 const adminName = sessionStorage.getItem('adminName') || 'Admin';
 
-document.getElementById('roleChip').textContent = isAdmin ? '👑 ' + adminName : 'Visitante';
+document.getElementById('roleChip').textContent = isAdmin ? '👑 ' + adminName : 'Visitor';
 document.getElementById('roleChip').className = 'role-chip ' + (isAdmin ? 'role-admin' : 'role-visitor');
 if(isAdmin){
   document.getElementById('fxControls').style.display = 'flex';
   document.getElementById('addTeamA').style.display = 'inline-block';
   document.getElementById('addTeamB').style.display = 'inline-block';
-  document.getElementById('adminHintTeams').textContent = '✎ Modo admin: hacé click en nombre o bandera de un equipo para editar. Doble click en una fila para eliminar el equipo.';
-  document.getElementById('adminHintFx').textContent = '✎ Modo admin: click en una bandera del detalle para cambiarla. Los partidos se cargan automáticamente del Google Sheet.';
-  document.getElementById('adminHintAw').textContent = '✎ Modo admin: click en "Por definir" o en los montos para editar.';
-  document.getElementById('adminHintRl').textContent = '✎ Modo admin: click en el texto de reglas para editarlo.';
+  document.getElementById('adminHintTeams').textContent = '✎ Admin mode: click on a team name or flag to edit. Double-click a row to remove the team.';
+  document.getElementById('adminHintFx').textContent = '✎ Admin mode: click a flag in the detail view to change it. Matches load automatically from Google Sheet.';
+  document.getElementById('adminHintAw').textContent = '✎ Admin mode: click "TBD" or amounts to edit.';
+  document.getElementById('adminHintRl').textContent = '✎ Admin mode: click the rules text to edit.';
 }
 
 function logout(){
@@ -591,7 +591,7 @@ function toggleSB(){
   document.getElementById('sidebar').classList.toggle('collapsed', !sbOpen);
   document.getElementById('sbToggle').textContent = sbOpen ? '‹' : '›';
 }
-const PG_TITLES = {overview:'Overview', fixtures:'Partidos', awards:'Premios', rules:'Reglas'};
+const PG_TITLES = {overview:'Overview', fixtures:'Matches', awards:'Awards', rules:'Rules'};
 function go(pg, el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-it').forEach(n=>n.classList.remove('active'));
@@ -612,7 +612,7 @@ function toast(msg){
 }
 
 /* ─────────────────────────────────────────────
-   DEFAULT SEED DATA (solo se escribe si la DB está vacía)
+   DEFAULT SEED DATA (only writes if DB is empty)
 ───────────────────────────────────────────── */
 const SEED_TEAMS = {
   poolA: {
@@ -649,7 +649,7 @@ db.ref('seedVersion').once('value').then(snap=>{
       });
       db.ref('teams').set(SEED_TEAMS);
       db.ref('seedVersion').set(SEED_VERSION);
-      toast('Equipos actualizados (v'+SEED_VERSION+')');
+      toast('Teams updated (v'+SEED_VERSION+')');
     });
   }
 });
@@ -704,15 +704,15 @@ function renderTable(pool, elId){
         s.addEventListener('blur', ()=>{
           const [p,id] = s.dataset.team.split('/');
           db.ref(`teams/${p}/${id}/${s.dataset.f}`).set(s.textContent.trim());
-          toast('Equipo actualizado');
+          toast('Team updated');
         });
         s.addEventListener('keydown', e=>{ if(e.key==='Enter'){e.preventDefault();s.blur();} });
       });
       div.addEventListener('dblclick', e=>{
         if(e.target.isContentEditable) return;
-        if(confirm(`¿Eliminar a ${r.name} del torneo?`)){
+        if(confirm(`Remove ${r.name} from tournament?`)){
           db.ref(`teams/${pool}/${r.id}`).remove();
-          toast('Equipo eliminado');
+          toast('Team eliminado');
         }
       });
     }
@@ -727,10 +727,10 @@ function renderTable(pool, elId){
 }
 
 function addTeam(pool){
-  const name = prompt('Nombre del nuevo equipo:');
+  const name = prompt('New team name:');
   if(!name) return;
   db.ref(`teams/${pool}`).push({name:name.trim(), flag:'🏳️'});
-  toast('Equipo agregado');
+  toast('Team agregado');
 }
 
 /* ─────────────────────────────────────────────
@@ -814,12 +814,12 @@ function matchStatus(dateStr){
   if(matchDate < tomorrow) return 'live';
   return 'upcoming';
 }
-const ST_LABEL = {upcoming:'Próximo', live:'En vivo', done:'Finalizado'};
+const ST_LABEL = {upcoming:'Upcoming', live:'Live', done:'Finished'};
 
 /* Load schedule from Pool A / Pool B Schedule tabs */
 async function loadScheduleFromSheet(){
   SCHEDULE = [];
-  toast('Cargando partidos del Sheet...');
+  toast('Loading matches from Sheet...');
 
   /* Pool A */
   const rowsA = await fetchTab('Pool A Schedule');
@@ -854,7 +854,7 @@ async function loadScheduleFromSheet(){
     }
   });
 
-  toast(`${SCHEDULE.length} partidos cargados`);
+  toast(`${SCHEDULE.length} matches loaded`);
   renderCarousel();
 }
 
@@ -993,7 +993,7 @@ function setupPool(p, matches, carId, detId){
   poolState[p].byDate = byDate;
 
   if(dates.length===0){
-    document.getElementById(carId).innerHTML = '<div style="padding:16px;text-align:center;color:var(--dim);font-size:11px">Sin partidos</div>';
+    document.getElementById(carId).innerHTML = '<div style="padding:16px;text-align:center;color:var(--dim);font-size:11px">No matches</div>';
     document.getElementById(detId).style.display = 'none';
     document.getElementById('date'+p).textContent = '—';
     return;
@@ -1032,7 +1032,7 @@ function showDate(p){
   const carEl = document.getElementById('carousel'+p);
   carEl.innerHTML = '';
   if(matches.length===0){
-    carEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--dim);font-size:11px">Sin partidos este día</div>';
+    carEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--dim);font-size:11px">No matches this day</div>';
     document.getElementById('detail'+p).style.display = 'none';
     return;
   }
@@ -1081,18 +1081,18 @@ async function showMatchDetail(p){
   document.getElementById(`d${p}hGoals`).textContent = '–';
   document.getElementById(`d${p}aGoals`).textContent = '–';
   document.getElementById(`d${p}status`).textContent = `${ST_LABEL[status]} · ${match.date}`;
-  document.getElementById(`d${p}hHead`).textContent = shortName(match.home) + ' — Jugadores';
-  document.getElementById(`d${p}aHead`).textContent = shortName(match.away) + ' — Jugadores';
+  document.getElementById(`d${p}hHead`).textContent = shortName(match.home) + ' — Playeres';
+  document.getElementById(`d${p}aHead`).textContent = shortName(match.away) + ' — Playeres';
 
   /* Admin: click flag to change */
   if(isAdmin){
     [`d${p}hFlag`,`d${p}aFlag`].forEach((elId,i)=>{
       const flagEl = document.getElementById(elId);
-      flagEl.style.cursor = 'pointer'; flagEl.title = 'Click para cambiar bandera';
+      flagEl.style.cursor = 'pointer'; flagEl.title = 'Click to change flag';
       flagEl.onclick = ()=>{
         const teamName = i===0?match.home:match.away;
-        const nf = prompt(`Bandera/emoji para ${teamName}:`, flagEl.textContent);
-        if(nf){ for(const pool of ['poolA','poolB']){ for(const tid of Object.keys(TEAMS[pool]||{})){ if((TEAMS[pool][tid].name||'').toUpperCase()===teamName.toUpperCase()){ db.ref(`teams/${pool}/${tid}/flag`).set(nf.trim()); toast('Bandera actualizada'); return; }}} }
+        const nf = prompt(`Flag/emoji for ${teamName}:`, flagEl.textContent);
+        if(nf){ for(const pool of ['poolA','poolB']){ for(const tid of Object.keys(TEAMS[pool]||{})){ if((TEAMS[pool][tid].name||'').toUpperCase()===teamName.toUpperCase()){ db.ref(`teams/${pool}/${tid}/flag`).set(nf.trim()); toast('Flag updated'); return; }}} }
       };
     });
   }
@@ -1173,7 +1173,7 @@ function renderPlayers(elId, players, totalId, isFuture){
   players.sort((a,b)=>b.sales-a.sales || b.amount-a.amount);
   /* Column header */
   el.innerHTML = `<div class="md-p" style="background:none;padding:4px 12px;opacity:.4;font-size:10px;letter-spacing:1.5px;text-transform:uppercase">
-    <span>Jugador</span><span style="text-align:center;font-family:var(--font-b);font-size:10px">PTS</span><span style="text-align:right;font-family:var(--font-b);font-size:10px">Monto</span></div>`;
+    <span>Player</span><span style="text-align:center;font-family:var(--font-b);font-size:10px">PTS</span><span style="text-align:right;font-family:var(--font-b);font-size:10px">Amount</span></div>`;
   players.forEach(p=>{
     totalSales += p.sales;
     const ptsDisplay = isFuture ? '<span style="opacity:.25">–</span>' : p.sales;
@@ -1185,7 +1185,7 @@ function renderPlayers(elId, players, totalId, isFuture){
     </div>`;
   });
   totalEl.textContent = isFuture ? '–' : totalSales;
-  if(!players.length) el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">Sin jugadores</div>';
+  if(!players.length) el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">No players</div>';
 }
 
 /* ─────────────────────────────────────────────
@@ -1202,7 +1202,7 @@ function bindPrizes(){
       el.contentEditable = true;
       el.addEventListener('blur', ()=>{
         db.ref(`prizes/${key}/${field}`).set(el.textContent.trim());
-        toast('Premio actualizado');
+        toast('Award updated');
       });
       el.addEventListener('keydown', e=>{ if(e.key==='Enter'){e.preventDefault();el.blur();} });
     }
@@ -1223,7 +1223,7 @@ function bindSettings(){
       el.contentEditable = true;
       el.addEventListener('blur', ()=>{
         db.ref(`settings/${key}`).set(el.textContent);
-        toast('Guardado');
+        toast('Saved');
       });
     }
   });

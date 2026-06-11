@@ -58,7 +58,16 @@
     background:radial-gradient(circle,rgba(37,168,82,0.25) 0%,transparent 65%);
     z-index:-1;animation:pulse 4s ease-in-out infinite;}
   @keyframes pulse{0%,100%{opacity:.6;transform:scale(1);}50%{opacity:1;transform:scale(1.06);}}
-  .logo{width:300px;max-width:72vw;height:auto;filter:drop-shadow(0 12px 40px rgba(0,0,0,.6));}
+  .logo{
+    width:300px;max-width:72vw;height:auto;
+    filter:drop-shadow(0 12px 40px rgba(0,0,0,.6));
+    -webkit-mask-image:linear-gradient(-75deg, rgba(0,0,0,1) 30%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,1) 70%);
+    mask-image:linear-gradient(-75deg, rgba(0,0,0,1) 30%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,1) 70%);
+    -webkit-mask-size:200% 100%;
+    mask-size:200% 100%;
+    animation:shimmer 3s infinite linear;
+  }
+  @keyframes shimmer{0%{-webkit-mask-position:150% 0;mask-position:150% 0}100%{-webkit-mask-position:-50% 0;mask-position:-50% 0}}
   .logo-fallback{width:280px;max-width:70vw;height:280px;border-radius:50%;
     border:4px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;
     background:radial-gradient(circle at 50% 35%,var(--gray),var(--dark));
@@ -137,7 +146,7 @@
     <h1 class="tagline" style="margin-top:14px;">The Sales Tournament Challenge</h1>
     <div class="subtagline">Where champions are made</div>
     <div class="divider"></div>
-    <button class="enter-btn" onclick="enterAsVisitor()">Ingresar</button>
+    <button class="enter-btn" onclick="enterAsVisitor()">Enter</button>
     <div class="admin-zone">
       <button class="admin-circle" onclick="openAdmin()" aria-label="Acceso administrador">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -154,16 +163,16 @@
           <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
       </div>
-      <div class="modal-title">🔐 Acceso Admin</div>
-      <div class="modal-sub">Ingresá tus credenciales</div>
-      <div class="field"><label for="user">Usuario</label>
+      <div class="modal-title">🔐 Admin Access</div>
+      <div class="modal-sub">Enter your credentials</div>
+      <div class="field"><label for="user">Username</label>
         <input type="text" id="user" autocomplete="username" placeholder="Joss" onkeydown="if(event.key==='Enter')document.getElementById('pass').focus()"></div>
-      <div class="field"><label for="pass">Contraseña</label>
+      <div class="field"><label for="pass">Password</label>
         <input type="password" id="pass" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')tryLogin()"></div>
       <div class="modal-error" id="error"></div>
       <div class="modal-btns">
-        <button class="btn-cancel" onclick="closeAdmin()">Cancelar</button>
-        <button class="btn-login" onclick="tryLogin()">Ingresar</button>
+        <button class="btn-cancel" onclick="closeAdmin()">Cancel</button>
+        <button class="btn-login" onclick="tryLogin()">Enter</button>
       </div>
     </div>
   </div>
@@ -176,7 +185,7 @@
     function tryLogin(){
       const u=document.getElementById('user').value.trim().toLowerCase(),p=document.getElementById('pass').value,err=document.getElementById('error');
       if(ADMINS[u]&&ADMINS[u].pass===p){sessionStorage.setItem('role','admin');sessionStorage.setItem('adminName',ADMINS[u].name);window.location.href='panel.html';}
-      else{err.textContent='Usuario o contraseña incorrectos';document.getElementById('pass').value='';document.getElementById('pass').focus();}
+      else{err.textContent='Wrong username or password';document.getElementById('pass').value='';document.getElementById('pass').focus();}
     }
     document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeAdmin();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAdmin();});
