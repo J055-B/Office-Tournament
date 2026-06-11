@@ -1013,8 +1013,11 @@ async function loadScheduleFromSheet(){
   const rowsA = await fetchTab('Pool A Schedule');
   rowsA.forEach(r=>{
     const cells = r.c||[];
-    const dateStr = normDate(cells[0]);
-    if(!dateStr) return;
+    const dateRaw = cells[0]?.v;
+    if(!dateRaw || typeof dateRaw!=='string' && typeof dateRaw!=='number') return;
+    const dateStr = typeof dateRaw==='string' ? dateRaw.replace(/\//g,'.') :
+      (cells[0]?.f || String(dateRaw));
+    if(!dateStr.match(/\d/)) return; /* skip non-date rows */
     const day = cellVal(cells[1]);
     const leg = cells[2]?.v||1;
     for(let col=3; col<=6; col++){
@@ -1027,8 +1030,11 @@ async function loadScheduleFromSheet(){
   const rowsB = await fetchTab('Pool B Schedule');
   rowsB.forEach(r=>{
     const cells = r.c||[];
-    const dateStr = normDate(cells[0]);
-    if(!dateStr) return;
+    const dateRaw = cells[0]?.v;
+    if(!dateRaw) return;
+    const dateStr = typeof dateRaw==='string' ? dateRaw.replace(/\//g,'.') :
+      (cells[0]?.f || String(dateRaw));
+    if(!dateStr.match(/\d/) || dateStr.includes('POOL')) return;
     const day = cellVal(cells[1]);
     const leg = cells[2]?.v||1;
     for(let col=3; col<=4; col++){
