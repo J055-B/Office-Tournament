@@ -480,7 +480,7 @@
           </div>
           <div class="aw-c" style="--ac:var(--gold)">
             <div class="aw-ic">📈</div><div class="aw-t">Best Progression ×2</div>
-            <div class="aw-d">FTD/Canva: % Growth vs last month (50%)<br>RET: % Growth Income vs mes anterior</div>
+            <div class="aw-d">FTD/Canva: % Growth vs last month (50%)<br>RET: % Growth Income vs last month</div>
             <div class="aw-foot"><span class="winner-tag" data-prize="progression" data-field="winner">TBD</span><span class="aw-amount" data-prize="progression" data-field="amount">—</span></div>
           </div>
         </div>
@@ -1470,7 +1470,7 @@ function initBGM(){
   bgmCurrentIdx = 0;
   bgmAudio = new Audio();
   bgmAudio.loop = false;
-  bgmAudio.volume = 0.3;
+  bgmAudio.volume = 0.5;
   bgmAudio.addEventListener('ended', ()=>{ skipTrack(1); });
   tryPlayCurrent();
 }
