@@ -1321,12 +1321,12 @@ setInterval(()=>{ SHEET_DATA = {}; RAW_CACHE = {}; loadScheduleFromSheet(); }, 3
    BGM — Background Music
 ───────────────────────────────────────────── */
 const BGM_TRACKS = [
-  'assets/bgm/bgm.mp3',
-  'assets/bgm/bgm1.mp3',
-  'assets/bgm/bgm2.mp3',
-  'assets/bgm/bgm3.mp3',
-  'assets/bgm/bgm4.mp3',
-  'assets/bgm/bgm5.mp3'
+  'assets/mp3/bgm.mp3',
+  'assets/mp3/bgm1.mp3',
+  'assets/mp3/bgm2.mp3',
+  'assets/mp3/bgm3.mp3',
+  'assets/mp3/bgm4.mp3',
+  'assets/mp3/bgm5.mp3'
 ];
 let bgmAudio = null;
 let bgmPlaying = false;
@@ -1339,38 +1339,44 @@ function initBGM(){
   bgmAudio = new Audio();
   bgmAudio.loop = false;
   bgmAudio.volume = 0.3;
-
-  /* When track ends, play next */
   bgmAudio.addEventListener('ended', ()=>{ skipTrack(1); });
-
-  playCurrentTrack();
+  tryPlayCurrent();
 }
 
-function playCurrentTrack(){
-  if(!bgmAudio || bgmShuffled.length===0) return;
-  bgmAudio.src = bgmShuffled[bgmCurrentIdx % bgmShuffled.length];
-  bgmAudio.play().then(()=>{
-    bgmPlaying = true;
-    updateMusicBtn();
-  }).catch(()=>{
-    /* Autoplay blocked or file missing — try next or wait for click */
-    bgmAudio.addEventListener('error', ()=>{
-      /* File doesn't exist, try next */
-      bgmCurrentIdx++;
-      if(bgmCurrentIdx < bgmShuffled.length) playCurrentTrack();
-    }, {once:true});
+function tryPlayCurrent(){
+  if(!bgmAudio || bgmCurrentIdx >= bgmShuffled.length){
+    /* All tracks tried, wait for user interaction */
     bgmPlaying = false;
     updateMusicBtn();
-    document.addEventListener('click', startBGMOnce, {once:true});
-  });
-}
+    return;
+  }
+  bgmAudio.src = bgmShuffled[bgmCurrentIdx];
+  
+  bgmAudio.onerror = ()=>{
+    /* File doesn't exist, skip to next */
+    bgmCurrentIdx++;
+    tryPlayCurrent();
+  };
 
-function startBGMOnce(){
-  if(bgmAudio && !bgmPlaying){
-    bgmAudio.play().then(()=>{
+  const playPromise = bgmAudio.play();
+  if(playPromise !== undefined){
+    playPromise.then(()=>{
       bgmPlaying = true;
       updateMusicBtn();
-    }).catch(()=>{});
+    }).catch(()=>{
+      /* Autoplay blocked — wait for any user click */
+      bgmPlaying = false;
+      updateMusicBtn();
+      document.addEventListener('click', function resumeBGM(){
+        document.removeEventListener('click', resumeBGM);
+        if(bgmAudio && !bgmPlaying){
+          bgmAudio.play().then(()=>{
+            bgmPlaying = true;
+            updateMusicBtn();
+          }).catch(()=>{});
+        }
+      });
+    });
   }
 }
 
