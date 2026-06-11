@@ -775,43 +775,44 @@ function addTeam(pool){
 let TARGETS = {}; /* { teamName: { dailyTarget, pool } } */
 let PREV_GOALS = {}; /* { teamName: goalCount } — for detecting new goals */
 
-/* Fetch targets from "Teams" sheet */
+/* Fetch targets from "Groups" sheet — col A=team name, col C=daily target */
 async function fetchTargets(){
-  const rows = await fetchTab('Teams');
-  if(rows.length < 2) return;
-  /* Pool A: rows 1-8 → col A=team, col E(4)=daily target */
-  /* Pool B: rows after Pool A → col H=team, col L(11)=2days target */
+  const rows = await fetchTab('Groups');
+  TARGETS = {};
   rows.forEach(r=>{
     const cells = r.c||[];
-    /* Pool A — column A(0) has team name, column E(4) has daily target */
-    const nameA = cellVal(cells[0]);
-    const dailyA = cellNum(cells[4]);
-    if(nameA && dailyA > 0 && !nameA.match(/^POOL|^#|^\d/i)){
-      TARGETS[nameA.trim()] = { dailyTarget: dailyA, pool: 'poolA' };
-    }
-    /* Pool B — column H(7) has team name, column L(11) has 2days target */
-    const nameB = cellVal(cells[7]);
-    const twoDayB = cellNum(cells[11]);
-    if(nameB && twoDayB > 0 && !nameB.match(/^POOL|^#|^\d/i)){
-      TARGETS[nameB.trim()] = { dailyTarget: twoDayB / 2, pool: 'poolB' }; /* divide by 2 for daily */
-    }
+    const name = cellVal(cells[0]);
+    const dailyTarget = cellNum(cells[2]); /* col C = Daily Target */
+    if(!name || dailyTarget <= 0) return;
+    /* Skip header and sub-group rows */
+    if(name.toLowerCase().includes('group') || name.includes('BG -') || name.includes('IL -') || name.includes('MAD ') || name.includes('MADA FTD') || name.includes('CIS ')) return;
+    const isRet = name.toUpperCase().startsWith('RET');
+    TARGETS[name.trim()] = { dailyTarget, pool: isRet ? 'poolB' : 'poolA' };
   });
-  console.log('Targets loaded:', TARGETS);
+  console.log('[Targets]', Object.keys(TARGETS).length, 'teams:', TARGETS);
 }
 
 /* Find target for a team (fuzzy match) */
 function getTarget(teamName){
   const clean = (teamName||'').trim();
+  /* Exact match */
   if(TARGETS[clean]) return TARGETS[clean];
-  /* Try partial match */
+  /* Try without "FTD " or "RET " prefix */
+  const noPrefix = clean.replace(/^(FTD|RET)\s*/i,'').trim();
+  for(const key of Object.keys(TARGETS)){
+    const keyClean = key.replace(/^(FTD|RET)\s*/i,'').trim();
+    if(keyClean === noPrefix) return TARGETS[key];
+    if(key === noPrefix) return TARGETS[key];
+  }
+  /* Partial match — first word */
   for(const key of Object.keys(TARGETS)){
     if(clean.includes(key) || key.includes(clean)) return TARGETS[key];
+    if(clean.toLowerCase().includes(key.toLowerCase())) return TARGETS[key];
   }
-  /* Try number-based lookup */
-  const num = clean.replace(/[^\d]/g,'');
-  for(const key of Object.keys(TARGETS)){
-    if(num && key.includes(num)) return TARGETS[key];
-  }
+  /* MADA special case */
+  if(clean.includes('MADA') && TARGETS['MADA']) return TARGETS['MADA'];
+  /* Canva special case */
+  if(clean.includes('Canva') && TARGETS['Canva']) return TARGETS['Canva'];
   return null;
 }
 
@@ -1065,28 +1066,27 @@ function cellNum(cell){
 
 /* Extract {day, month(1-indexed)} from any date representation */
 function extractDayMonth(val){
-  const s = String(val||'');
+  const s = String(val||'').replace(/,/g,'.'); /* normalize commas to dots */
   /* GViz Date format: "Date(2026,5,12,...)" — month is 0-indexed */
-  let m = s.match(/^Date\(\d+,(\d+),(\d+)/i);
+  let m = s.match(/^Date\(\d+\.(\d+)\.(\d+)/i);
   if(m) return { day:parseInt(m[2]), month:parseInt(m[1])+1 };
+  /* Also try original comma format */
+  let m2 = String(val||'').match(/^Date\(\d+,(\d+),(\d+)/i);
+  if(m2) return { day:parseInt(m2[2]), month:parseInt(m2[1])+1 };
   /* ISO format: "2026-06-12..." */
   m = s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
   if(m) return { day:parseInt(m[3]), month:parseInt(m[2]) };
   /* dd.mm or dd/mm format */
   m = s.match(/^(\d{1,2})[\.\/](\d{1,2})/);
   if(m) return { day:parseInt(m[1]), month:parseInt(m[2]) };
-  /* mm/dd/yyyy US format */
-  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if(m) return { day:parseInt(m[2]), month:parseInt(m[1]) };
   return null;
 }
 
 /* Check if a cell date matches a match date (dd.mm format) */
 function dateMatches(cellValue, matchDate){
-  if(!matchDate || !cellValue) return true; /* no filter = match all */
-  const target = extractDayMonth(matchDate);
+  if(!matchDate || !cellValue) return true;
+  const target = extractDayMonth(String(matchDate).replace(/,/g,'.'));
   if(!target) return true;
-  /* Try raw value first, then formatted */
   const raw = extractDayMonth(cellValue);
   if(raw) return raw.day===target.day && raw.month===target.month;
   return false;
@@ -1338,25 +1338,7 @@ async function showMatchDetail(p){
   document.getElementById(`d${p}hHead`).textContent = shortName(match.home) + ' — Players';
   document.getElementById(`d${p}aHead`).textContent = shortName(match.away) + ' — Players';
 
-  /* Calculate goals for both teams */
-  const [hGoalData, aGoalData] = await Promise.all([
-    calcTeamGoals(match.home, match.date),
-    calcTeamGoals(match.away, match.date)
-  ]);
-
-  /* Display goals in the score area */
-  document.getElementById(`d${p}hGoals`).textContent = status==='upcoming' ? '–' : hGoalData.goals;
-  document.getElementById(`d${p}aGoals`).textContent = status==='upcoming' ? '–' : aGoalData.goals;
-  document.getElementById(`d${p}hTotal`).textContent = status==='upcoming' ? '–' : `⚽ ${hGoalData.goals}`;
-  document.getElementById(`d${p}aTotal`).textContent = status==='upcoming' ? '–' : `⚽ ${aGoalData.goals}`;
-
-  /* Check for new goals (only for live matches = today) */
-  if(status === 'live'){
-    checkNewGoal(match.home, hGoalData.goals);
-    checkNewGoal(match.away, aGoalData.goals);
-  }
-
-  /* Load players (roster from col L + day stats from transactions) */
+  /* Load players (roster + day stats) */
   const isFuture = status === 'upcoming';
   const dateFilter = isFuture ? null : match.date;
   const [hp, ap] = await Promise.all([
@@ -1365,6 +1347,24 @@ async function showMatchDetail(p){
   ]);
   renderPlayers(`d${p}hPlayers`, hp, `d${p}hTotal`, isFuture);
   renderPlayers(`d${p}aPlayers`, ap, `d${p}aTotal`, isFuture);
+
+  /* Calculate goals AFTER players render to ensure GOALS display is never overwritten */
+  const [hGoalData, aGoalData] = await Promise.all([
+    calcTeamGoals(match.home, match.date),
+    calcTeamGoals(match.away, match.date)
+  ]);
+
+  /* Display goals */
+  document.getElementById(`d${p}hGoals`).textContent = isFuture ? '–' : hGoalData.goals;
+  document.getElementById(`d${p}aGoals`).textContent = isFuture ? '–' : aGoalData.goals;
+  document.getElementById(`d${p}hTotal`).textContent = isFuture ? '–' : `⚽ ${hGoalData.goals}`;
+  document.getElementById(`d${p}aTotal`).textContent = isFuture ? '–' : `⚽ ${aGoalData.goals}`;
+
+  /* Check for new goals (only for live matches) */
+  if(status === 'live'){
+    checkNewGoal(match.home, hGoalData.goals);
+    checkNewGoal(match.away, aGoalData.goals);
+  }
 
   highlightCard(p, st.selIdx);
 
@@ -1516,11 +1516,9 @@ function resetCarouselTimer(){ startCarouselTimer(); }
 
 function renderPlayers(elId, players, totalId, isFuture){
   const el = document.getElementById(elId);
-  const totalEl = document.getElementById(totalId);
   el.innerHTML = '';
   let totalSales = 0;
   players.sort((a,b)=>b.sales-a.sales || b.amount-a.amount);
-  /* Column header */
   el.innerHTML = `<div class="md-p" style="background:none;padding:4px 12px;opacity:.4;font-size:10px;letter-spacing:1.5px;text-transform:uppercase">
     <span>Player</span><span style="text-align:center;font-family:var(--font-b);font-size:10px">PTS</span><span style="text-align:right;font-family:var(--font-b);font-size:10px">Amount</span></div>`;
   players.forEach(p=>{
@@ -1533,7 +1531,7 @@ function renderPlayers(elId, players, totalId, isFuture){
       <span class="md-p-amount">${amtDisplay}</span>
     </div>`;
   });
-  totalEl.textContent = isFuture ? '–' : totalSales;
+  /* Don't set totalId here — GOALS is set by showMatchDetail after calcTeamGoals */
   if(!players.length) el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">No players</div>';
 }
 
