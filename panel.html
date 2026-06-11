@@ -1042,8 +1042,8 @@ async function loadScheduleFromSheet(){
     }
   });
 
-  toast(`${SCHEDULE.length} matches | 1st: "${SCHEDULE[0]?.date}" | Last: "${SCHEDULE[SCHEDULE.length-1]?.date}"`);
-  console.log('[Schedule]', SCHEDULE.length, 'matches. Dates:', [...new Set(SCHEDULE.map(s=>s.date))].sort());
+  toast(`${SCHEDULE.length} matches loaded`);
+  console.log('[Schedule]', SCHEDULE.length, 'matches');
   renderCarousel();
   renderYesterdayResults();
 }
@@ -1116,12 +1116,24 @@ function fetchPlayers(tabName, matchDate){
       const isRet = tabName.toUpperCase().includes('RET');
       const dataRows = rows.slice(1);
 
-      /* 1. Build roster from col L(11) + col M(12) */
+      /* Detect roster columns (Full Name + Status) from header row */
+      const header = rows[0]?.c || [];
+      let nameCol = -1, statusCol = -1;
+      for(let i=0; i<header.length; i++){
+        const h = (cellVal(header[i])||'').toLowerCase().trim();
+        if(h.includes('full name') && nameCol===-1) nameCol = i;
+        if(h.includes('status') && statusCol===-1) statusCol = i;
+      }
+      /* Fallback to common positions if not found in header */
+      if(nameCol===-1) nameCol = 11; /* col L */
+      if(statusCol===-1) statusCol = nameCol + 1;
+
+      /* 1. Build roster from detected columns */
       const roster = {};
       dataRows.forEach(r=>{
         const cells = r.c||[];
-        const fullName = cellVal(cells[11]);
-        const status = cellVal(cells[12]);
+        const fullName = cellVal(cells[nameCol]);
+        const status = cellVal(cells[statusCol]);
         if(fullName && fullName.length>1 && !INVALID_NAMES.test(fullName.trim())){
           if(!status || status.toLowerCase().includes('active')){
             const n = fullName.trim();
@@ -1147,22 +1159,25 @@ function fetchPlayers(tabName, matchDate){
         if(!agentName || agentName.length<2 || INVALID_NAMES.test(agentName.trim())) return;
 
         const clean = agentName.trim();
-        /* Match to roster by first name or partial match */
         let matched = false;
         for(const rName of Object.keys(roster)){
-          const rFirst = rName.split(' ')[0].toLowerCase();
-          const aFirst = clean.split(' ')[0].toLowerCase();
-          if(rName===clean || rFirst===aFirst || rName.toLowerCase().includes(aFirst)){
-            roster[rName].sales++;
-            roster[rName].amount += amount;
-            matched = true;
-            break;
+          /* Exact match */
+          if(rName===clean){ roster[rName].sales++; roster[rName].amount+=amount; matched=true; break; }
+          /* Both first AND last name match */
+          const rP=rName.toLowerCase().split(/\s+/), aP=clean.toLowerCase().split(/\s+/);
+          if(rP.length>=2 && aP.length>=2 && rP[0]===aP[0] && rP[rP.length-1]===aP[aP.length-1]){
+            roster[rName].sales++; roster[rName].amount+=amount; matched=true; break;
+          }
+          /* Truncated name: first 8+ chars match (handles "Beatrice Landi..." → "Beatrice Landini") */
+          const rL=rName.toLowerCase(), aL=clean.toLowerCase();
+          if(rL.length>6 && aL.length>6 && rL.substring(0,Math.min(10,rL.length))===aL.substring(0,Math.min(10,aL.length))){
+            roster[rName].sales++; roster[rName].amount+=amount; matched=true; break;
           }
         }
-        if(!matched){
-          if(!roster[clean]) roster[clean]={sales:0, amount:0};
+        if(!matched && clean.length>1){
+          if(!roster[clean]) roster[clean]={sales:0,amount:0};
           roster[clean].sales++;
-          roster[clean].amount += amount;
+          roster[clean].amount+=amount;
         }
       });
 
