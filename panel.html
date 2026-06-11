@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -100,26 +100,6 @@
   [contenteditable="true"]:hover{background:rgba(245,197,24,0.07);}
   [contenteditable="true"]:focus{background:rgba(245,197,24,0.1);border-bottom-color:var(--gold);}
 
-  /* ═══ SCOREBOARD ═══ */
-  .scoreboard{background:var(--card-bg);border:1px solid var(--border-strong);border-radius:12px;overflow:hidden;margin-bottom:24px;}
-  .sb-head{background:linear-gradient(90deg,rgba(37,168,82,0.12),rgba(245,197,24,0.07),rgba(192,57,43,0.12));padding:11px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
-  .sb-head-t{font-family:var(--font-d);font-size:17px;letter-spacing:2px;color:var(--gold);}
-  .sb-body{padding:20px;display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;}
-  .pcard{text-align:center;padding:16px;border-radius:10px;border:1px solid;}
-  .pcard.pa{background:rgba(37,168,82,0.07);border-color:rgba(37,168,82,0.28);}
-  .pcard.pb{background:rgba(192,57,43,0.07);border-color:rgba(192,57,43,0.28);}
-  .ptag{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:6px;}
-  .pa .ptag{color:var(--pool-a-soft);}.pb .ptag{color:var(--pool-b-soft);}
-  .pname{font-family:var(--font-d);font-size:26px;letter-spacing:2px;margin-bottom:10px;}
-  .pa .pname{color:var(--pool-a-soft);}.pb .pname{color:var(--pool-b-soft);}
-  .pstats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
-  .pst{background:rgba(255,255,255,0.04);border-radius:6px;padding:8px 4px;}
-  .pst-v{font-size:19px;font-weight:700;font-family:var(--font-d);color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 3px;}
-  .pst-l{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-top:2px;}
-  .vsmid{display:flex;flex-direction:column;align-items:center;gap:7px;}
-  .vstxt{font-family:var(--font-d);font-size:42px;color:var(--gold);opacity:.35;line-height:1;}
-  .rndtag{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);background:rgba(255,255,255,0.04);padding:3px 9px;border-radius:4px;}
-
   /* ═══ POOL TABLES ═══ */
   .pools-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
   .pblock{background:var(--card-bg);border-radius:12px;overflow:hidden;border:1px solid var(--border);}
@@ -137,15 +117,8 @@
   .tpos{font-size:11px;font-weight:700;color:var(--dim);text-align:center;}
   .tpos.g{color:var(--gold);}
   .tinfo{display:flex;align-items:center;gap:8px;min-width:0;}
-  .tflag{font-size:16px;flex-shrink:0;}
+  .tflag{width:24px;height:24px;flex-shrink:0;border-radius:50%;object-fit:cover;}
   .tname{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .flag-edit-btn{background:none;border:1px solid rgba(245,197,24,0.3);color:var(--gold);
-    font-size:10px;padding:2px 5px;border-radius:4px;cursor:pointer;margin-left:6px;
-    opacity:.5;transition:all .15s;flex-shrink:0;}
-  .flag-edit-btn:hover{opacity:1;background:rgba(245,197,24,0.12);border-color:var(--gold);}
-  .md-flag.editable{cursor:pointer;border:2px dashed rgba(245,197,24,0.4);border-radius:50%;
-    padding:4px;transition:all .2s;}
-  .md-flag.editable:hover{border-color:var(--gold);background:rgba(245,197,24,0.08);}
   .tstat{text-align:center;font-size:12px;color:var(--dim);}
   .tgd{text-align:center;font-size:11px;color:var(--dim);}
   .tpts{text-align:center;font-family:var(--font-d);font-size:18px;color:var(--text);}
@@ -157,11 +130,6 @@
   .btn:hover{background:rgba(245,197,24,0.2);}
   .btn.danger{border-color:rgba(192,57,43,0.4);background:rgba(192,57,43,0.1);color:#e8939a;}
   .btn.danger:hover{background:rgba(192,57,43,0.2);}
-  /* (old fx-card/fx-grid classes removed — replaced by mc-card carousel) */
-  .st-up{background:rgba(255,255,255,0.05);color:var(--dim);}
-  .st-live{background:rgba(192,57,43,0.14);color:#e8939a;border:1px solid rgba(192,57,43,0.3);animation:pulse 1.6s ease-in-out infinite;}
-  .st-done{background:rgba(37,168,82,0.13);color:var(--green);}
-  /* (old fx status/delete classes removed) */
 
   /* ═══ AWARDS ═══ */
   .mvp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
@@ -242,8 +210,9 @@
   .mc-week{position:absolute;top:8px;right:10px;font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;opacity:.5;}
   .mc-teams{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:10px;}
   .mc-t{display:flex;flex-direction:column;align-items:center;gap:4px;}
-  .mc-flag{font-size:28px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.06);
-    display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.08);}
+  .mc-flag{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.06);
+    display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.08);overflow:hidden;}
+  .mc-flag img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
   .mc-tname{font-family:var(--font-d);font-size:13px;letter-spacing:1.5px;color:var(--text);line-height:1;}
   .mc-vs{font-family:var(--font-d);font-size:16px;color:var(--gold);opacity:.5;}
   .mc-score-line{margin-top:8px;font-family:var(--font-d);font-size:22px;letter-spacing:3px;color:var(--gold);}
@@ -254,7 +223,7 @@
     background:linear-gradient(90deg,rgba(37,168,82,0.08),rgba(245,197,24,0.05),rgba(192,57,43,0.08));
     border-bottom:1px solid rgba(255,255,255,0.06);}
   .md-team{text-align:center;}
-  .md-flag{font-size:44px;margin-bottom:6px;}
+  .md-flag{width:80px;height:80px;margin:0 auto 6px;border-radius:50%;object-fit:cover;display:block;}
   .md-tname{font-family:var(--font-d);font-size:22px;letter-spacing:2px;color:var(--text);margin-bottom:4px;}
   .md-total{font-family:var(--font-d);font-size:38px;color:var(--gold);line-height:1;}
   .md-total-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;opacity:.4;margin-top:2px;}
@@ -605,7 +574,7 @@ if(isAdmin){
   document.getElementById('addTeamA').style.display = 'inline-block';
   document.getElementById('addTeamB').style.display = 'inline-block';
   document.getElementById('adminHintTeams').textContent = '✎ Admin mode: click on a team name or flag to edit. Double-click a row to remove the team.';
-  document.getElementById('adminHintFx').textContent = '✎ Admin mode: click a flag in the detail view to change it. Matches load automatically from Google Sheet.';
+  document.getElementById('adminHintFx').textContent = '✎ Admin mode: Matches load automatically from Google Sheet.';
   document.getElementById('adminHintAw').textContent = '✎ Admin mode: click "TBD" or amounts to edit.';
   document.getElementById('adminHintRl').textContent = '✎ Admin mode: click the rules text to edit.';
   /* Admin-only nav items */
@@ -752,55 +721,20 @@ function renderTable(pool, elId){
     const gd = r.gf-r.ga;
     div.innerHTML =
       `<div class="tpos${i===0?' g':''}">${i+1}</div>`+
-      `<div class="tinfo"><span class="tflag" data-team="${pool}/${r.id}" data-f="flag">${r.flag}</span>`+
-      `<span class="tname" data-team="${pool}/${r.id}" data-f="name">${escapeHtml(r.name)}</span>`+
-      (isAdmin?`<button class="flag-edit-btn" data-team="${pool}/${r.id}" title="Change flag">✏️</button>`:'')+
-      `</div>`+
+      `<div class="tinfo">${flagHTML(r.name, 24)}`+
+      `<span class="tname">${escapeHtml(r.name)}</span></div>`+
       `<div class="tstat">${r.p}</div><div class="tstat">${r.w}</div><div class="tstat">${r.d}</div><div class="tstat">${r.l}</div>`+
       `<div class="tgd">${gd>0?'+':''}${gd}</div>`+
       `<div class="tpts${i===0&&r.pts>0?' top':''}">${r.pts}</div>`;
-    if(isAdmin){
-      div.querySelectorAll('[data-team]').forEach(s=>{
-        if(s.classList.contains('flag-edit-btn')){
-          s.addEventListener('click', (e)=>{
-            e.stopPropagation();
-            const [p,id] = s.dataset.team.split('/');
-            const current = TEAMS[p]?.[id]?.flag||'🏳️';
-            const nf = prompt(`New flag/emoji for ${TEAMS[p]?.[id]?.name||'team'}:`, current);
-            if(nf && nf.trim()){
-              db.ref(`teams/${p}/${id}/flag`).set(nf.trim());
-              toast('Flag updated');
-            }
-          });
-          return;
-        }
-        s.contentEditable = true;
-        s.addEventListener('blur', ()=>{
-          const [p,id] = s.dataset.team.split('/');
-          db.ref(`teams/${p}/${id}/${s.dataset.f}`).set(s.textContent.trim());
-          toast('Team updated');
-        });
-        s.addEventListener('keydown', e=>{ if(e.key==='Enter'){e.preventDefault();s.blur();} });
-      });
-      div.addEventListener('dblclick', e=>{
-        if(e.target.isContentEditable) return;
-        if(confirm(`Remove ${r.name} from tournament?`)){
-          db.ref(`teams/${pool}/${r.id}`).remove();
-          toast('Team eliminado');
-        }
-      });
-    }
     el.appendChild(div);
   });
-  /* header stats */
-  /* Scoreboard removed — stats computed in standings only */
 }
 
 function addTeam(pool){
   const name = prompt('New team name:');
   if(!name) return;
   db.ref(`teams/${pool}`).push({name:name.trim(), flag:'🏳️'});
-  toast('Team agregado');
+  toast('Team added');
 }
 
 /* ─────────────────────────────────────────────
@@ -912,14 +846,23 @@ let carouselTimer = null;
 
 function shortName(name){ return (name||'').replace(/^(FTD|RET)\s*/i,'').replace(/MADA1?-?3?-?4?\s*/i,'MADA ').trim() || name; }
 
-/* Find team flag from Firebase TEAMS by matching name */
-function findFlag(teamName){
-  const clean = (teamName||'').trim().toUpperCase();
-  for(const pool of ['poolA','poolB']){
-    for(const id of Object.keys(TEAMS[pool]||{})){
-      if((TEAMS[pool][id].name||'').toUpperCase() === clean) return TEAMS[pool][id].flag||'🏳️';
-    }
-  }
+/* Team name → flag image path */
+const FLAG_MAP = {
+  'FTD BG IT':'ftd_bg_it','FTD BG ES':'ftd_bg_es','FTD BG EN':'ftd_bg_en',
+  'FTD BG Canva':'ftd_bg_canva','FTD IL ES':'ftd_il_es','FTD BS ES':'ftd_bs_es',
+  'FTD MADA1-3-4 FR':'ftd_mada_fr','FTD MADA FR':'ftd_mada_fr',
+  'FTD IL FR':'ftd_il_fr',
+  'RET BG':'ret_bg','RET IL ES':'ret_il_es','RET IL FR':'ret_il_fr','RET BS ES':'ret_bs_es'
+};
+function flagSrc(teamName){
+  const key = (teamName||'').trim();
+  const file = FLAG_MAP[key];
+  return file ? `assets/flags/${file}.png` : '';
+}
+function flagHTML(teamName, size){
+  const src = flagSrc(teamName);
+  const s = size||40;
+  if(src) return `<img src="${src}" alt="" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;" onerror="this.outerHTML='🏳️'">`;
   return '🏳️';
 }
 
@@ -936,16 +879,29 @@ function fetchTab(tabName){
 
 /* (player data fetched by fetchPlayers below, after cellVal) */
 
-/* Map full team name → sheet tab name(s) for player data */
+/* Map full team name → sheet tab name(s) for player data
+   Exact tab names from Google Sheet:
+   Pool A: FTD BG IT, FTD BG ES, FTD BG EN, Canva, FTD IL ES, FTD BS ES, MADA, FTD IL FR
+   Pool B: RET BG (reads EN+ES+IT), RET IL FR, RET IL ES, RET IL BS:
+*/
 function teamToTabs(name){
   const n = (name||'').trim();
   const map = {
-    'FTD BG EN':['FTD BG EN'],'FTD BG ES':['FTD BG ES'],'FTD BG IT':['FTD BG IT'],
-    'FTD BG Canva':['FTD BG EN'], /* Canva team shares BG EN tab */
-    'FTD IL ES':['FTD IL ES'],'FTD BS ES':['FTD BS ES'],'FTD IL FR':['FTD IL FR'],
-    'FTD MADA1-3-4 FR':['MADA'],'FTD MADA FR':['MADA'],'MADA':['MADA'],
-    'RET BG':['RET BG EN','RET BG ES','RET BG IT'], /* combined */
-    'RET IL ES':['RET IL ES'],'RET IL FR':['RET IL FR'],'RET BS ES':['RET BS ES']
+    /* Pool A — FTD */
+    'FTD BG IT':['FTD BG IT'],
+    'FTD BG ES':['FTD BG ES'],
+    'FTD BG EN':['FTD BG EN'],
+    'FTD BG Canva':['Canva'],
+    'FTD IL ES':['FTD IL ES'],
+    'FTD BS ES':['FTD BS ES'],
+    'FTD IL FR':['FTD IL FR'],
+    'FTD MADA1-3-4 FR':['MADA'],
+    'FTD MADA FR':['MADA'],
+    /* Pool B — RET */
+    'RET BG':['RET BG'],
+    'RET IL ES':['RET IL ES'],
+    'RET IL FR':['RET IL FR'],
+    'RET BS ES':['RET IL BS:']
   };
   return map[n] || [n];
 }
@@ -1207,8 +1163,8 @@ function showDate(p){
   }
 
   matches.forEach((match,i)=>{
-    const hFlag = findFlag(match.home);
-    const aFlag = findFlag(match.away);
+    const hFlag = flagHTML(match.home, 36);
+    const aFlag = flagHTML(match.away, 36);
     const status = matchStatus(match.date);
     const card = document.createElement('div');
     card.className = 'mc-card' + (i===0?' active':'');
@@ -1240,30 +1196,17 @@ async function showMatchDetail(p){
 
   const det = document.getElementById('detail'+p);
   det.style.display = 'block';
-  const hFlag = findFlag(match.home), aFlag = findFlag(match.away);
+  const hFlag = flagHTML(match.home, 80);
+  const aFlag = flagHTML(match.away, 80);
   const status = matchStatus(match.date);
 
-  document.getElementById(`d${p}hFlag`).textContent = hFlag;
+  document.getElementById(`d${p}hFlag`).innerHTML = hFlag;
   document.getElementById(`d${p}hName`).textContent = shortName(match.home);
-  document.getElementById(`d${p}aFlag`).textContent = aFlag;
+  document.getElementById(`d${p}aFlag`).innerHTML = aFlag;
   document.getElementById(`d${p}aName`).textContent = shortName(match.away);
   document.getElementById(`d${p}status`).textContent = `${ST_LABEL[status]} · ${match.date}`;
   document.getElementById(`d${p}hHead`).textContent = shortName(match.home) + ' — Players';
   document.getElementById(`d${p}aHead`).textContent = shortName(match.away) + ' — Players';
-
-  /* Admin: click flag to change */
-  if(isAdmin){
-    [`d${p}hFlag`,`d${p}aFlag`].forEach((elId,i)=>{
-      const flagEl = document.getElementById(elId);
-      flagEl.className = 'md-flag editable';
-      flagEl.title = '🖊 Click to change flag';
-      flagEl.onclick = ()=>{
-        const teamName = i===0?match.home:match.away;
-        const nf = prompt(`Flag/emoji for ${teamName}:`, flagEl.textContent);
-        if(nf){ for(const pool of ['poolA','poolB']){ for(const tid of Object.keys(TEAMS[pool]||{})){ if((TEAMS[pool][tid].name||'').toUpperCase()===teamName.toUpperCase()){ db.ref(`teams/${pool}/${tid}/flag`).set(nf.trim()); toast('Flag updated'); return; }}} }
-      };
-    });
-  }
 
   /* Calculate goals for both teams */
   const [hGoalData, aGoalData] = await Promise.all([
