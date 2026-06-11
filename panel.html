@@ -1182,17 +1182,32 @@ function renderCarousel(){
 }
 
 function setupPool(p, matches, carId, detId){
-  /* Group by date */
   const byDate = {};
   matches.forEach(m=>{
     const d = m.date||'?';
     if(!byDate[d]) byDate[d]=[];
     byDate[d].push(m);
   });
-  /* Sort dates as real dates, not strings */
-  const parseDate = (s)=>{ const p=s.split('.'); return new Date(2026, parseInt(p[1])-1, parseInt(p[0])); };
-  const dates = Object.keys(byDate).sort((a,b)=>parseDate(a)-parseDate(b));
+  const parseDate = (s)=>{ const pp=s.split('.'); return new Date(2026, parseInt(pp[1])-1, parseInt(pp[0])); };
+  const allDates = Object.keys(byDate).sort((a,b)=>parseDate(a)-parseDate(b));
+
+  /* Only show today and tomorrow for visitors, all for admin */
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+  let dates = isAdmin ? allDates : allDates.filter(d=>{
+    const dt = parseDate(d);
+    return dt.getTime()===today.getTime() || dt.getTime()===tomorrow.getTime();
+  });
+
+  /* If no matches today/tomorrow, show the nearest upcoming date */
+  if(dates.length===0){
+    for(const d of allDates){
+      if(parseDate(d) >= today){ dates.push(d); break; }
+    }
+  }
+
   poolState[p].dates = dates;
+  poolState[p].allDates = allDates; /* keep full list for admin calendar */
   poolState[p].byDate = byDate;
 
   if(dates.length===0){
@@ -1203,7 +1218,6 @@ function setupPool(p, matches, carId, detId){
   }
 
   /* Find today or nearest future date */
-  const today = new Date(); today.setHours(0,0,0,0);
   let bestIdx = 0;
   for(let i=0;i<dates.length;i++){
     if(parseDate(dates[i]) >= today){ bestIdx = i; break; }
@@ -1380,12 +1394,22 @@ function buildCalendar(p){
   el.innerHTML = '';
   const today = new Date(); today.setHours(0,0,0,0);
   const parseD = (s)=>{ const pp=s.split('.'); return new Date(2026, parseInt(pp[1])-1, parseInt(pp[0])); };
-  st.dates.forEach((date,i)=>{
+  const calDates = isAdmin ? (st.allDates||st.dates) : st.dates;
+  calDates.forEach((date,i)=>{
     const isToday = parseD(date).getTime()===today.getTime();
+    const isVisible = st.dates.includes(date);
     const chip = document.createElement('div');
-    chip.className = 'dc-chip' + (i===st.dateIdx?' active':'') + (isToday?' today':'');
+    chip.className = 'dc-chip' + (date===st.dates[st.dateIdx]?' active':'') + (isToday?' today':'');
+    if(!isVisible) chip.style.opacity = '0.3';
     chip.textContent = date;
-    chip.addEventListener('click', ()=>{ st.dateIdx = i; showDate(p); });
+    chip.addEventListener('click', ()=>{
+      if(!isVisible && !isAdmin) return;
+      /* Find index in visible dates or add temporarily */
+      let idx = st.dates.indexOf(date);
+      if(idx===-1){ st.dates.push(date); st.dates.sort((a,b)=>parseD(a)-parseD(b)); idx = st.dates.indexOf(date); }
+      st.dateIdx = idx;
+      showDate(p);
+    });
     el.appendChild(chip);
   });
 }
