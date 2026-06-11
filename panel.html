@@ -12,9 +12,9 @@
     --green:#1a7a3c; --green-light:#25a852;
     --gold:#f5c518; --gold-dark:#c9a000;
     --red:#c0392b;
-    --white:#f9f9f4; --dark:#0d1f14; --gray:#2e3d2f;
-    --card-bg:rgba(255,255,255,0.04); --card-border:rgba(255,255,255,0.08);
-    --border:rgba(255,255,255,0.08); --border-strong:rgba(245,197,24,0.3);
+    --white:#f9f9f4; --dark:#226b3a; --gray:#1a5a2e;
+    --card-bg:rgba(0,0,0,0.18); --card-border:rgba(255,255,255,0.12);
+    --border:rgba(255,255,255,0.12); --border-strong:rgba(245,197,24,0.3);
     --text:#f9f9f4; --dim:rgba(255,255,255,0.5);
     --pool-a:#25a852; --pool-a-soft:#5fd47e;
     --pool-b:#c0392b; --pool-b-soft:#e8939a;
@@ -25,8 +25,8 @@
   html,body{height:100%;}
   body{font-family:var(--font-b);background:var(--dark);color:var(--text);overflow:hidden;
     background-image:
-      radial-gradient(ellipse at 10% 20%,rgba(26,122,60,.3) 0%,transparent 50%),
-      radial-gradient(ellipse at 90% 80%,rgba(37,168,82,.15) 0%,transparent 50%),
+      radial-gradient(ellipse at 10% 20%,rgba(0,0,0,0.15) 0%,transparent 50%),
+      radial-gradient(ellipse at 90% 80%,rgba(255,255,255,0.05) 0%,transparent 50%),
       repeating-linear-gradient(45deg,transparent,transparent 60px,rgba(255,255,255,.015) 60px,rgba(255,255,255,.015) 61px);}
 
   .app{display:flex;height:100vh;}
@@ -274,6 +274,20 @@
   .md-p-pts{font-family:var(--font-d);font-size:28px;color:var(--gold);letter-spacing:1px;text-align:center;}
   .md-p-amount{font-family:var(--font-d);font-size:18px;color:var(--green-light);letter-spacing:1px;text-align:right;}
 
+  .md-team.winner{border:2px solid var(--gold);border-radius:12px;padding:20px;position:relative;
+    background:rgba(245,197,24,0.06);box-shadow:0 0 30px rgba(245,197,24,0.15);}
+  .md-team.winner .md-flag{filter:drop-shadow(0 0 12px rgba(245,197,24,0.6));
+    outline:3px solid var(--gold);outline-offset:4px;border-radius:50%;}
+  .winner-badge{font-family:var(--font-d);font-size:22px;letter-spacing:4px;
+    color:#0d3d1a;-webkit-text-stroke:1.5px var(--gold);paint-order:stroke fill;
+    text-shadow:0 0 12px rgba(245,197,24,0.5);margin-top:6px;position:relative;display:inline-block;}
+  .winner-badge::after{content:'WINNER';position:absolute;inset:0;color:transparent;-webkit-text-stroke:1.5px transparent;
+    background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.5) 45%,rgba(255,240,150,0.6) 50%,rgba(255,255,255,0.5) 55%,transparent 65%);
+    -webkit-background-clip:text;background-clip:text;background-size:250% 100%;
+    animation:metalShimmer 2s ease-in-out infinite;pointer-events:none;}
+  @keyframes metalShimmer{0%{background-position:150% 0}50%{background-position:-50% 0}100%{background-position:-50% 0}}
+  .md-team.loser{opacity:.5;}
+
   /* ═══ GOAL CELEBRATION ═══ */
   .goal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.92);
     display:none;align-items:center;justify-content:center;cursor:pointer;}
@@ -396,9 +410,9 @@
           <div class="match-carousel" id="carouselA"></div>
           <div class="match-detail" id="detailA" style="display:none">
             <div class="md-header">
-              <div class="md-team"><div class="md-flag" id="dAhFlag">🏳️</div><div class="md-tname" id="dAhName">—</div><div class="md-total" id="dAhTotal">0</div><div class="md-total-label">TOTAL SALES</div></div>
+              <div class="md-team"><div class="md-flag" id="dAhFlag">🏳️</div><div class="md-tname" id="dAhName">—</div><div class="md-total" id="dAhTotal">0</div><div class="md-total-label">GOALS</div></div>
               <div class="md-vs"><div class="md-score"><span id="dAhGoals">–</span> : <span id="dAaGoals">–</span></div><div class="md-status" id="dAstatus">—</div></div>
-              <div class="md-team"><div class="md-flag" id="dAaFlag">🏳️</div><div class="md-tname" id="dAaName">—</div><div class="md-total" id="dAaTotal">0</div><div class="md-total-label">TOTAL SALES</div></div>
+              <div class="md-team"><div class="md-flag" id="dAaFlag">🏳️</div><div class="md-tname" id="dAaName">—</div><div class="md-total" id="dAaTotal">0</div><div class="md-total-label">GOALS</div></div>
             </div>
             <div class="md-players-wrap">
               <div class="md-players-col"><div class="md-col-head" id="dAhHead">HOME</div><div id="dAhPlayers" class="md-player-list"></div></div>
@@ -420,9 +434,9 @@
           <div class="match-carousel" id="carouselB"></div>
           <div class="match-detail" id="detailB" style="display:none">
             <div class="md-header">
-              <div class="md-team"><div class="md-flag" id="dBhFlag">🏳️</div><div class="md-tname" id="dBhName">—</div><div class="md-total" id="dBhTotal">0</div><div class="md-total-label">TOTAL SALES</div></div>
+              <div class="md-team"><div class="md-flag" id="dBhFlag">🏳️</div><div class="md-tname" id="dBhName">—</div><div class="md-total" id="dBhTotal">0</div><div class="md-total-label">GOALS</div></div>
               <div class="md-vs"><div class="md-score"><span id="dBhGoals">–</span> : <span id="dBaGoals">–</span></div><div class="md-status" id="dBstatus">—</div></div>
-              <div class="md-team"><div class="md-flag" id="dBaFlag">🏳️</div><div class="md-tname" id="dBaName">—</div><div class="md-total" id="dBaTotal">0</div><div class="md-total-label">TOTAL SALES</div></div>
+              <div class="md-team"><div class="md-flag" id="dBaFlag">🏳️</div><div class="md-tname" id="dBaName">—</div><div class="md-total" id="dBaTotal">0</div><div class="md-total-label">GOALS</div></div>
             </div>
             <div class="md-players-wrap">
               <div class="md-players-col"><div class="md-col-head" id="dBhHead">HOME</div><div id="dBhPlayers" class="md-player-list"></div></div>
@@ -790,6 +804,105 @@ function addTeam(pool){
 }
 
 /* ─────────────────────────────────────────────
+   TARGETS & GOALS SYSTEM
+───────────────────────────────────────────── */
+let TARGETS = {}; /* { teamName: { dailyTarget, pool } } */
+let PREV_GOALS = {}; /* { teamName: goalCount } — for detecting new goals */
+
+/* Fetch targets from "Teams" sheet */
+async function fetchTargets(){
+  const rows = await fetchTab('Teams');
+  if(rows.length < 2) return;
+  /* Pool A: rows 1-8 → col A=team, col E(4)=daily target */
+  /* Pool B: rows after Pool A → col H=team, col L(11)=2days target */
+  rows.forEach(r=>{
+    const cells = r.c||[];
+    /* Pool A — column A(0) has team name, column E(4) has daily target */
+    const nameA = cellVal(cells[0]);
+    const dailyA = cellNum(cells[4]);
+    if(nameA && dailyA > 0 && !nameA.match(/^POOL|^#|^\d/i)){
+      TARGETS[nameA.trim()] = { dailyTarget: dailyA, pool: 'poolA' };
+    }
+    /* Pool B — column H(7) has team name, column L(11) has 2days target */
+    const nameB = cellVal(cells[7]);
+    const twoDayB = cellNum(cells[11]);
+    if(nameB && twoDayB > 0 && !nameB.match(/^POOL|^#|^\d/i)){
+      TARGETS[nameB.trim()] = { dailyTarget: twoDayB / 2, pool: 'poolB' }; /* divide by 2 for daily */
+    }
+  });
+  console.log('Targets loaded:', TARGETS);
+}
+
+/* Find target for a team (fuzzy match) */
+function getTarget(teamName){
+  const clean = (teamName||'').trim();
+  if(TARGETS[clean]) return TARGETS[clean];
+  /* Try partial match */
+  for(const key of Object.keys(TARGETS)){
+    if(clean.includes(key) || key.includes(clean)) return TARGETS[key];
+  }
+  /* Try number-based lookup */
+  const num = clean.replace(/[^\d]/g,'');
+  for(const key of Object.keys(TARGETS)){
+    if(num && key.includes(num)) return TARGETS[key];
+  }
+  return null;
+}
+
+/* Convert % reached to goals */
+function pctToGoals(pct){
+  if(pct < 100) return 0;
+  if(pct < 120) return 1;
+  if(pct < 140) return 2;
+  if(pct < 160) return 3;
+  if(pct < 180) return 4;
+  return 5; /* 180%+ */
+}
+
+/* Calculate goals for a team based on today's data */
+async function calcTeamGoals(teamName, matchDate){
+  const target = getTarget(teamName);
+  if(!target || target.dailyTarget <= 0) return { goals:0, progress:0, pct:0 };
+
+  const isRet = target.pool === 'poolB';
+  const players = await fetchTeamPlayers(teamName, matchDate);
+
+  let progress = 0;
+  if(isRet){
+    /* RET: sum of SUM amounts */
+    players.forEach(p=>{ progress += p.amount; });
+  } else {
+    /* FTD: count of FTDs (sales) */
+    players.forEach(p=>{ progress += p.sales; });
+  }
+
+  const pct = (progress / target.dailyTarget) * 100;
+  const goals = pctToGoals(pct);
+
+  return { goals, progress, pct: Math.round(pct), dailyTarget: target.dailyTarget, isRet };
+}
+
+/* Check if a team scored a new goal and trigger celebration */
+function checkNewGoal(teamName, currentGoals){
+  const prev = PREV_GOALS[teamName] || 0;
+  if(currentGoals > prev){
+    PREV_GOALS[teamName] = currentGoals;
+    /* Only trigger celebration if it's a real new goal (not initial load) */
+    if(prev > 0 || currentGoals >= 1){
+      triggerGoal(teamName);
+    }
+    /* Save to localStorage to persist across refreshes */
+    try{ localStorage.setItem('mundialGoals', JSON.stringify(PREV_GOALS)); }catch(e){}
+  }
+}
+
+/* Load previous goal counts from localStorage */
+try{
+  const saved = localStorage.getItem('mundialGoals');
+  if(saved) PREV_GOALS = JSON.parse(saved);
+}catch(e){}
+
+/* ─────────────────────────────────────────────
    FIXTURES — AUTO-LOADED FROM GOOGLE SHEETS
 ───────────────────────────────────────────── */
 const SHEET_ID = '1ATNJGBhXhUPNWX0Ok7EXOdvIDSY0HG2GA61k57mt4J8';
@@ -1134,11 +1247,9 @@ async function showMatchDetail(p){
   document.getElementById(`d${p}hName`).textContent = shortName(match.home);
   document.getElementById(`d${p}aFlag`).textContent = aFlag;
   document.getElementById(`d${p}aName`).textContent = shortName(match.away);
-  document.getElementById(`d${p}hGoals`).textContent = '–';
-  document.getElementById(`d${p}aGoals`).textContent = '–';
   document.getElementById(`d${p}status`).textContent = `${ST_LABEL[status]} · ${match.date}`;
-  document.getElementById(`d${p}hHead`).textContent = shortName(match.home) + ' — Playeres';
-  document.getElementById(`d${p}aHead`).textContent = shortName(match.away) + ' — Playeres';
+  document.getElementById(`d${p}hHead`).textContent = shortName(match.home) + ' — Players';
+  document.getElementById(`d${p}aHead`).textContent = shortName(match.away) + ' — Players';
 
   /* Admin: click flag to change */
   if(isAdmin){
@@ -1152,6 +1263,24 @@ async function showMatchDetail(p){
         if(nf){ for(const pool of ['poolA','poolB']){ for(const tid of Object.keys(TEAMS[pool]||{})){ if((TEAMS[pool][tid].name||'').toUpperCase()===teamName.toUpperCase()){ db.ref(`teams/${pool}/${tid}/flag`).set(nf.trim()); toast('Flag updated'); return; }}} }
       };
     });
+  }
+
+  /* Calculate goals for both teams */
+  const [hGoalData, aGoalData] = await Promise.all([
+    calcTeamGoals(match.home, match.date),
+    calcTeamGoals(match.away, match.date)
+  ]);
+
+  /* Display goals in the score area */
+  document.getElementById(`d${p}hGoals`).textContent = status==='upcoming' ? '–' : hGoalData.goals;
+  document.getElementById(`d${p}aGoals`).textContent = status==='upcoming' ? '–' : aGoalData.goals;
+  document.getElementById(`d${p}hTotal`).textContent = status==='upcoming' ? '–' : `⚽ ${hGoalData.goals}`;
+  document.getElementById(`d${p}aTotal`).textContent = status==='upcoming' ? '–' : `⚽ ${aGoalData.goals}`;
+
+  /* Check for new goals (only for live matches = today) */
+  if(status === 'live'){
+    checkNewGoal(match.home, hGoalData.goals);
+    checkNewGoal(match.away, aGoalData.goals);
   }
 
   /* Load roster (all players) + stats only if match day arrived */
@@ -1179,6 +1308,57 @@ async function showMatchDetail(p){
   }
 
   highlightCard(p, st.selIdx);
+
+  /* ── WINNER DETERMINATION (only for finished matches) ── */
+  const hTeamEl = document.getElementById(`d${p}hFlag`).closest('.md-team');
+  const aTeamEl = document.getElementById(`d${p}aFlag`).closest('.md-team');
+  /* Reset previous winner/loser classes */
+  hTeamEl.classList.remove('winner','loser');
+  aTeamEl.classList.remove('winner','loser');
+  /* Remove old winner badges */
+  hTeamEl.querySelectorAll('.winner-badge').forEach(e=>e.remove());
+  aTeamEl.querySelectorAll('.winner-badge').forEach(e=>e.remove());
+
+  if(status === 'done'){
+    const hG = hGoalData.goals, aG = aGoalData.goals;
+    let winner = null; /* 'home', 'away', or null for undecided */
+
+    if(hG !== aG){
+      /* Goals decide */
+      winner = hG > aG ? 'home' : 'away';
+    } else {
+      /* Tiebreaker 1: total amount */
+      const hPlayers = await fetchTeamPlayers(match.home, match.date);
+      const aPlayers = await fetchTeamPlayers(match.away, match.date);
+      const hAmount = hPlayers.reduce((s,pl)=>s+pl.amount, 0);
+      const aAmount = aPlayers.reduce((s,pl)=>s+pl.amount, 0);
+
+      if(hAmount !== aAmount){
+        winner = hAmount > aAmount ? 'home' : 'away';
+      } else {
+        /* Tiebreaker 2: total PTS (sales count) */
+        const hPts = hPlayers.reduce((s,pl)=>s+pl.sales, 0);
+        const aPts = aPlayers.reduce((s,pl)=>s+pl.sales, 0);
+        if(hPts !== aPts){
+          winner = hPts > aPts ? 'home' : 'away';
+        }
+        /* If still tied: draw — no winner badge */
+      }
+    }
+
+    if(winner === 'home'){
+      hTeamEl.classList.add('winner');
+      aTeamEl.classList.add('loser');
+      const badge = document.createElement('div'); badge.className='winner-badge'; badge.textContent='WINNER';
+      hTeamEl.appendChild(badge);
+    } else if(winner === 'away'){
+      aTeamEl.classList.add('winner');
+      hTeamEl.classList.add('loser');
+      const badge = document.createElement('div'); badge.className='winner-badge'; badge.textContent='WINNER';
+      aTeamEl.appendChild(badge);
+    }
+    /* If null = perfect draw, both stay neutral */
+  }
 }
 
 function shiftDate(p, dir){
@@ -1311,23 +1491,28 @@ bindPrizes();
 bindSettings();
 startCarouselTimer();
 
-/* Load schedule from Google Sheets on startup */
+/* Load schedule and targets from Google Sheets on startup */
+fetchTargets();
 loadScheduleFromSheet();
 
-/* Auto-refresh player data + schedule every 5 minutes */
-setInterval(()=>{ SHEET_DATA = {}; RAW_CACHE = {}; loadScheduleFromSheet(); }, 300000);
+/* Auto-refresh every 5 minutes — clears cache, reloads data, rechecks goals */
+setInterval(()=>{ SHEET_DATA = {}; RAW_CACHE = {}; fetchTargets(); loadScheduleFromSheet(); }, 300000);
+
+/* Also check goals more frequently (every 60 seconds) for live matches */
+setInterval(()=>{
+  SHEET_DATA = {}; RAW_CACHE = {};
+  ['A','B'].forEach(p=>{
+    const st = poolState[p];
+    if(st.matches && st.matches.length > 0) showMatchDetail(p);
+  });
+}, 60000);
 
 /* ─────────────────────────────────────────────
    BGM — Background Music
 ───────────────────────────────────────────── */
-const BGM_TRACKS = [
-  'assets/mp3/bgm.mp3',
-  'assets/mp3/bgm1.mp3',
-  'assets/mp3/bgm2.mp3',
-  'assets/mp3/bgm3.mp3',
-  'assets/mp3/bgm4.mp3',
-  'assets/mp3/bgm5.mp3'
-];
+/* Auto-generate track list — just drop bgm.mp3, bgm1.mp3...bgm20.mp3 in assets/mp3/ */
+const BGM_TRACKS = ['assets/mp3/bgm.mp3'];
+for(let i=1;i<=20;i++) BGM_TRACKS.push(`assets/mp3/bgm${i}.mp3`);
 let bgmAudio = null;
 let bgmPlaying = false;
 let bgmShuffled = [];
