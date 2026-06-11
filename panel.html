@@ -1462,55 +1462,35 @@ for(let i=0;i<=20;i++){
 }
 let bgmAudio = null;
 let bgmPlaying = false;
-let bgmShuffled = [];
+let bgmPlaylist = [];
 let bgmCurrentIdx = 0;
 
-function initBGM(){
-  if(bgmAudio) return;
-  /* Build shuffled playlist */
-  bgmShuffled = [...BGM_TRACKS].sort(()=>Math.random()-0.5);
+function startMusic(){
+  bgmPlaylist = [...BGM_TRACKS].sort(()=>Math.random()-0.5);
   bgmCurrentIdx = 0;
   bgmAudio = new Audio();
   bgmAudio.volume = 0.5;
-  /* When track ends, play next */
-  bgmAudio.addEventListener('ended', ()=>{
-    bgmCurrentIdx = (bgmCurrentIdx + 1) % bgmShuffled.length;
-    playTrack();
-  });
-}
-
-function playTrack(){
-  if(!bgmAudio || bgmShuffled.length===0) return;
-  bgmAudio.src = bgmShuffled[bgmCurrentIdx];
-  bgmAudio.play().then(()=>{
-    bgmPlaying = true;
-    updateMusicBtn();
-  }).catch(()=>{
-    /* File missing, try next */
-    bgmShuffled.splice(bgmCurrentIdx, 1);
-    if(bgmShuffled.length > 0){
-      bgmCurrentIdx = bgmCurrentIdx % bgmShuffled.length;
-      playTrack();
-    } else {
-      bgmPlaying = false;
-      updateMusicBtn();
-    }
-  });
-}
-
-function startMusic(){
-  initBGM();
+  /* When track ends, next */
+  bgmAudio.addEventListener('ended', ()=>{ skipTrack(1); });
+  /* When file doesn't exist, skip */
+  bgmAudio.addEventListener('error', ()=>{ bgmPlaylist.splice(bgmCurrentIdx,1); if(bgmPlaylist.length) skipTrack(0); });
   playTrack();
 }
 
+function playTrack(){
+  if(!bgmAudio || !bgmPlaylist.length) return;
+  bgmAudio.src = bgmPlaylist[bgmCurrentIdx % bgmPlaylist.length];
+  bgmAudio.currentTime = 0;
+  bgmAudio.play().then(()=>{ bgmPlaying=true; updateMusicBtn(); }).catch(()=>{});
+}
+
 function toggleMusic(){
-  if(!bgmAudio) { startMusic(); return; }
+  if(!bgmAudio) return;
   if(bgmPlaying){
     bgmAudio.pause();
     bgmAudio.currentTime = 0;
     bgmPlaying = false;
   } else {
-    bgmAudio.currentTime = 0;
     bgmAudio.play().catch(()=>{});
     bgmPlaying = true;
   }
@@ -1518,21 +1498,15 @@ function toggleMusic(){
 }
 
 function skipTrack(dir){
-  initBGM();
-  if(bgmShuffled.length===0) return;
-  bgmCurrentIdx = (bgmCurrentIdx + dir + bgmShuffled.length) % bgmShuffled.length;
-  bgmAudio.src = bgmShuffled[bgmCurrentIdx];
-  bgmAudio.currentTime = 0;
-  bgmAudio.play().catch(()=>{});
-  bgmPlaying = true;
-  updateMusicBtn();
+  if(!bgmAudio || !bgmPlaylist.length) return;
+  bgmCurrentIdx = (bgmCurrentIdx + dir + bgmPlaylist.length) % bgmPlaylist.length;
+  playTrack();
 }
 
 function updateMusicBtn(){
   const icon = document.getElementById('musicIcon');
   if(!icon) return;
   icon.src = bgmPlaying ? 'assets/btn-stop.png' : 'assets/btn-play.png';
-  icon.alt = bgmPlaying ? 'Stop' : 'Play';
 }
 
 /* Stop music on logout */
