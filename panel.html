@@ -180,6 +180,21 @@
 
   /* ═══ DATE NAV ═══ */
   .pool-section{margin-bottom:8px;}
+  .pool-top-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .pool-today{min-width:0;}
+  .pool-yesterday{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:14px 16px;max-height:220px;overflow-y:auto;}
+  .yd-title{font-family:var(--font-d);font-size:14px;letter-spacing:2px;color:var(--gold);margin-bottom:10px;}
+  .yd-results{display:flex;flex-direction:column;gap:8px;}
+  .yd-empty{font-size:11px;color:var(--dim);text-align:center;padding:16px 0;}
+  .yd-match{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:8px 10px;
+    background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.04);}
+  .yd-team{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;}
+  .yd-team img{width:22px;height:22px;border-radius:50%;}
+  .yd-score{font-family:var(--font-d);font-size:20px;color:var(--gold);text-align:center;letter-spacing:2px;}
+  .yd-team.winner-yd{color:var(--gold);}
+  .yd-team.loser-yd{opacity:.4;}
+  /* Hide nav arrows for visitors */
+  body.visitor-mode .admin-only-nav{display:none!important;}
   .date-nav{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
   .dn-arrow{background:var(--card-bg);border:1px solid var(--card-border);color:var(--gold);
     width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
@@ -369,14 +384,22 @@
         <!-- ══ POOL A — FTD ══ -->
         <div class="pool-section">
           <div class="slabel">Pool A — FTD</div>
-          <div class="date-nav">
-            <button class="dn-arrow" onclick="shiftDate('A',-1)">◀</button>
-            <span class="dn-date" id="dateA">—</span>
-            <button class="dn-arrow" onclick="shiftDate('A',1)">▶</button>
-            <button class="dn-expand" onclick="toggleCalendar('A')">📅 More dates</button>
+          <div class="pool-top-row">
+            <div class="pool-today">
+              <div class="date-nav">
+                <button class="dn-arrow admin-only-nav" onclick="shiftDate('A',-1)">◀</button>
+                <span class="dn-date" id="dateA">—</span>
+                <button class="dn-arrow admin-only-nav" onclick="shiftDate('A',1)">▶</button>
+                <button class="dn-expand admin-only-nav" onclick="toggleCalendar('A')">📅 More dates</button>
+              </div>
+              <div class="date-calendar" id="calendarA" style="display:none"></div>
+              <div class="match-carousel" id="carouselA"></div>
+            </div>
+            <div class="pool-yesterday" id="yesterdayA">
+              <div class="yd-title">📋 Previous Day</div>
+              <div class="yd-results" id="ydResultsA"><span class="yd-empty">No previous results</span></div>
+            </div>
           </div>
-          <div class="date-calendar" id="calendarA" style="display:none"></div>
-          <div class="match-carousel" id="carouselA"></div>
           <div class="match-detail" id="detailA" style="display:none">
             <div class="md-header">
               <div class="md-team"><div class="md-flag" id="dAhFlag">🏳️</div><div class="md-tname" id="dAhName">—</div><div class="md-total" id="dAhTotal">0</div><div class="md-total-label">GOALS</div></div>
@@ -393,14 +416,22 @@
         <!-- ══ POOL B — RET ══ -->
         <div class="pool-section" style="margin-top:28px">
           <div class="slabel">Pool B — RET</div>
-          <div class="date-nav">
-            <button class="dn-arrow" onclick="shiftDate('B',-1)">◀</button>
-            <span class="dn-date" id="dateB">—</span>
-            <button class="dn-arrow" onclick="shiftDate('B',1)">▶</button>
-            <button class="dn-expand" onclick="toggleCalendar('B')">📅 More dates</button>
+          <div class="pool-top-row">
+            <div class="pool-today">
+              <div class="date-nav">
+                <button class="dn-arrow admin-only-nav" onclick="shiftDate('B',-1)">◀</button>
+                <span class="dn-date" id="dateB">—</span>
+                <button class="dn-arrow admin-only-nav" onclick="shiftDate('B',1)">▶</button>
+                <button class="dn-expand admin-only-nav" onclick="toggleCalendar('B')">📅 More dates</button>
+              </div>
+              <div class="date-calendar" id="calendarB" style="display:none"></div>
+              <div class="match-carousel" id="carouselB"></div>
+            </div>
+            <div class="pool-yesterday" id="yesterdayB">
+              <div class="yd-title">📋 Previous Day</div>
+              <div class="yd-results" id="ydResultsB"><span class="yd-empty">No previous results</span></div>
+            </div>
           </div>
-          <div class="date-calendar" id="calendarB" style="display:none"></div>
-          <div class="match-carousel" id="carouselB"></div>
           <div class="match-detail" id="detailB" style="display:none">
             <div class="md-header">
               <div class="md-team"><div class="md-flag" id="dBhFlag">🏳️</div><div class="md-tname" id="dBhName">—</div><div class="md-total" id="dBhTotal">0</div><div class="md-total-label">GOALS</div></div>
@@ -569,6 +600,7 @@ const adminName = sessionStorage.getItem('adminName') || 'Admin';
 
 document.getElementById('roleChip').textContent = isAdmin ? '👑 ' + adminName : 'Visitor';
 document.getElementById('roleChip').className = 'role-chip ' + (isAdmin ? 'role-admin' : 'role-visitor');
+if(!isAdmin) document.body.classList.add('visitor-mode');
 if(isAdmin){
   document.getElementById('fxControls').style.display = 'flex';
   document.getElementById('addTeamA').style.display = 'inline-block';
@@ -981,6 +1013,7 @@ async function loadScheduleFromSheet(){
 
   toast(`${SCHEDULE.length} matches loaded`);
   renderCarousel();
+  renderYesterdayResults();
 }
 
 /* ─── Cell value helpers ─── */
@@ -1329,6 +1362,49 @@ function buildCalendar(p){
 function toggleCalendar(p){
   const el = document.getElementById('calendar'+p);
   el.style.display = el.style.display==='none'?'flex':'none';
+}
+
+/* Render yesterday's match results for each pool */
+async function renderYesterdayResults(){
+  for(const p of ['A','B']){
+    const st = poolState[p];
+    if(!st.dates || !st.dates.length) continue;
+
+    /* Find yesterday's date (the date before the current selected date, or the last played date) */
+    const today = new Date(); today.setHours(0,0,0,0);
+    const parseD = (s)=>{ const pp=s.split('.'); return new Date(2026, parseInt(pp[1])-1, parseInt(pp[0])); };
+
+    let ydDate = null;
+    for(let i=st.dates.length-1; i>=0; i--){
+      const d = parseD(st.dates[i]);
+      if(d < today){ ydDate = st.dates[i]; break; }
+    }
+
+    const el = document.getElementById('ydResults'+p);
+    if(!ydDate || !st.byDate[ydDate]){
+      el.innerHTML = '<span class="yd-empty">No previous results</span>';
+      continue;
+    }
+
+    const matches = st.byDate[ydDate];
+    let html = `<div style="font-size:10px;opacity:.4;margin-bottom:4px">${ydDate}</div>`;
+
+    for(const match of matches){
+      const [hGoal, aGoal] = await Promise.all([
+        calcTeamGoals(match.home, ydDate),
+        calcTeamGoals(match.away, ydDate)
+      ]);
+      const hWins = hGoal.goals > aGoal.goals;
+      const aWins = aGoal.goals > hGoal.goals;
+
+      html += `<div class="yd-match">
+        <div class="yd-team${hWins?' winner-yd':''}${aWins?' loser-yd':''}">${flagHTML(match.home, 22)} ${shortName(match.home)}</div>
+        <div class="yd-score">${hGoal.goals} : ${aGoal.goals}</div>
+        <div class="yd-team${aWins?' winner-yd':''}${hWins?' loser-yd':''}" style="justify-content:flex-end">${shortName(match.away)} ${flagHTML(match.away, 22)}</div>
+      </div>`;
+    }
+    el.innerHTML = html;
+  }
 }
 
 /* Auto-rotation: cycle through matches of current date for each pool */
