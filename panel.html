@@ -1200,41 +1200,45 @@ function setupPool(p, matches, carId, detId){
 
   poolState[p].allDates = allDates;
   poolState[p].byDate = byDate;
+  poolState[p].dates = allDates;
 
   if(allDates.length===0){
     document.getElementById(carId).innerHTML = '<div style="padding:16px;text-align:center;color:var(--dim);font-size:11px">No matches loaded</div>';
     document.getElementById(detId).style.display = 'none';
     document.getElementById('date'+p).textContent = '—';
-    poolState[p].dates = [];
     return;
   }
 
-  /* Find the best starting date */
+  /* Find today and tomorrow */
   const today = new Date(); today.setHours(0,0,0,0);
   const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
-  let startIdx = 0;
+
+  /* Find best date to show */
+  let bestIdx = 0;
+  let found = false;
   for(let i=0;i<allDates.length;i++){
     const dt = parseDate(allDates[i]);
-    if(dt >= today){ startIdx = i; break; }
-    startIdx = i; /* fallback to last date if all are past */
+    /* Exact match for today */
+    if(dt.getTime()===today.getTime()){ bestIdx=i; found=true; break; }
+    /* Exact match for tomorrow */
+    if(dt.getTime()===tomorrow.getTime()){ bestIdx=i; found=true; break; }
+    /* First future date */
+    if(dt > tomorrow && !found){ bestIdx=i; found=true; break; }
+    bestIdx=i;
   }
 
-  if(isAdmin){
-    /* Admin sees all dates */
-    poolState[p].dates = allDates;
-    poolState[p].dateIdx = startIdx;
-  } else {
-    /* Visitor sees only today + tomorrow */
-    const visibleDates = allDates.filter(d=>{
-      const dt = parseDate(d);
-      return dt >= today && dt <= tomorrow;
-    });
-    /* If nothing today/tomorrow, show nearest upcoming */
-    if(visibleDates.length===0 && allDates[startIdx]){
-      visibleDates.push(allDates[startIdx]);
+  poolState[p].dateIdx = bestIdx;
+
+  /* For visitors: if the nearest date is far away, show a message */
+  if(!isAdmin){
+    const bestDate = parseDate(allDates[bestIdx]);
+    if(bestDate > tomorrow){
+      document.getElementById(carId).innerHTML = `<div style="padding:20px;text-align:center;color:var(--gold);font-size:14px;font-family:var(--font-d);letter-spacing:2px">Next match: ${allDates[bestIdx]}</div>`;
+      document.getElementById(detId).style.display = 'none';
+      document.getElementById('date'+p).textContent = allDates[bestIdx];
+      buildCalendar(p);
+      return;
     }
-    poolState[p].dates = visibleDates;
-    poolState[p].dateIdx = 0;
   }
 
   showDate(p);
