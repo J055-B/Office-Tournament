@@ -991,9 +991,8 @@ function parseVs(text){
 /* Determine match status from date string */
 function matchStatus(dateStr){
   if(!dateStr) return 'upcoming';
-  /* dateStr like "12.06" or "12.06.2026" */
-  const parts = dateStr.split('.');
-  const d = parseInt(parts[0]), m = parseInt(parts[1])-1;
+  const parts = String(dateStr).replace(/,/g,'.').split('.');
+  const d = parseInt(parts[0])||1, m = (parseInt(parts[1])||1)-1;
   const y = parts[2] ? parseInt(parts[2]) : 2026;
   const matchDate = new Date(y, m, d);
   const today = new Date(); today.setHours(0,0,0,0);
@@ -1201,8 +1200,7 @@ function setupPool(p, matches, carId, detId){
     if(!byDate[d]) byDate[d]=[];
     byDate[d].push(m);
   });
-  /* Sort dates chronologically */
-  const toNum = (s)=>{ const pp=s.split('.'); return parseInt(pp[1])*100+parseInt(pp[0]); }; /* mmdd as number */
+  const toNum = (s)=>{ const pp=String(s).replace(/,/g,'.').split('.'); return parseInt(pp[1]||0)*100+parseInt(pp[0]||0); };
   const allDates = Object.keys(byDate).sort((a,b)=>toNum(a)-toNum(b));
 
   poolState[p].allDates = allDates;
@@ -1216,25 +1214,33 @@ function setupPool(p, matches, carId, detId){
     return;
   }
 
-  /* Today as mmdd number for simple comparison */
-  const now = new Date();
-  const todayNum = (now.getMonth()+1)*100 + now.getDate(); /* e.g. 611 for June 11 */
-  const tomorrowNum = todayNum + 1; /* simple, works within same month */
-
-  /* Find first date >= today */
-  let bestIdx = allDates.length - 1; /* default to last */
+  /* Find first upcoming/live date */
+  let bestIdx = 0;
   for(let i=0; i<allDates.length; i++){
-    if(toNum(allDates[i]) >= todayNum){ bestIdx = i; break; }
+    const status = matchStatus(allDates[i]);
+    if(status === 'live'){ bestIdx = i; break; }
+    if(status === 'upcoming'){ bestIdx = i; break; }
   }
 
   poolState[p].dateIdx = bestIdx;
 
-  /* Visitor: if best date is far (not today or tomorrow), show "Next match" message */
+  /* Visitor: if no match today or tomorrow, show "Next match" message */
   if(!isAdmin){
-    const bestNum = toNum(allDates[bestIdx]);
-    if(bestNum > tomorrowNum){
-      document.getElementById('date'+p).textContent = allDates[bestIdx];
-      document.getElementById(carId).innerHTML = `<div style="padding:20px;text-align:center;color:var(--gold);font-size:16px;font-family:var(--font-d);letter-spacing:2px">Next match: ${allDates[bestIdx]}</div>`;
+    const bestDate = allDates[bestIdx];
+    const bestStatus = matchStatus(bestDate);
+    /* Check if best date is further than tomorrow */
+    const pp = bestDate.split('.');
+    const bestDay = parseInt(pp[0]), bestMonth = parseInt(pp[1]);
+    const now = new Date();
+    const dayDiff = (bestMonth - (now.getMonth()+1)) * 30 + (bestDay - now.getDate());
+    if(dayDiff > 1 && bestStatus === 'upcoming'){
+      const matchesOnDay = byDate[bestDate]||[];
+      let nextInfo = `Next match: ${bestDate}`;
+      if(matchesOnDay.length > 0){
+        nextInfo = `Next match: ${bestDate} — ${shortName(matchesOnDay[0].home)} vs ${shortName(matchesOnDay[0].away)}`;
+      }
+      document.getElementById('date'+p).textContent = bestDate;
+      document.getElementById(carId).innerHTML = `<div style="padding:20px;text-align:center;color:var(--gold);font-size:15px;font-family:var(--font-d);letter-spacing:2px">${nextInfo}</div>`;
       document.getElementById(detId).style.display = 'none';
       buildCalendar(p);
       return;
