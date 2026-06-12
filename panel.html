@@ -1148,11 +1148,16 @@ function fetchPlayers(tabName, matchDate){
       let nameCol = -1, statusCol = -1;
       for(let i=0; i<header.length; i++){
         const h = (cellVal(header[i])||'').toLowerCase().trim();
-        if(h.includes('full name') && nameCol===-1) nameCol = i;
-        if(h.includes('status') && statusCol===-1) statusCol = i;
+        if(h === 'full name' && nameCol===-1) nameCol = i;
       }
-      /* Fallback to common positions if not found in header */
-      if(nameCol===-1) nameCol = 11; /* col L */
+      /* Search for Status only after Full Name column */
+      if(nameCol >= 0){
+        for(let i=nameCol+1; i<header.length; i++){
+          const h = (cellVal(header[i])||'').toLowerCase().trim();
+          if(h === 'status'){ statusCol = i; break; }
+        }
+      }
+      if(nameCol===-1) nameCol = 11;
       if(statusCol===-1) statusCol = nameCol + 1;
 
       /* 1. Build roster from detected columns */
