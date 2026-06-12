@@ -296,8 +296,6 @@
     .pools-grid,.mvp-grid{grid-template-columns:1fr;}
     .aw-grid{grid-template-columns:1fr 1fr;}
     .goal-grid{grid-template-columns:repeat(3,1fr);}
-    .sb-body{grid-template-columns:1fr;gap:12px;}
-    .vsmid{flex-direction:row;justify-content:center;}
   }
 </style>
 </head>
@@ -605,7 +603,7 @@ if(isAdmin){
   document.getElementById('fxControls').style.display = 'flex';
   document.getElementById('addTeamA').style.display = 'inline-block';
   document.getElementById('addTeamB').style.display = 'inline-block';
-  document.getElementById('adminHintTeams').textContent = '✎ Admin mode: click on a team name or flag to edit. Double-click a row to remove the team.';
+  document.getElementById('adminHintTeams').textContent = '✎ Admin mode: teams are loaded from Firebase seed data.';
   document.getElementById('adminHintFx').textContent = '✎ Admin mode: Matches load automatically from Google Sheet.';
   document.getElementById('adminHintAw').textContent = '✎ Admin mode: click "TBD" or amounts to edit.';
   document.getElementById('adminHintRl').textContent = '✎ Admin mode: click the rules text to edit.';
@@ -718,7 +716,7 @@ db.ref('seedVersion').once('value').then(snap=>{
    STATE
 ───────────────────────────────────────────── */
 let TEAMS = {poolA:{}, poolB:{}};
-let FIXTURES = {poolA:{}, poolB:{}};
+let FIXTURES = {poolA:{}, poolB:{}}; /* populated as matches finish — used by computeStandings */
 
 /* ─────────────────────────────────────────────
    STANDINGS (auto desde fixtures finalizados)
@@ -775,19 +773,32 @@ function addTeam(pool){
 let TARGETS = {}; /* { teamName: { dailyTarget, pool } } */
 let PREV_GOALS = {}; /* { teamName: goalCount } — for detecting new goals */
 
-/* Fetch targets from "Groups" sheet — col A=team name, col C=daily target */
+/* Fetch targets from "Target for goals" sheet — exact thresholds per team */
 async function fetchTargets(){
-  const rows = await fetchTab('Groups');
+  const rows = await fetchTab('Target for goals');
   TARGETS = {};
+  let currentPool = '';
   rows.forEach(r=>{
     const cells = r.c||[];
-    const name = cellVal(cells[0]);
-    const dailyTarget = cellNum(cells[2]); /* col C = Daily Target */
-    if(!name || dailyTarget <= 0) return;
-    /* Skip header and sub-group rows */
-    if(name.toLowerCase().includes('group') || name.includes('BG -') || name.includes('IL -') || name.includes('MAD ') || name.includes('MADA FTD') || name.includes('CIS ')) return;
-    const isRet = name.toUpperCase().startsWith('RET');
-    TARGETS[name.trim()] = { dailyTarget, pool: isRet ? 'poolB' : 'poolA' };
+    const colA = cellVal(cells[0]);
+    /* Detect pool */
+    if(colA.includes('POOL A')) { currentPool = 'poolA'; return; }
+    if(colA.includes('POOL B')) { currentPool = 'poolB'; return; }
+    /* Skip header/label rows */
+    if(!colA || colA.includes('Team') || colA.includes('%') || colA.includes('goal') || colA.length < 3) return;
+    /* Clean team name: remove "1. ", "2. " etc prefix */
+    const name = colA.replace(/^\d+\.\s*/, '').trim();
+    if(!name) return;
+    /* Read thresholds from columns C-H (indices 2-7) = 1 Goal through 6 Goals */
+    const thresholds = [];
+    for(let i = 2; i <= 7; i++){
+      const val = cellNum(cells[i]);
+      if(val > 0) thresholds.push(val);
+    }
+    if(thresholds.length === 0) return;
+    const dailyTarget = cellNum(cells[1]); /* col B = Daily Target or 2-Day Target */
+    const pool = currentPool || (name.toUpperCase().startsWith('RET') ? 'poolB' : 'poolA');
+    TARGETS[name] = { dailyTarget, thresholds, pool };
   });
   console.log('[Targets]', Object.keys(TARGETS).length, 'teams:', TARGETS);
 }
@@ -795,58 +806,91 @@ async function fetchTargets(){
 /* Find target for a team (fuzzy match) */
 function getTarget(teamName){
   const clean = (teamName||'').trim();
-  /* Exact match */
   if(TARGETS[clean]) return TARGETS[clean];
-  /* Try without "FTD " or "RET " prefix */
   const noPrefix = clean.replace(/^(FTD|RET)\s*/i,'').trim();
   for(const key of Object.keys(TARGETS)){
     const keyClean = key.replace(/^(FTD|RET)\s*/i,'').trim();
-    if(keyClean === noPrefix) return TARGETS[key];
-    if(key === noPrefix) return TARGETS[key];
+    if(keyClean === noPrefix || key === noPrefix) return TARGETS[key];
   }
-  /* Partial match — first word */
   for(const key of Object.keys(TARGETS)){
-    if(clean.includes(key) || key.includes(clean)) return TARGETS[key];
-    if(clean.toLowerCase().includes(key.toLowerCase())) return TARGETS[key];
+    if(clean.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(clean.toLowerCase())) return TARGETS[key];
   }
-  /* MADA special case */
-  if(clean.includes('MADA') && TARGETS['MADA']) return TARGETS['MADA'];
-  /* Canva special case */
-  if(clean.includes('Canva') && TARGETS['Canva']) return TARGETS['Canva'];
+  if(clean.includes('MADA') && TARGETS['FTD MADA1']) return TARGETS['FTD MADA1'];
+  if(clean.includes('Canva') && TARGETS['FTD BG Canva']) return TARGETS['FTD BG Canva'];
+  for(const key of Object.keys(TARGETS)){
+    if(clean.includes('MADA') && key.includes('MADA')) return TARGETS[key];
+    if(clean.includes('Canva') && key.includes('Canva')) return TARGETS[key];
+  }
   return null;
 }
 
-/* Convert % reached to goals */
-function pctToGoals(pct){
-  if(pct < 100) return 0;
-  if(pct < 120) return 1;
-  if(pct < 140) return 2;
-  if(pct < 160) return 3;
-  if(pct < 180) return 4;
-  return 5; /* 180%+ */
+/* Count goals — uses thresholds from sheet, then extrapolates beyond with 20% increments */
+function countGoals(progress, thresholds, dailyTarget){
+  if(!thresholds || thresholds.length === 0 || progress <= 0) return 0;
+  let goals = 0;
+  /* Count defined thresholds met */
+  for(const t of thresholds){
+    if(progress >= t) goals++;
+    else return goals;
+  }
+  /* Beyond defined thresholds: each +20% of dailyTarget = +1 goal */
+  if(dailyTarget > 0){
+    const increment = dailyTarget * 0.20;
+    let nextThreshold = thresholds[thresholds.length-1] + increment;
+    while(progress >= nextThreshold){
+      goals++;
+      nextThreshold += increment;
+    }
+  }
+  return goals;
 }
 
-/* Calculate goals for a team based on today's data */
+/* Get the second day of a Pool B match (next calendar day) */
+function getNextDay(dateStr){
+  const clean = String(dateStr).replace(/,/g,'.');
+  const pp = clean.split('.');
+  const d = parseInt(pp[0]), m = parseInt(pp[1]);
+  const dt = new Date(2026, m-1, d);
+  dt.setDate(dt.getDate() + 1);
+  return String(dt.getDate()).padStart(2,'0') + '.' + String(dt.getMonth()+1).padStart(2,'0');
+}
+
+/* Calculate goals for a team based on match data */
 async function calcTeamGoals(teamName, matchDate){
   const target = getTarget(teamName);
-  if(!target || target.dailyTarget <= 0) return { goals:0, progress:0, pct:0 };
+  if(!target || !target.thresholds || target.thresholds.length===0) return { goals:0, progress:0, pct:0 };
 
   const isRet = target.pool === 'poolB';
-  const players = await fetchTeamPlayers(teamName, matchDate);
+
+  /* For Pool B: sum 2 days (match day + next day) */
+  let players;
+  if(isRet){
+    const day1 = await fetchTeamPlayers(teamName, matchDate);
+    const day2Date = getNextDay(matchDate);
+    const day2 = await fetchTeamPlayers(teamName, day2Date);
+    /* Merge day1 + day2 */
+    const merged = {};
+    [...day1, ...day2].forEach(p=>{
+      if(!merged[p.name]) merged[p.name] = {sales:0, amount:0};
+      merged[p.name].sales += p.sales;
+      merged[p.name].amount += p.amount;
+    });
+    players = Object.entries(merged).map(([name,d])=>({name, sales:d.sales, amount:d.amount}));
+  } else {
+    players = await fetchTeamPlayers(teamName, matchDate);
+  }
 
   let progress = 0;
   if(isRet){
-    /* RET: sum of SUM amounts */
     players.forEach(p=>{ progress += p.amount; });
   } else {
-    /* FTD: count of FTDs (sales) */
     players.forEach(p=>{ progress += p.sales; });
   }
 
-  const pct = (progress / target.dailyTarget) * 100;
-  const goals = pctToGoals(pct);
+  const goals = countGoals(progress, target.thresholds, target.dailyTarget);
+  const pct = target.dailyTarget > 0 ? Math.round((progress / target.dailyTarget) * 100) : 0;
 
-  return { goals, progress, pct: Math.round(pct), dailyTarget: target.dailyTarget, isRet };
+  return { goals, progress, pct, dailyTarget: target.dailyTarget, isRet };
 }
 
 /* Check if a team scored a new goal and trigger celebration */
@@ -910,13 +954,7 @@ function fetchTab(tabName){
   });
 }
 
-/* (player data fetched by fetchPlayers below, after cellVal) */
-
-/* Map full team name → sheet tab name(s) for player data
-   Exact tab names from Google Sheet:
-   Pool A: FTD BG IT, FTD BG ES, FTD BG EN, Canva, FTD IL ES, FTD BS ES, MADA, FTD IL FR
-   Pool B: RET BG (reads EN+ES+IT), RET IL FR, RET IL ES, RET IL BS:
-*/
+/* Map full team name → sheet tab name(s) for player data */
 function teamToTabs(name){
   const n = (name||'').trim();
   const map = {
@@ -948,37 +986,6 @@ async function fetchTeamPlayers(teamName, matchDate){
     allPlayers.push(...players);
   }
   return allPlayers;
-}
-
-/* Normalize a GViz cell to "dd.mm" format */
-function normDate(cell){
-  if(!cell) return null;
-  const f = String(cell.f||'').trim();
-  const v = cell.v;
-  
-  /* Try formatted value for dd.mm */
-  let m = f.match(/(\d{1,2})[\.\/\-](\d{1,2})/);
-  if(m && parseInt(m[1])<=31) return m[1].padStart(2,'0')+'.'+m[2].padStart(2,'0');
-  
-  /* Try raw string value */
-  if(typeof v==='string'){
-    m = v.match(/(\d{1,2})[\.\/](\d{1,2})/);
-    if(m && parseInt(m[1])<=31) return m[1].padStart(2,'0')+'.'+m[2].padStart(2,'0');
-    /* GViz Date: Date(2026,5,12,...) */
-    m = v.match(/Date\(\d+,(\d+),(\d+)/i);
-    if(m) return String(parseInt(m[2])).padStart(2,'0')+'.'+String(parseInt(m[1])+1).padStart(2,'0');
-  }
-  
-  /* Raw is a number like 12.06 */
-  if(typeof v==='number' && v>0 && v<32){
-    const s = v.toFixed(2);
-    return s.split('.')[0].padStart(2,'0')+'.'+s.split('.')[1];
-  }
-  
-  /* Last resort: just use whatever string we have */
-  if(f && f.match(/\d/)) return f;
-  
-  return null;
 }
 
 /* Parse "FTD BS ES vs FTD BG ES" → {home, away} */
@@ -1082,24 +1089,44 @@ function extractDayMonth(val){
   return null;
 }
 
-/* Check if a cell date matches a match date (dd.mm format) */
-function dateMatches(cellValue, matchDate){
+/* Check if a cell date matches a match date
+   FTD (Pool A): 8am match day → 7:59am next day
+   RET (Pool B): full calendar day (dateMatches handles day only, 2-day sum done in calcTeamGoals)
+*/
+function dateMatches(cellValue, matchDate, isTimeAware){
   if(!matchDate || !cellValue) return true;
   const target = extractDayMonth(String(matchDate).replace(/,/g,'.'));
   if(!target) return true;
+
+  if(isTimeAware){
+    /* FTD: 8am to 8am window — need to parse full datetime */
+    const dt = parseDatetime(cellValue);
+    if(!dt) return false;
+    /* Match window: matchDay 08:00 → matchDay+1 08:00 */
+    const windowStart = new Date(2026, target.month-1, target.day, 8, 0, 0);
+    const windowEnd = new Date(2026, target.month-1, target.day+1, 8, 0, 0);
+    return dt >= windowStart && dt < windowEnd;
+  }
+
+  /* Simple day+month comparison (for RET or roster loading) */
   const raw = extractDayMonth(cellValue);
   if(raw) return raw.day===target.day && raw.month===target.month;
   return false;
 }
 
-/* Invalid player names — day names, headers, etc */
-const INVALID_NAMES = /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|date|agent|owner|jugador|player|nombre|name|total|sum|amount|monto|email|currency|country|business)$/i;
-function isValidName(name){
-  if(!name || typeof name!=='string' || name.length<2) return false;
-  if(name.match(/^\d/) || name.match(/^Date\(/i)) return false;
-  if(INVALID_NAMES.test(name.trim())) return false;
-  return true;
+/* Parse a datetime from GViz cell value */
+function parseDatetime(val){
+  const s = String(val||'');
+  /* GViz Date: Date(2026,5,12,13,22,39) — month 0-indexed */
+  let m = s.match(/Date\((\d+),(\d+),(\d+),?(\d+)?,?(\d+)?,?(\d+)?\)/i);
+  if(m) return new Date(parseInt(m[1]), parseInt(m[2]), parseInt(m[3]), parseInt(m[4]||0), parseInt(m[5]||0), parseInt(m[6]||0));
+  /* ISO: 2026-06-12 13:22:39 or 2026-06-12T13:22:39 */
+  m = s.match(/(\d{4})-(\d{1,2})-(\d{1,2})[\sT]?(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?/);
+  if(m) return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]), parseInt(m[4]||0), parseInt(m[5]||0), parseInt(m[6]||0));
+  return null;
 }
+
+const INVALID_NAMES = /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|date|agent|owner|player|name|total|sum|amount|email|currency|country|business|full name|status)$/i;
 
 /* ─── Fetch player data ───
    Roster from col L (Full Name) + col M (Status)
@@ -1155,7 +1182,7 @@ function fetchPlayers(tabName, matchDate){
           rowDate = cells[1]?.v || cells[1]?.f || '';
           amount = cellNum(cells[9]) || cellNum(cells[7]);
         }
-        if(matchDate && !dateMatches(rowDate, matchDate)) return;
+        if(matchDate && !dateMatches(rowDate, matchDate, !isRet)) return; /* FTD=timeAware, RET=dayOnly */
         if(!agentName || agentName.length<2 || INVALID_NAMES.test(agentName.trim())) return;
 
         const clean = agentName.trim();
@@ -1345,8 +1372,8 @@ async function showMatchDetail(p){
     fetchTeamPlayers(match.home, dateFilter),
     fetchTeamPlayers(match.away, dateFilter)
   ]);
-  renderPlayers(`d${p}hPlayers`, hp, `d${p}hTotal`, isFuture);
-  renderPlayers(`d${p}aPlayers`, ap, `d${p}aTotal`, isFuture);
+  renderPlayers(`d${p}hPlayers`, hp, isFuture);
+  renderPlayers(`d${p}aPlayers`, ap, isFuture);
 
   /* Calculate goals AFTER players render to ensure GOALS display is never overwritten */
   const [hGoalData, aGoalData] = await Promise.all([
@@ -1431,7 +1458,7 @@ function buildCalendar(p){
   const el = document.getElementById('calendar'+p);
   el.innerHTML = '';
   const today = new Date(); today.setHours(0,0,0,0);
-  const parseD = (s)=>{ const pp=s.split('.'); return new Date(2026, parseInt(pp[1])-1, parseInt(pp[0])); };
+  const parseD = (s)=>{ const pp=String(s).replace(/,/g,'.').split('.'); return new Date(2026, parseInt(pp[1])-1, parseInt(pp[0])); };
   const calDates = isAdmin ? (st.allDates||st.dates) : st.dates;
   calDates.forEach((date,i)=>{
     const isToday = parseD(date).getTime()===today.getTime();
@@ -1465,7 +1492,7 @@ async function renderYesterdayResults(){
 
     /* Find yesterday's date (the date before the current selected date, or the last played date) */
     const today = new Date(); today.setHours(0,0,0,0);
-    const parseD = (s)=>{ const pp=s.split('.'); return new Date(2026, parseInt(pp[1])-1, parseInt(pp[0])); };
+    const parseD = (s)=>{ const pp=String(s).replace(/,/g,'.').split('.'); return new Date(2026, parseInt(pp[1])-1, parseInt(pp[0])); };
 
     let ydDate = null;
     for(let i=st.dates.length-1; i>=0; i--){
@@ -1512,17 +1539,14 @@ function startCarouselTimer(){
     });
   }, 30000);
 }
-function resetCarouselTimer(){ startCarouselTimer(); }
 
-function renderPlayers(elId, players, totalId, isFuture){
+function renderPlayers(elId, players, isFuture){
   const el = document.getElementById(elId);
   el.innerHTML = '';
-  let totalSales = 0;
   players.sort((a,b)=>b.sales-a.sales || b.amount-a.amount);
   el.innerHTML = `<div class="md-p" style="background:none;padding:4px 12px;opacity:.4;font-size:10px;letter-spacing:1.5px;text-transform:uppercase">
     <span>Player</span><span style="text-align:center;font-family:var(--font-b);font-size:10px">PTS</span><span style="text-align:right;font-family:var(--font-b);font-size:10px">Amount</span></div>`;
   players.forEach(p=>{
-    totalSales += p.sales;
     const ptsDisplay = isFuture ? '<span style="opacity:.25">–</span>' : p.sales;
     const amtDisplay = isFuture ? '<span style="opacity:.25">–</span>' : `${Math.round(p.amount).toLocaleString()}€`;
     el.innerHTML += `<div class="md-p">
@@ -1531,7 +1555,6 @@ function renderPlayers(elId, players, totalId, isFuture){
       <span class="md-p-amount">${amtDisplay}</span>
     </div>`;
   });
-  /* Don't set totalId here — GOALS is set by showMatchDetail after calcTeamGoals */
   if(!players.length) el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">No players</div>';
 }
 
