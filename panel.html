@@ -946,7 +946,8 @@ function flagHTML(teamName, size){
 /* Fetch a sheet tab as JSON */
 function fetchTab(tabName){
   return new Promise(resolve=>{
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
+    const cacheBust = Date.now();
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}&_=${cacheBust}`;
     fetch(url).then(r=>r.text()).then(txt=>{
       const json = JSON.parse(txt.replace(/^[^(]*\(/,'').replace(/\);?\s*$/,''));
       resolve(json.table.rows||[]);
@@ -1164,6 +1165,7 @@ function fetchPlayers(tabName, matchDate){
       if(statusCol===-1) statusCol = nameCol + 1;
 
       const dataRows = rows.slice(headerRowIdx + 1);
+      console.log(`[Roster ${tabName}] nameCol=${nameCol} statusCol=${statusCol} headerRow=${headerRowIdx} dataRows=${dataRows.length}`);
 
       /* 1. Build roster from detected columns */
       const roster = {};
@@ -1175,6 +1177,7 @@ function fetchPlayers(tabName, matchDate){
           if(!roster[n]) roster[n] = {sales:0, amount:0};
         }
       });
+      console.log(`[Roster ${tabName}] ${Object.keys(roster).length} players:`, Object.keys(roster).slice(0,5).join(', '), '...');
 
       /* 2. Count sales per agent for the match date */
       dataRows.forEach(r=>{
