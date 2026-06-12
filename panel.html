@@ -1150,7 +1150,7 @@ function fetchPlayers(tabName, matchDate){
         const cells = rows[r]?.c || [];
         for(let i=0; i<cells.length; i++){
           const h = (cellVal(cells[i])||'').toLowerCase().trim();
-          if(h === 'full name' && nameCol===-1){ nameCol = i; headerRowIdx = r; }
+          if((h === 'full name' || h === 'full_name' || h.includes('full name')) && nameCol===-1){ nameCol = i; headerRowIdx = r; }
         }
         if(nameCol >= 0) break;
       }
@@ -1158,14 +1158,30 @@ function fetchPlayers(tabName, matchDate){
         const hCells = rows[headerRowIdx]?.c || [];
         for(let i=nameCol+1; i<hCells.length; i++){
           const h = (cellVal(hCells[i])||'').toLowerCase().trim();
-          if(h === 'status'){ statusCol = i; break; }
+          if(h === 'status' || h.includes('status')){ statusCol = i; break; }
         }
       }
-      if(nameCol===-1) nameCol = 11;
+      /* Fallback: try different default positions based on tab type */
+      if(nameCol===-1){
+        const isRetTab = isRet;
+        if(isRetTab){
+          /* RET tabs: Full Name typically in col J (9) */
+          nameCol = 9;
+        } else {
+          /* FTD tabs: Full Name typically in col L (11) */
+          nameCol = 11;
+        }
+      }
       if(statusCol===-1) statusCol = nameCol + 1;
 
       const dataRows = rows.slice(headerRowIdx + 1);
-      console.log(`[Roster ${tabName}] nameCol=${nameCol} statusCol=${statusCol} headerRow=${headerRowIdx} dataRows=${dataRows.length}`);
+      /* Debug: show header values around nameCol */
+      const hDbg = rows[headerRowIdx]?.c || [];
+      const hVals = [];
+      for(let i=Math.max(0,nameCol-2); i<Math.min(hDbg.length, nameCol+3); i++){
+        hVals.push(`${i}:${cellVal(hDbg[i])||'(empty)'}`);
+      }
+      console.log(`[Roster ${tabName}] nameCol=${nameCol} statusCol=${statusCol} headerRow=${headerRowIdx} dataRows=${dataRows.length} header=[${hVals.join(', ')}]`);
 
       /* 1. Build roster from detected columns */
       const roster = {};
@@ -1178,6 +1194,10 @@ function fetchPlayers(tabName, matchDate){
         }
       });
       console.log(`[Roster ${tabName}] ${Object.keys(roster).length} players:`, Object.keys(roster).slice(0,5).join(', '), '...');
+      if(dataRows.length > 0){
+        const firstCells = dataRows[0]?.c || [];
+        console.log(`[Roster ${tabName}] First row col${nameCol}:`, JSON.stringify(firstCells[nameCol]), 'col0:', JSON.stringify(firstCells[0]));
+      }
 
       /* 2. Count sales per agent for the match date */
       dataRows.forEach(r=>{
