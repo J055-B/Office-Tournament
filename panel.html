@@ -950,7 +950,10 @@ function fetchTab(tabName){
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}&_=${cacheBust}`;
     fetch(url).then(r=>r.text()).then(txt=>{
       const json = JSON.parse(txt.replace(/^[^(]*\(/,'').replace(/\);?\s*$/,''));
-      resolve(json.table.rows||[]);
+      const rows = json.table.rows||[];
+      /* Attach column labels from GViz metadata */
+      rows._cols = (json.table.cols||[]).map(c=>(c.label||'').trim());
+      resolve(rows);
     }).catch(()=>resolve([]));
   });
 }
@@ -1140,48 +1143,47 @@ function fetchPlayers(tabName, matchDate){
     if(SHEET_DATA[cacheKey]) return resolve(SHEET_DATA[cacheKey]);
 
     const doProcess = (rows)=>{
-      if(rows.length<2){ SHEET_DATA[cacheKey]=[]; return resolve([]); }
+      if(rows.length<1){ SHEET_DATA[cacheKey]=[]; return resolve([]); }
       const isRet = tabName.toUpperCase().includes('RET');
 
-      /* Detect roster columns (Full Name + Status) from ANY row's header */
+      /* Detect roster columns from GViz column labels (metadata, not data rows) */
+      const colLabels = rows._cols || [];
       let nameCol = -1, statusCol = -1;
-      let headerRowIdx = 0;
-      for(let r=0; r<Math.min(3, rows.length); r++){
-        const cells = rows[r]?.c || [];
-        for(let i=0; i<cells.length; i++){
-          const h = (cellVal(cells[i])||'').toLowerCase().trim();
-          if((h === 'full name' || h === 'full_name' || h.includes('full name')) && nameCol===-1){ nameCol = i; headerRowIdx = r; }
-        }
-        if(nameCol >= 0) break;
+
+      /* First: try GViz column labels */
+      for(let i=0; i<colLabels.length; i++){
+        const h = colLabels[i].toLowerCase();
+        if(h.includes('full name') && nameCol===-1) nameCol = i;
       }
       if(nameCol >= 0){
-        const hCells = rows[headerRowIdx]?.c || [];
-        for(let i=nameCol+1; i<hCells.length; i++){
-          const h = (cellVal(hCells[i])||'').toLowerCase().trim();
-          if(h === 'status' || h.includes('status')){ statusCol = i; break; }
+        for(let i=nameCol+1; i<colLabels.length; i++){
+          if(colLabels[i].toLowerCase().includes('status')){ statusCol = i; break; }
         }
       }
-      /* Fallback: try different default positions based on tab type */
-      if(nameCol===-1){
-        const isRetTab = isRet;
-        if(isRetTab){
-          /* RET tabs: Full Name typically in col J (9) */
-          nameCol = 9;
-        } else {
-          /* FTD tabs: Full Name typically in col L (11) */
-          nameCol = 11;
-        }
-      }
-      if(statusCol===-1) statusCol = nameCol + 1;
 
-      const dataRows = rows.slice(headerRowIdx + 1);
-      /* Debug: show header values around nameCol */
-      const hDbg = rows[headerRowIdx]?.c || [];
-      const hVals = [];
-      for(let i=Math.max(0,nameCol-2); i<Math.min(hDbg.length, nameCol+3); i++){
-        hVals.push(`${i}:${cellVal(hDbg[i])||'(empty)'}`);
+      /* If GViz labels didn't have it, scan first row of data as fallback */
+      if(nameCol === -1){
+        const firstCells = rows[0]?.c || [];
+        for(let i=0; i<firstCells.length; i++){
+          const h = (cellVal(firstCells[i])||'').toLowerCase().trim();
+          if(h.includes('full name') && nameCol===-1) nameCol = i;
+        }
       }
-      console.log(`[Roster ${tabName}] nameCol=${nameCol} statusCol=${statusCol} headerRow=${headerRowIdx} dataRows=${dataRows.length} header=[${hVals.join(', ')}]`);
+
+      /* Final fallback: hardcoded positions */
+      if(nameCol === -1) nameCol = isRet ? 9 : 11;
+      if(statusCol === -1) statusCol = nameCol + 1;
+
+      /* Determine where data starts — if first row IS a header ("Full Name"), skip it */
+      let dataStartRow = 0;
+      if(rows.length > 0){
+        const firstVal = cellVal((rows[0]?.c||[])[nameCol]);
+        if(firstVal.toLowerCase().trim() === 'full name') dataStartRow = 1;
+      }
+      const dataRows = rows.slice(dataStartRow);
+
+      /* Debug */
+      console.log(`[Roster ${tabName}] nameCol=${nameCol} statusCol=${statusCol} gvizLabels=${colLabels.length>0} dataStart=${dataStartRow} dataRows=${dataRows.length}`);
 
       /* 1. Build roster from detected columns */
       const roster = {};
@@ -1194,10 +1196,6 @@ function fetchPlayers(tabName, matchDate){
         }
       });
       console.log(`[Roster ${tabName}] ${Object.keys(roster).length} players:`, Object.keys(roster).slice(0,5).join(', '), '...');
-      if(dataRows.length > 0){
-        const firstCells = dataRows[0]?.c || [];
-        console.log(`[Roster ${tabName}] First row col${nameCol}:`, JSON.stringify(firstCells[nameCol]), 'col0:', JSON.stringify(firstCells[0]));
-      }
 
       /* 2. Count sales per agent for the match date */
       dataRows.forEach(r=>{
