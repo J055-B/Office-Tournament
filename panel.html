@@ -1141,36 +1141,38 @@ function fetchPlayers(tabName, matchDate){
     const doProcess = (rows)=>{
       if(rows.length<2){ SHEET_DATA[cacheKey]=[]; return resolve([]); }
       const isRet = tabName.toUpperCase().includes('RET');
-      const dataRows = rows.slice(1);
 
-      /* Detect roster columns (Full Name + Status) from header row */
-      const header = rows[0]?.c || [];
+      /* Detect roster columns (Full Name + Status) from ANY row's header */
       let nameCol = -1, statusCol = -1;
-      for(let i=0; i<header.length; i++){
-        const h = (cellVal(header[i])||'').toLowerCase().trim();
-        if(h === 'full name' && nameCol===-1) nameCol = i;
+      let headerRowIdx = 0;
+      for(let r=0; r<Math.min(3, rows.length); r++){
+        const cells = rows[r]?.c || [];
+        for(let i=0; i<cells.length; i++){
+          const h = (cellVal(cells[i])||'').toLowerCase().trim();
+          if(h === 'full name' && nameCol===-1){ nameCol = i; headerRowIdx = r; }
+        }
+        if(nameCol >= 0) break;
       }
-      /* Search for Status only after Full Name column */
       if(nameCol >= 0){
-        for(let i=nameCol+1; i<header.length; i++){
-          const h = (cellVal(header[i])||'').toLowerCase().trim();
+        const hCells = rows[headerRowIdx]?.c || [];
+        for(let i=nameCol+1; i<hCells.length; i++){
+          const h = (cellVal(hCells[i])||'').toLowerCase().trim();
           if(h === 'status'){ statusCol = i; break; }
         }
       }
       if(nameCol===-1) nameCol = 11;
       if(statusCol===-1) statusCol = nameCol + 1;
 
+      const dataRows = rows.slice(headerRowIdx + 1);
+
       /* 1. Build roster from detected columns */
       const roster = {};
       dataRows.forEach(r=>{
         const cells = r.c||[];
         const fullName = cellVal(cells[nameCol]);
-        const status = cellVal(cells[statusCol]);
         if(fullName && fullName.length>1 && !INVALID_NAMES.test(fullName.trim())){
-          if(!status || status.toLowerCase().includes('active')){
-            const n = fullName.trim();
-            if(!roster[n]) roster[n] = {sales:0, amount:0};
-          }
+          const n = fullName.trim();
+          if(!roster[n]) roster[n] = {sales:0, amount:0};
         }
       });
 
