@@ -180,9 +180,13 @@
 
   /* ═══ DATE NAV ═══ */
   .pool-section{margin-bottom:8px;}
-  .pool-top-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-  .pool-today{min-width:0;}
-  .pool-yesterday{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:14px 16px;max-height:220px;overflow-y:auto;}
+  .pool-top-row{display:grid;grid-template-columns:0.82fr 1.75fr 0.82fr;gap:14px;align-items:start;}
+  .pool-today{min-width:0;display:flex;flex-direction:column;align-items:center;}
+  .pool-today .date-nav{justify-content:center;}
+  .pool-today .match-carousel{justify-content:center;width:100%;}
+  .pool-today .dn-expand{margin-left:8px;}
+  .pool-today .dn-date{font-size:24px;min-width:200px;}
+  .pool-yesterday,.pool-tomorrow{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:14px 16px;max-height:260px;overflow-y:auto;}
   .yd-title{font-family:var(--font-d);font-size:14px;letter-spacing:2px;color:var(--gold);margin-bottom:10px;}
   .yd-results{display:flex;flex-direction:column;gap:8px;}
   .yd-empty{font-size:11px;color:var(--dim);text-align:center;padding:16px 0;}
@@ -191,6 +195,7 @@
   .yd-team{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;}
   .yd-team img{width:22px;height:22px;border-radius:50%;}
   .yd-score{font-family:var(--font-d);font-size:20px;color:var(--gold);text-align:center;letter-spacing:2px;}
+  .yd-vs{font-family:var(--font-d);font-size:13px;color:var(--gold);opacity:.55;text-align:center;letter-spacing:1px;}
   .yd-team.winner-yd{color:var(--gold);}
   .yd-team.loser-yd{opacity:.4;}
   /* Hide nav arrows for visitors */
@@ -231,6 +236,11 @@
   .mc-tname{font-family:var(--font-d);font-size:13px;letter-spacing:1.5px;color:var(--text);line-height:1;}
   .mc-vs{font-family:var(--font-d);font-size:16px;color:var(--gold);opacity:.5;}
   .mc-score-line{margin-top:8px;font-family:var(--font-d);font-size:22px;letter-spacing:3px;color:var(--gold);}
+  /* Center (today) cards a touch larger to stand out */
+  .pool-today .mc-card{width:228px;padding:18px 16px;}
+  .pool-today .mc-flag{width:46px;height:46px;}
+  .pool-today .mc-tname{font-size:14px;}
+  .pool-today .mc-score-line{font-size:26px;}
 
   /* ═══ MATCH DETAIL ═══ */
   .match-detail{background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;overflow:hidden;margin-top:4px;animation:fadeIn .25s ease;}
@@ -383,6 +393,10 @@
         <div class="pool-section">
           <div class="slabel">Pool A — FTD</div>
           <div class="pool-top-row">
+            <div class="pool-yesterday" id="yesterdayA">
+              <div class="yd-title">📋 Previous Day</div>
+              <div class="yd-results" id="ydResultsA"><span class="yd-empty">No information to display</span></div>
+            </div>
             <div class="pool-today">
               <div class="date-nav">
                 <button class="dn-arrow admin-only-nav" onclick="shiftDate('A',-1)">◀</button>
@@ -393,9 +407,9 @@
               <div class="date-calendar" id="calendarA" style="display:none"></div>
               <div class="match-carousel" id="carouselA"></div>
             </div>
-            <div class="pool-yesterday" id="yesterdayA">
-              <div class="yd-title">📋 Previous Day</div>
-              <div class="yd-results" id="ydResultsA"><span class="yd-empty">No information to display</span></div>
+            <div class="pool-tomorrow" id="tomorrowA">
+              <div class="yd-title">📅 Next Day</div>
+              <div class="yd-results" id="ndResultsA"><span class="yd-empty">No information to display</span></div>
             </div>
           </div>
           <div class="match-detail" id="detailA" style="display:none">
@@ -415,6 +429,10 @@
         <div class="pool-section" style="margin-top:28px">
           <div class="slabel">Pool B — RET</div>
           <div class="pool-top-row">
+            <div class="pool-yesterday" id="yesterdayB">
+              <div class="yd-title">📋 Previous Day</div>
+              <div class="yd-results" id="ydResultsB"><span class="yd-empty">No information to display</span></div>
+            </div>
             <div class="pool-today">
               <div class="date-nav">
                 <button class="dn-arrow admin-only-nav" onclick="shiftDate('B',-1)">◀</button>
@@ -425,9 +443,9 @@
               <div class="date-calendar" id="calendarB" style="display:none"></div>
               <div class="match-carousel" id="carouselB"></div>
             </div>
-            <div class="pool-yesterday" id="yesterdayB">
-              <div class="yd-title">📋 Previous Day</div>
-              <div class="yd-results" id="ydResultsB"><span class="yd-empty">No information to display</span></div>
+            <div class="pool-tomorrow" id="tomorrowB">
+              <div class="yd-title">📅 Next Day</div>
+              <div class="yd-results" id="ndResultsB"><span class="yd-empty">No information to display</span></div>
             </div>
           </div>
           <div class="match-detail" id="detailB" style="display:none">
@@ -1058,6 +1076,7 @@ async function loadScheduleFromSheet(){
   console.log('[Schedule]', SCHEDULE.length, 'matches');
   renderCarousel();
   renderYesterdayResults();
+  renderNextDayResults();
 }
 
 /* ─── Cell value helpers ─── */
@@ -1555,7 +1574,44 @@ async function renderYesterdayResults(){
   }
 }
 
-/* Auto-rotation: cycle through matches of current date for each pool */
+/* Render the next day's matches (or nearest upcoming date) for each pool */
+async function renderNextDayResults(){
+  for(const p of ['A','B']){
+    const st = poolState[p];
+    const el = document.getElementById('ndResults'+p);
+    if(!el) continue;
+    const allDates = st.allDates || st.dates;
+    if(!allDates || !allDates.length){
+      el.innerHTML = '<span class="yd-empty">No information to display</span>';
+      continue;
+    }
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const parseD = (s)=>{ const pp=String(s).replace(/,/g,'.').split('.'); return new Date(2026, parseInt(pp[1])-1, parseInt(pp[0])); };
+
+    /* First date strictly after today (next day if it has matches, else nearest upcoming) */
+    let ndDate = null;
+    for(let i=0; i<allDates.length; i++){
+      if(parseD(allDates[i]) > today){ ndDate = allDates[i]; break; }
+    }
+
+    if(!ndDate || !st.byDate[ndDate]){
+      el.innerHTML = '<span class="yd-empty">No information to display</span>';
+      continue;
+    }
+
+    const matches = st.byDate[ndDate];
+    let html = `<div style="font-size:10px;opacity:.4;margin-bottom:4px">${ndDate}</div>`;
+    for(const match of matches){
+      html += `<div class="yd-match">
+        <div class="yd-team">${flagHTML(match.home, 22)} ${shortName(match.home)}</div>
+        <div class="yd-vs">vs</div>
+        <div class="yd-team" style="justify-content:flex-end">${shortName(match.away)} ${flagHTML(match.away, 22)}</div>
+      </div>`;
+    }
+    el.innerHTML = html;
+  }
+}
 function startCarouselTimer(){
   if(carouselTimer) clearInterval(carouselTimer);
   carouselTimer = setInterval(()=>{
