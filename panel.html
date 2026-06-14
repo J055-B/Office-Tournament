@@ -298,7 +298,7 @@
 
   /* ═══ GOAL CELEBRATION ═══ */
   .goal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.92);
-    display:none;align-items:center;justify-content:center;cursor:pointer;}
+    display:none;align-items:flex-start;justify-content:center;cursor:pointer;padding-top:1.5vh;}
   .goal-overlay.show{display:flex;animation:fadeIn .2s ease;}
   .goal-stage{display:flex;flex-direction:column;align-items:center;position:relative;max-width:95vw;}
   .goal-crown{width:200px;height:auto;margin-bottom:-30px;z-index:3;
@@ -310,6 +310,7 @@
   .goal-flag-r{margin-left:-40px;}
   .goal-gif{width:min(85vw,750px);height:auto;border-radius:16px;z-index:2;
     filter:drop-shadow(0 0 60px rgba(245,197,24,0.4));}
+  .goal-vid{width:auto;height:auto;max-height:80vh;max-width:min(85vw,460px);object-fit:contain;background:#000;}
   .goal-team-name{font-family:var(--font-d);font-size:clamp(42px,10vw,80px);letter-spacing:8px;
     color:var(--gold);text-align:center;margin-top:16px;
     text-shadow:0 0 40px rgba(245,197,24,0.6),0 4px 12px rgba(0,0,0,0.7);
@@ -767,10 +768,9 @@
 <!-- GOAL CELEBRATION OVERLAY -->
 <div class="goal-overlay" id="goalOverlay" onclick="hideGoalCelebration()">
   <div class="goal-stage">
-    <img src="assets/crown.gif" alt="" class="goal-crown">
     <div class="goal-center">
       <img src="assets/flag-left.gif" alt="" class="goal-flag goal-flag-l">
-      <img src="assets/goal_celebration.gif" alt="GOAL!" class="goal-gif" id="goalGif">
+      <video src="assets/goal_celebration.mp4" class="goal-gif goal-vid" id="goalVid" playsinline preload="auto"></video>
       <img src="assets/flag-right.gif" alt="" class="goal-flag goal-flag-r">
     </div>
     <div class="goal-team-name" id="goalTeamName">TEST TEAM</div>
@@ -826,19 +826,32 @@ if(isAdmin){
 /* ─── Goal Celebration ─── */
 function showGoalCelebration(teamName){
   const overlay = document.getElementById('goalOverlay');
-  const gif = document.getElementById('goalGif');
+  const vid = document.getElementById('goalVid');
   const nameEl = document.getElementById('goalTeamName');
   /* Set team name */
   nameEl.textContent = teamName || 'TEST TEAM';
-  /* Force reload GIF to restart animation */
-  gif.src = '';
-  setTimeout(()=>{ gif.src = 'assets/goal_celebration.gif'; }, 50);
   overlay.classList.add('show');
-  /* Auto-hide after 9 seconds */
-  setTimeout(()=>{ hideGoalCelebration(); }, 9000);
+  /* Restart the celebration video from the beginning, with sound */
+  if(vid){
+    vid.currentTime = 0;
+    vid.muted = false;
+    const p = vid.play();
+    if(p && p.catch){
+      /* If the browser blocks autoplay-with-sound, fall back to muted so it still shows */
+      p.catch(()=>{ vid.muted = true; vid.play().catch(()=>{}); });
+    }
+    /* Hide as soon as the video finishes */
+    vid.onended = ()=>hideGoalCelebration();
+  }
+  /* Safety auto-hide (in case the video can't play) */
+  clearTimeout(window._goalHideTimer);
+  window._goalHideTimer = setTimeout(()=>{ hideGoalCelebration(); }, 20000);
 }
 function hideGoalCelebration(){
   document.getElementById('goalOverlay').classList.remove('show');
+  const vid = document.getElementById('goalVid');
+  if(vid){ try{ vid.pause(); vid.currentTime = 0; }catch(e){} }
+  clearTimeout(window._goalHideTimer);
 }
 /* Trigger goal for a specific team (called when goals are detected) */
 function triggerGoal(teamName){
