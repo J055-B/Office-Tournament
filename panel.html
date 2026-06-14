@@ -313,6 +313,81 @@
     .aw-grid{grid-template-columns:1fr 1fr;}
     .goal-grid{grid-template-columns:repeat(3,1fr);}
   }
+
+  /* ═══ MOBILE (phones) ═══ */
+  @media(max-width:640px){
+    /* Shell: sidebar becomes a top bar, content below */
+    .app{flex-direction:column;}
+    .sidebar{flex-direction:row;align-items:center;width:100%;min-width:0;height:auto;
+      border-right:none;border-bottom:1px solid var(--border);padding-top:3px;position:relative;transition:none;overflow:visible;}
+    .sidebar.collapsed{width:100%;min-width:0;}
+    .sb-stripe{position:absolute;top:0;left:0;width:100%;}
+    .sb-logo{border-bottom:none;padding:8px 12px;flex:0 0 auto;}
+    .sb-title{font-size:13px;}
+    .sb-toggle{display:none;}
+    .sb-nav{flex:1 1 auto;flex-direction:row;justify-content:center;align-items:center;
+      padding:6px 6px;gap:10px;overflow-x:auto;}
+    .sidebar.collapsed .sb-nav{padding-top:6px;}
+    .nav-it{padding:8px;gap:0;}
+    .nav-ic{width:30px;height:30px;font-size:16px;}
+    .nav-lb{display:none;}
+    .sb-bottom{flex-direction:row;border-top:none;padding:6px 8px;gap:8px;flex:0 0 auto;}
+    .music-controls{padding:0;gap:5px;}
+    .mc-btn{width:28px;height:28px;}
+    .mc-main,.mc-img{width:34px;height:34px;}
+
+    /* Topbar + content */
+    .topbar{padding:10px 14px;}
+    .pg-title{font-size:18px;letter-spacing:2px;}
+    .top-right{gap:8px;}
+    .content{padding:14px 12px;}
+
+    /* Awards / goals */
+    .aw-grid{grid-template-columns:1fr;}
+    .goal-grid{grid-template-columns:repeat(3,1fr);}
+
+    /* Standings table — compact (collapse the centering spacer, shrink) */
+    .thead,.trow{grid-template-columns:22px minmax(0,1fr) 48px 0px 22px 22px 22px 22px 28px 32px;padding:8px 8px 8px 10px;}
+    .thead{font-size:7px;letter-spacing:1px;}
+    .tpos{font-size:10px;}
+    .tname{font-size:11px;}
+    .tstat{font-size:11px;}
+    .tscore{font-size:13px;}
+    .tgd{font-size:10px;}
+    .tpts{font-size:15px;}
+    .tinfo{gap:5px;}
+    .tinfo img{width:18px!important;height:18px!important;}
+
+    /* Matches: stack the 3 columns, Today first */
+    .pool-top-row{grid-template-columns:1fr;gap:12px;}
+    .pool-today{order:-1;}
+    .pool-yesterday,.pool-tomorrow{max-height:none;}
+
+    /* Center card scaled for phone */
+    .pool-today .dn-date,.dn-date{min-width:0;}
+    .pool-today .dn-date{font-size:26px;}
+    .pool-today .mc-card{padding:20px 18px;}
+    .pool-today .mc-flag{width:72px;height:72px;}
+    .pool-today .mc-teams{gap:22px;margin-top:12px;}
+    .pool-today .mc-tname{font-size:22px;}
+    .pool-today .mc-vs{font-size:26px;}
+    .pool-today .mc-score-line{font-size:22px!important;margin-top:14px;}
+    .date-nav{gap:6px;}
+    .dn-expand{font-size:10px;padding:5px 9px;}
+
+    /* Match detail */
+    .md-header{padding:16px 12px;}
+    .md-flag{width:54px;height:54px;}
+    .md-tname{font-size:16px;}
+    .md-total{font-size:26px;}
+    .md-score{font-size:30px;}
+    .md-vs{padding:0 8px;}
+    .md-players-wrap{grid-template-columns:1fr;}
+    .md-players-col{padding:12px 14px;}
+    .md-players-col:first-child{border-right:none;border-bottom:1px solid rgba(255,255,255,0.05);}
+    .md-p-pts{font-size:22px;}
+    .md-p-amount{font-size:15px;}
+  }
 </style>
 </head>
 <body>
