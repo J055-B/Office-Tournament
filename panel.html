@@ -1339,6 +1339,18 @@ const poolState = {
   B: { dates:[], dateIdx:0, matches:[], selIdx:0 }
 };
 
+/* Date helpers for the "today" anchored center */
+function isToday(dateStr){
+  const now = new Date();
+  const pp = String(dateStr).replace(/,/g,'.').split('.');
+  return parseInt(pp[0])===now.getDate() && parseInt(pp[1])===(now.getMonth()+1);
+}
+function weekdayLabel(dateStr){
+  const pp = String(dateStr).replace(/,/g,'.').split('.');
+  const dt = new Date(2026, parseInt(pp[1])-1, parseInt(pp[0]));
+  return ['SUN','MON','TUE','WED','THU','FRI','SAT'][dt.getDay()] || '';
+}
+
 function renderCarousel(){
   const ftd = SCHEDULE.filter(m=>m.pool==='poolA');
   const ret = SCHEDULE.filter(m=>m.pool==='poolB');
@@ -1359,7 +1371,7 @@ function setupPool(p, matches, carId, detId){
 
   poolState[p].allDates = allDates;
   poolState[p].byDate = byDate;
-  poolState[p].dates = allDates;
+  poolState[p].dates = allDates.slice();
 
   if(allDates.length===0){
     document.getElementById(carId).innerHTML = '<div style="padding:16px;text-align:center;color:var(--dim);font-size:11px">No matches loaded</div>';
@@ -1368,19 +1380,24 @@ function setupPool(p, matches, carId, detId){
     return;
   }
 
-  /* Find first upcoming/live date */
-  let bestIdx = 0;
-  for(let i=0; i<allDates.length; i++){
-    const status = matchStatus(allDates[i]);
-    if(status === 'live'){ bestIdx = i; break; }
-    if(status === 'upcoming'){ bestIdx = i; break; }
+  /* Center = TODAY. Show today's matches if any; otherwise show today as an empty
+     day — never pull a future match into the center (that's the Next Day panel's job). */
+  let bestIdx = allDates.findIndex(isToday);
+  if(bestIdx === -1){
+    const now = new Date();
+    const sep = (allDates[0] && allDates[0].includes(',')) ? ',' : '.';
+    const pad = n=>String(n).padStart(2,'0');
+    const todayStr = pad(now.getDate())+sep+pad(now.getMonth()+1);
+    const dts = poolState[p].dates;
+    if(!dts.some(isToday)){ dts.push(todayStr); dts.sort((a,b)=>toNum(a)-toNum(b)); }
+    bestIdx = dts.findIndex(isToday);
   }
 
   poolState[p].dateIdx = bestIdx;
 
   /* Visitor: if no match today or tomorrow, show "Next match" message */
   if(!isAdmin){
-    const bestDate = allDates[bestIdx];
+    const bestDate = poolState[p].dates[bestIdx];
     const bestStatus = matchStatus(bestDate);
     /* Check if best date is further than tomorrow */
     const pp = bestDate.split('.');
@@ -1415,7 +1432,7 @@ function showDate(p){
 
   /* Update date label */
   const m = matches[0];
-  document.getElementById('date'+p).textContent = `${date} · ${m?.day||''}`;
+  document.getElementById('date'+p).textContent = `${date} · ${m?.day || weekdayLabel(date)}`;
 
   /* Update calendar active */
   document.querySelectorAll(`#calendar${p} .dc-chip`).forEach((c,i)=>{
@@ -1426,7 +1443,8 @@ function showDate(p){
   const carEl = document.getElementById('carousel'+p);
   carEl.innerHTML = '';
   if(matches.length===0){
-    carEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--dim);font-size:11px">No matches this day</div>';
+    const msg = isToday(date) ? 'No match today' : 'No matches this day';
+    carEl.innerHTML = `<div style="padding:16px;text-align:center;color:var(--dim);font-size:13px;letter-spacing:1px">${msg}</div>`;
     document.getElementById('detail'+p).style.display = 'none';
     return;
   }
