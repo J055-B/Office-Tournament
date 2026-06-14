@@ -873,6 +873,48 @@ function getNextDay(dateStr){
   return String(dt.getDate()).padStart(2,'0') + '.' + String(dt.getMonth()+1).padStart(2,'0');
 }
 
+/* ─── Weekend roll-up ───
+   Some FTD teams have many agents selling on the weekend. When such a team
+   plays on a SUNDAY, their sales from Friday + Saturday + Sunday all count
+   toward that Sunday match (3-day window instead of the usual single day).
+   Add team names here to enable it for them. */
+const WEEKEND_ROLLUP_TEAMS = ['FTD BS ES'];
+
+function shiftDateStr(dateStr, delta){
+  const pp = String(dateStr).replace(/,/g,'.').split('.');
+  const dt = new Date(2026, parseInt(pp[1])-1, parseInt(pp[0]));
+  dt.setDate(dt.getDate() + delta);
+  return String(dt.getDate()).padStart(2,'0') + '.' + String(dt.getMonth()+1).padStart(2,'0');
+}
+
+function isWeekendRollup(teamName, matchDate){
+  if(!matchDate) return false;
+  if(!WEEKEND_ROLLUP_TEAMS.includes((teamName||'').trim())) return false;
+  const pp = String(matchDate).replace(/,/g,'.').split('.');
+  const day = parseInt(pp[0]), month = parseInt(pp[1]);
+  if(!day || !month) return false;
+  return new Date(2026, month-1, day).getDay() === 0; /* 0 = Sunday */
+}
+
+/* Players for a match — merges Fri+Sat+Sun for weekend-rollup teams on Sundays,
+   otherwise the normal single-day fetch. Keeps goals + player tables consistent. */
+async function fetchTeamPlayersWindow(teamName, matchDate){
+  if(isWeekendRollup(teamName, matchDate)){
+    const days = [shiftDateStr(matchDate,-2), shiftDateStr(matchDate,-1), matchDate];
+    const merged = {};
+    for(const d of days){
+      const dp = await fetchTeamPlayers(teamName, d);
+      dp.forEach(pl=>{
+        if(!merged[pl.name]) merged[pl.name] = {sales:0, amount:0};
+        merged[pl.name].sales  += pl.sales;
+        merged[pl.name].amount += pl.amount;
+      });
+    }
+    return Object.entries(merged).map(([name,d])=>({name, sales:d.sales, amount:Math.round(d.amount*100)/100}));
+  }
+  return fetchTeamPlayers(teamName, matchDate);
+}
+
 /* Calculate goals for a team based on match data */
 async function calcTeamGoals(teamName, matchDate){
   const target = getTarget(teamName);
@@ -895,7 +937,7 @@ async function calcTeamGoals(teamName, matchDate){
     });
     players = Object.entries(merged).map(([name,d])=>({name, sales:d.sales, amount:d.amount}));
   } else {
-    players = await fetchTeamPlayers(teamName, matchDate);
+    players = await fetchTeamPlayersWindow(teamName, matchDate);
   }
 
   let progress = 0;
@@ -1416,8 +1458,8 @@ async function showMatchDetail(p){
   const isFuture = status === 'upcoming';
   const dateFilter = isFuture ? null : match.date;
   const [hp, ap] = await Promise.all([
-    fetchTeamPlayers(match.home, dateFilter),
-    fetchTeamPlayers(match.away, dateFilter)
+    fetchTeamPlayersWindow(match.home, dateFilter),
+    fetchTeamPlayersWindow(match.away, dateFilter)
   ]);
   renderPlayers(`d${p}hPlayers`, hp, isFuture);
   renderPlayers(`d${p}aPlayers`, ap, isFuture);
@@ -1461,8 +1503,8 @@ async function showMatchDetail(p){
       winner = hG > aG ? 'home' : 'away';
     } else {
       /* Tiebreaker 1: total amount */
-      const hPlayers = await fetchTeamPlayers(match.home, match.date);
-      const aPlayers = await fetchTeamPlayers(match.away, match.date);
+      const hPlayers = await fetchTeamPlayersWindow(match.home, match.date);
+      const aPlayers = await fetchTeamPlayersWindow(match.away, match.date);
       const hAmount = hPlayers.reduce((s,pl)=>s+pl.amount, 0);
       const aAmount = aPlayers.reduce((s,pl)=>s+pl.amount, 0);
 
