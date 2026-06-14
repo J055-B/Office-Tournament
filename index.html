@@ -139,6 +139,14 @@
   .btn-cancel:hover{color:var(--white);background:rgba(255,255,255,.12);}
   .footer-credit{position:fixed;bottom:14px;left:0;right:0;z-index:5;text-align:center;
     font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.2);}
+
+  @media(max-width:640px){
+    .tagline{display:block;text-align:center;font-size:26px;letter-spacing:2px;line-height:1.08;
+      -webkit-text-stroke-width:1.5px;}
+    .tagline::after{display:none;}        /* drop shimmer overlay so the wrapped text aligns */
+    .tl-ch{display:block;}                /* "Challenge" drops to its own centered line */
+    .subtagline{letter-spacing:3px;font-size:11px;}
+  }
 </style>
 </head>
 <body>
@@ -158,7 +166,7 @@
         <div class="fb-sub">MUNDIAL</div>
       </div>
     </div>
-    <h1 class="tagline" style="margin-top:14px;">The Sales Tournament Challenge</h1>
+    <h1 class="tagline" style="margin-top:14px;">The Sales Tournament <span class="tl-ch">Challenge</span></h1>
     <div class="subtagline">Where champions are made</div>
     <div class="divider"></div>
     <button class="enter-btn" onclick="enterAsVisitor()">Enter</button>

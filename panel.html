@@ -273,6 +273,14 @@
   .md-p-name{font-size:13px;font-weight:600;color:var(--text);}
   .md-p-pts{font-family:var(--font-d);font-size:28px;color:var(--gold);letter-spacing:1px;text-align:center;}
   .md-p-amount{font-family:var(--font-d);font-size:18px;color:var(--green-light);letter-spacing:1px;text-align:right;}
+  /* Player list collapse / expand */
+  .mp-extra{display:none;}
+  .md-player-list.mp-expanded .mp-extra{display:grid;}
+  .mp-toggle{width:100%;margin-top:8px;padding:9px;background:rgba(245,197,24,0.08);
+    border:1px solid var(--card-border);border-radius:8px;color:var(--gold);
+    font-family:var(--font-b);font-size:11px;font-weight:600;letter-spacing:1.5px;
+    text-transform:uppercase;cursor:pointer;transition:all .15s;}
+  .mp-toggle:hover{background:rgba(245,197,24,0.16);border-color:var(--gold);}
 
   .md-team.winner{border:2px solid var(--gold);border-radius:12px;padding:20px;position:relative;
     background:rgba(245,197,24,0.06);box-shadow:0 0 30px rgba(245,197,24,0.15);}
@@ -322,8 +330,9 @@
       border-right:none;border-bottom:1px solid var(--border);padding-top:3px;position:relative;transition:none;overflow:visible;}
     .sidebar.collapsed{width:100%;min-width:0;}
     .sb-stripe{position:absolute;top:0;left:0;width:100%;}
-    .sb-logo{border-bottom:none;padding:8px 12px;flex:0 0 auto;}
-    .sb-title{font-size:13px;}
+    .sb-logo{border-bottom:none;padding:8px 10px;flex:0 0 auto;}
+    .sb-title{font-size:12px;line-height:1;}
+    .sb-mun{display:block;}
     .sb-toggle{display:none;}
     .sb-nav{flex:1 1 auto;flex-direction:row;justify-content:center;align-items:center;
       padding:6px 6px;gap:10px;overflow-x:auto;}
@@ -331,16 +340,16 @@
     .nav-it{padding:8px;gap:0;}
     .nav-ic{width:30px;height:30px;font-size:16px;}
     .nav-lb{display:none;}
-    .sb-bottom{flex-direction:row;border-top:none;padding:6px 8px;gap:8px;flex:0 0 auto;}
-    .music-controls{padding:0;gap:5px;}
-    .mc-btn{width:28px;height:28px;}
-    .mc-main,.mc-img{width:34px;height:34px;}
+    .sb-bottom{flex-direction:row;border-top:none;padding:6px 8px;gap:6px;flex:0 0 auto;}
+    .music-controls{padding:0;gap:4px;}
+    .mc-btn{width:24px;height:24px;}
+    .mc-main,.mc-img{width:30px;height:30px;}
 
     /* Topbar + content */
     .topbar{padding:10px 14px;}
     .pg-title{font-size:18px;letter-spacing:2px;}
     .top-right{gap:8px;}
-    .content{padding:14px 12px;}
+    .content{padding:14px 12px 64px;}
 
     /* Awards / goals */
     .aw-grid{grid-template-columns:1fr;}
@@ -398,7 +407,7 @@
     <div class="sb-stripe"></div>
     <div class="sb-logo">
       <img src="assets/callisto.png" alt="" onerror="this.outerHTML='&lt;div class=&quot;sb-logo-fb&quot;&gt;🏆&lt;/div&gt;'">
-      <span class="sb-title">CALLISTO MUNDIAL</span>
+      <span class="sb-title">CALLISTO<span class="sb-mun"> MUNDIAL</span></span>
       <button class="sb-toggle" onclick="toggleSB()" id="sbToggle" aria-label="Collapse menu">‹</button>
     </div>
     <nav class="sb-nav">
@@ -1785,19 +1794,33 @@ function startCarouselTimer(){
 function renderPlayers(elId, players, isFuture){
   const el = document.getElementById(elId);
   el.innerHTML = '';
+  el.classList.remove('mp-expanded');
   players.sort((a,b)=>b.sales-a.sales || b.amount-a.amount);
-  el.innerHTML = `<div class="md-p" style="background:none;padding:4px 12px;opacity:.4;font-size:10px;letter-spacing:1.5px;text-transform:uppercase">
+  if(!players.length){ el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">No players</div>'; return; }
+  const LIMIT = 6;
+  let html = `<div class="md-p" style="background:none;padding:4px 12px;opacity:.4;font-size:10px;letter-spacing:1.5px;text-transform:uppercase">
     <span>Player</span><span style="text-align:center;font-family:var(--font-b);font-size:10px">PTS</span><span style="text-align:right;font-family:var(--font-b);font-size:10px">Amount</span></div>`;
-  players.forEach(p=>{
+  players.forEach((p,idx)=>{
     const ptsDisplay = isFuture ? '<span style="opacity:.25">–</span>' : p.sales;
     const amtDisplay = isFuture ? '<span style="opacity:.25">–</span>' : `${Math.round(p.amount).toLocaleString()}€`;
-    el.innerHTML += `<div class="md-p">
+    const extra = idx >= LIMIT ? ' mp-extra' : '';
+    html += `<div class="md-p${extra}">
       <span class="md-p-name">${escapeHtml(p.name)}</span>
       <span class="md-p-pts">${ptsDisplay}</span>
       <span class="md-p-amount">${amtDisplay}</span>
     </div>`;
   });
-  if(!players.length) el.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;opacity:.4">No players</div>';
+  el.innerHTML = html;
+  if(players.length > LIMIT){
+    const btn = document.createElement('button');
+    btn.className = 'mp-toggle';
+    btn.textContent = `Ver todos (${players.length})`;
+    btn.onclick = ()=>{
+      const expanded = el.classList.toggle('mp-expanded');
+      btn.textContent = expanded ? 'Ver menos' : `Ver todos (${players.length})`;
+    };
+    el.appendChild(btn);
+  }
 }
 
 /* ─────────────────────────────────────────────
