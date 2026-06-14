@@ -180,7 +180,7 @@
 
   /* ═══ DATE NAV ═══ */
   .pool-section{margin-bottom:8px;}
-  .pool-top-row{display:grid;grid-template-columns:0.82fr 1.75fr 0.82fr;gap:14px;align-items:start;}
+  .pool-top-row{display:grid;grid-template-columns:0.7fr 2.4fr 0.7fr;gap:14px;align-items:center;}
   .pool-today{min-width:0;display:flex;flex-direction:column;align-items:center;}
   .pool-today .date-nav{justify-content:center;}
   .pool-today .match-carousel{justify-content:center;width:100%;}
@@ -236,11 +236,15 @@
   .mc-tname{font-family:var(--font-d);font-size:13px;letter-spacing:1.5px;color:var(--text);line-height:1;}
   .mc-vs{font-family:var(--font-d);font-size:16px;color:var(--gold);opacity:.5;}
   .mc-score-line{margin-top:8px;font-family:var(--font-d);font-size:22px;letter-spacing:3px;color:var(--gold);}
-  /* Center (today) cards a touch larger to stand out */
-  .pool-today .mc-card{width:228px;padding:18px 16px;}
-  .pool-today .mc-flag{width:46px;height:46px;}
-  .pool-today .mc-tname{font-size:14px;}
-  .pool-today .mc-score-line{font-size:26px;}
+  /* Center (today) cards larger to stand out */
+  .pool-today .dn-date{font-size:30px;}
+  .pool-today .mc-card{width:340px;padding:28px 24px;}
+  .pool-today .mc-flag{width:72px;height:72px;}
+  .pool-today .mc-teams{gap:22px;margin-top:14px;}
+  .pool-today .mc-tname{font-size:18px;letter-spacing:2px;}
+  .pool-today .mc-vs{font-size:24px;}
+  .pool-today .mc-score-line{font-size:36px;margin-top:14px;}
+  .pool-today .mc-pool-tag,.pool-today .mc-week{font-size:10px;}
 
   /* ═══ MATCH DETAIL ═══ */
   .match-detail{background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;overflow:hidden;margin-top:4px;animation:fadeIn .25s ease;}
