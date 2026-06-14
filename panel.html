@@ -316,31 +316,52 @@
     animation:teamPulse 2s ease-in-out infinite;}
   @keyframes teamPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.85;transform:scale(1.04);}}
 
+  /* ═══ SCHEDULE PAGE ═══ */
+  .sch-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start;}
+  .sch-pool{border:2px solid var(--card-border);border-radius:16px;padding:18px 20px;}
+  .sch-pool.pa{background:rgba(37,168,82,0.06);border-color:rgba(37,168,82,0.5);}
+  .sch-pool.pb{background:rgba(192,57,43,0.06);border-color:rgba(192,57,43,0.5);}
+  .sch-pool-title{font-family:var(--font-d);font-size:28px;letter-spacing:3px;margin-bottom:14px;
+    padding-bottom:7px;border-bottom:2px solid;}
+  .sch-pool-title.pa{color:var(--pool-a-soft);border-color:rgba(37,168,82,0.45);}
+  .sch-pool-title.pb{color:var(--pool-b-soft);border-color:rgba(192,57,43,0.45);}
+  .sch-day{padding:16px 0;border-bottom:2px solid rgba(245,197,24,0.45);}
+  .sch-day:last-child{border-bottom:none;}
+  .sch-date{font-family:var(--font-d);font-size:16px;color:var(--gold);letter-spacing:2px;margin-bottom:14px;}
+  .sch-matches{display:flex;flex-wrap:wrap;gap:16px;}
+  .sch-match{display:flex;align-items:center;gap:18px;background:var(--card-bg);
+    border:1px solid var(--card-border);border-radius:12px;padding:14px 22px;}
+  .sch-team{display:flex;flex-direction:column;align-items:center;gap:7px;width:92px;}
+  .sch-team img{width:46px;height:46px;border-radius:50%;object-fit:cover;}
+  .sch-team-name{font-family:var(--font-d);font-size:13px;letter-spacing:1px;text-align:center;color:var(--text);line-height:1.1;}
+  .sch-vs{font-family:var(--font-d);font-size:18px;color:var(--gold);opacity:.6;}
+
   @media(max-width:900px){
     .pools-grid,.mvp-grid{grid-template-columns:1fr;}
     .aw-grid{grid-template-columns:1fr 1fr;}
     .goal-grid{grid-template-columns:repeat(3,1fr);}
+    .sch-grid{grid-template-columns:1fr;gap:24px;}
   }
 
   /* ═══ MOBILE (phones) ═══ */
   @media(max-width:640px){
     /* Shell: sidebar becomes a top bar, content below */
     .app{flex-direction:column;}
-    .sidebar{flex-direction:row;align-items:center;width:100%;min-width:0;height:auto;
+    .sidebar{flex-direction:row;flex-wrap:wrap;align-items:center;width:100%;min-width:0;height:auto;
       border-right:none;border-bottom:1px solid var(--border);padding-top:3px;position:relative;transition:none;overflow:visible;}
     .sidebar.collapsed{width:100%;min-width:0;}
     .sb-stripe{position:absolute;top:0;left:0;width:100%;}
-    .sb-logo{border-bottom:none;padding:8px 10px;flex:0 0 auto;}
+    .sb-logo{border-bottom:none;padding:8px 10px;flex:0 0 auto;order:1;}
     .sb-title{font-size:12px;line-height:1;}
     .sb-mun{display:block;}
     .sb-toggle{display:none;}
-    .sb-nav{flex:1 1 auto;flex-direction:row;justify-content:center;align-items:center;
-      padding:6px 6px;gap:10px;overflow-x:auto;}
-    .sidebar.collapsed .sb-nav{padding-top:6px;}
-    .nav-it{padding:8px;gap:0;}
-    .nav-ic{width:30px;height:30px;font-size:16px;}
+    .sb-nav{order:3;flex:1 1 100%;flex-direction:row;justify-content:center;align-items:center;
+      padding:8px 6px;gap:18px;overflow-x:auto;border-top:1px solid var(--border);margin-top:4px;}
+    .sidebar.collapsed .sb-nav{padding-top:8px;}
+    .nav-it{padding:8px 12px;gap:0;}
+    .nav-ic{width:32px;height:32px;font-size:17px;}
     .nav-lb{display:none;}
-    .sb-bottom{flex-direction:row;border-top:none;padding:6px 8px;gap:6px;flex:0 0 auto;}
+    .sb-bottom{flex-direction:row;border-top:none;padding:6px 8px;gap:6px;flex:0 0 auto;order:2;margin-left:auto;}
     .music-controls{padding:0;gap:4px;}
     .mc-btn{width:24px;height:24px;}
     .mc-main,.mc-img{width:30px;height:30px;}
@@ -396,6 +417,14 @@
     .md-players-col:first-child{border-right:none;border-bottom:1px solid rgba(255,255,255,0.05);}
     .md-p-pts{font-size:22px;}
     .md-p-amount{font-size:15px;}
+
+    /* Schedule on mobile: each match full width, slightly smaller */
+    .sch-matches{gap:10px;}
+    .sch-match{flex:1 1 100%;justify-content:center;gap:14px;padding:12px 14px;}
+    .sch-team{width:84px;}
+    .sch-team img{width:42px!important;height:42px!important;}
+    .sch-pool-title{font-size:23px;}
+    .sch-pool{padding:14px 14px;}
   }
 </style>
 </head>
@@ -416,6 +445,9 @@
       </div>
       <div class="nav-it" data-pg="fixtures" onclick="go('fixtures',this)" title="Matches">
         <div class="nav-ic">📅</div><span class="nav-lb">Matches</span>
+      </div>
+      <div class="nav-it" data-pg="schedule" onclick="go('schedule',this)" title="Schedule">
+        <div class="nav-ic">🗓</div><span class="nav-lb">Schedule</span>
       </div>
       <div class="nav-it" data-pg="awards" onclick="go('awards',this)" title="Awards" id="navAwards" style="display:none">
         <div class="nav-ic">🏅</div><span class="nav-lb">Awards</span>
@@ -552,6 +584,21 @@
         </div>
 
         <p style="font-size:10px;color:var(--dim);letter-spacing:.5px;margin-top:14px" id="adminHintFx"></p>
+      </div>
+
+      <!-- ═══ SCHEDULE ═══ -->
+      <div class="page" id="pg-schedule">
+        <div class="slabel">Full Schedule</div>
+        <div class="sch-grid">
+          <div class="sch-pool pa">
+            <div class="sch-pool-title pa">Pool A — FTD</div>
+            <div id="schA"></div>
+          </div>
+          <div class="sch-pool pb">
+            <div class="sch-pool-title pb">Pool B — RET</div>
+            <div id="schB"></div>
+          </div>
+        </div>
       </div>
 
       <!-- ═══ AWARDS ═══ -->
@@ -757,7 +804,7 @@ function toggleSB(){
   document.getElementById('sidebar').classList.toggle('collapsed', !sbOpen);
   document.getElementById('sbToggle').textContent = sbOpen ? '‹' : '›';
 }
-const PG_TITLES = {overview:'Overview', fixtures:'Matches', awards:'Awards', rules:'Rules'};
+const PG_TITLES = {overview:'Overview', fixtures:'Matches', schedule:'Schedule', awards:'Awards', rules:'Rules'};
 function go(pg, el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-it').forEach(n=>n.classList.remove('active'));
@@ -1226,6 +1273,7 @@ async function loadScheduleFromSheet(){
   renderNextDayResults();
   renderTable('poolA','tableA');
   renderTable('poolB','tableB');
+  renderSchedule();
 }
 
 /* ─── Cell value helpers ─── */
@@ -1433,6 +1481,36 @@ function weekdayLabel(dateStr){
   const pp = String(dateStr).replace(/,/g,'.').split('.');
   const dt = new Date(2026, parseInt(pp[1])-1, parseInt(pp[0]));
   return ['SUN','MON','TUE','WED','THU','FRI','SAT'][dt.getDay()] || '';
+}
+
+/* Build the full fixture list grouped by pool then date (Schedule page) */
+function renderSchedule(){
+  const build = (poolKey, elId)=>{
+    const el = document.getElementById(elId);
+    if(!el) return;
+    const matches = SCHEDULE.filter(m=>m.pool===poolKey);
+    if(!matches.length){ el.innerHTML = '<div style="padding:14px;color:var(--dim);font-size:12px">No matches loaded</div>'; return; }
+    const byDate = {};
+    matches.forEach(m=>{ const d=m.date||'?'; (byDate[d]=byDate[d]||[]).push(m); });
+    const toNum = (s)=>{ const pp=String(s).replace(/,/g,'.').split('.'); return parseInt(pp[1]||0)*100+parseInt(pp[0]||0); };
+    const dates = Object.keys(byDate).sort((a,b)=>toNum(a)-toNum(b));
+    let html = '';
+    dates.forEach(date=>{
+      const dayLabel = byDate[date][0]?.day || weekdayLabel(date);
+      let cards = '';
+      byDate[date].forEach(m=>{
+        cards += `<div class="sch-match">
+          <div class="sch-team">${flagHTML(m.home,46)}<span class="sch-team-name">${shortName(m.home)}</span></div>
+          <div class="sch-vs">VS</div>
+          <div class="sch-team">${flagHTML(m.away,46)}<span class="sch-team-name">${shortName(m.away)}</span></div>
+        </div>`;
+      });
+      html += `<div class="sch-day"><div class="sch-date">${date} · ${dayLabel}</div><div class="sch-matches">${cards}</div></div>`;
+    });
+    el.innerHTML = html;
+  };
+  build('poolA','schA');
+  build('poolB','schB');
 }
 
 function renderCarousel(){
