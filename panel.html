@@ -109,8 +109,8 @@
   .pb-t{font-family:var(--font-d);font-size:19px;letter-spacing:2px;}
   .pblock.pa .pb-t{color:var(--pool-a-soft);}.pblock.pb .pb-t{color:var(--pool-b-soft);}
   .pb-s{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);}
-  .thead{display:grid;grid-template-columns:26px 1fr 30px 30px 30px 30px 36px 42px;padding:7px 14px;font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);}
-  .trow{display:grid;grid-template-columns:26px 1fr 30px 30px 30px 30px 36px 42px;padding:9px 14px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.025);transition:background .12s;}
+  .thead{display:grid;grid-template-columns:26px 1fr 58px 1fr 30px 30px 30px 30px 36px 42px;padding:7px 14px;font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);}
+  .trow{display:grid;grid-template-columns:26px 1fr 58px 1fr 30px 30px 30px 30px 36px 42px;padding:9px 14px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.025);transition:background .12s;}
   .trow:hover{background:rgba(255,255,255,0.025);}
   .trow:last-child{border-bottom:none;}
   .trow.leader{background:rgba(245,197,24,0.05);}
@@ -121,6 +121,7 @@
   .tname{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .tstat{text-align:center;font-size:12px;color:var(--dim);}
   .tgd{text-align:center;font-size:11px;color:var(--dim);}
+  .tscore{text-align:center;font-family:var(--font-d);font-size:16px;color:var(--gold);letter-spacing:1px;}
   .tpts{text-align:center;font-family:var(--font-d);font-size:18px;color:var(--text);}
   .tpts.top{color:var(--gold);}
 
@@ -373,7 +374,7 @@
               <div><div class="pb-t">Pool A</div><div class="pb-s">FTD Division</div></div>
               <button class="btn" id="addTeamA" style="display:none;padding:5px 11px;font-size:10px" onclick="addTeam('poolA')">+ Team</button>
             </div>
-            <div class="thead"><span>#</span><span>Team</span><span style="text-align:center">P</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:center">DG</span><span style="text-align:center">Pts</span></div>
+            <div class="thead"><span>#</span><span>Team</span><span style="text-align:center">Score</span><span></span><span style="text-align:center">P</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:center">DG</span><span style="text-align:center">Pts</span></div>
             <div id="tableA"></div>
           </div>
           <div class="pblock pb">
@@ -381,7 +382,7 @@
               <div><div class="pb-t">Pool B</div><div class="pb-s">RET Division</div></div>
               <button class="btn" id="addTeamB" style="display:none;padding:5px 11px;font-size:10px" onclick="addTeam('poolB')">+ Team</button>
             </div>
-            <div class="thead"><span>#</span><span>Team</span><span style="text-align:center">P</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:center">DG</span><span style="text-align:center">Pts</span></div>
+            <div class="thead"><span>#</span><span>Team</span><span style="text-align:center">Score</span><span></span><span style="text-align:center">P</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:center">DG</span><span style="text-align:center">Pts</span></div>
             <div id="tableB"></div>
           </div>
         </div>
@@ -744,29 +745,42 @@ let FIXTURES = {poolA:{}, poolB:{}}; /* populated as matches finish — used by 
 /* ─────────────────────────────────────────────
    STANDINGS (auto desde fixtures finalizados)
 ───────────────────────────────────────────── */
-function computeStandings(pool){
-  const teams = TEAMS[pool] || {};
-  const fixtures = FIXTURES[pool] || {};
+async function computeStandings(pool){
   const table = {};
-  Object.keys(teams).forEach(id=>{
-    table[id] = {id, name:teams[id].name, flag:teams[id].flag||'🏳️', p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
-  });
-  Object.values(fixtures).forEach(fx=>{
-    if(fx.status!=='done') return;
-    const h = table[fx.home], a = table[fx.away];
-    if(!h||!a) return;
-    const hg = parseInt(fx.homeGoals)||0, ag = parseInt(fx.awayGoals)||0;
+  const ensure = (name)=>{
+    const n = (name||'').trim();
+    if(!n) return null;
+    if(!table[n]) table[n] = {name:n, p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
+    return table[n];
+  };
+  /* Seed every team in this pool so they all show, even with no matches played */
+  Object.values(TEAMS[pool]||{}).forEach(t=> ensure(t.name));
+
+  /* Accumulate finished matches straight from the schedule (goals via calcTeamGoals,
+     the same source as the live view — so the BS ES weekend roll-up applies here too) */
+  const matches = SCHEDULE.filter(m=> m.pool===pool);
+  for(const match of matches){
+    ensure(match.home); ensure(match.away);
+    if(matchStatus(match.date) !== 'done') continue;
+    const [hData, aData] = await Promise.all([
+      calcTeamGoals(match.home, match.date),
+      calcTeamGoals(match.away, match.date)
+    ]);
+    const hg = hData.goals||0, ag = aData.goals||0;
+    const h = table[(match.home||'').trim()], a = table[(match.away||'').trim()];
+    if(!h || !a) continue;
     h.p++; a.p++; h.gf+=hg; h.ga+=ag; a.gf+=ag; a.ga+=hg;
     if(hg>ag){h.w++;a.l++;h.pts+=3;}
     else if(hg<ag){a.w++;h.l++;a.pts+=3;}
     else {h.d++;a.d++;h.pts++;a.pts++;}
-  });
+  }
   return Object.values(table).sort((x,y)=> y.pts-x.pts || (y.gf-y.ga)-(x.gf-x.ga) || y.gf-x.gf || x.name.localeCompare(y.name));
 }
 
-function renderTable(pool, elId){
-  const rows = computeStandings(pool);
+async function renderTable(pool, elId){
+  const rows = await computeStandings(pool);
   const el = document.getElementById(elId);
+  if(!el) return;
   el.innerHTML = '';
   rows.forEach((r,i)=>{
     const div = document.createElement('div');
@@ -776,6 +790,8 @@ function renderTable(pool, elId){
       `<div class="tpos${i===0?' g':''}">${i+1}</div>`+
       `<div class="tinfo">${flagHTML(r.name, 24)}`+
       `<span class="tname">${escapeHtml(r.name)}</span></div>`+
+      `<div class="tscore">${r.gf} : ${r.ga}</div>`+
+      `<div></div>`+
       `<div class="tstat">${r.p}</div><div class="tstat">${r.w}</div><div class="tstat">${r.d}</div><div class="tstat">${r.l}</div>`+
       `<div class="tgd">${gd>0?'+':''}${gd}</div>`+
       `<div class="tpts${i===0&&r.pts>0?' top':''}">${r.pts}</div>`;
@@ -1124,6 +1140,8 @@ async function loadScheduleFromSheet(){
   renderCarousel();
   renderYesterdayResults();
   renderNextDayResults();
+  renderTable('poolA','tableA');
+  renderTable('poolB','tableB');
 }
 
 /* ─── Cell value helpers ─── */
