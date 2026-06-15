@@ -831,6 +831,10 @@ function showGoalCelebration(teamName){
   /* Set team name */
   nameEl.textContent = teamName || 'TEST TEAM';
   overlay.classList.add('show');
+  /* Pause the background music while the goal video plays */
+  try{
+    if(bgmAudio && bgmPlaying){ window._musicWasPlaying = true; bgmAudio.pause(); }
+  }catch(e){}
   /* Restart the celebration video from the beginning, with sound */
   if(vid){
     vid.currentTime = 0;
@@ -852,6 +856,11 @@ function hideGoalCelebration(){
   const vid = document.getElementById('goalVid');
   if(vid){ try{ vid.pause(); vid.currentTime = 0; }catch(e){} }
   clearTimeout(window._goalHideTimer);
+  /* Resume the background music if it was playing before the goal */
+  try{
+    if(window._musicWasPlaying && bgmAudio && bgmPlaying){ bgmAudio.play().catch(()=>{}); }
+  }catch(e){}
+  window._musicWasPlaying = false;
 }
 /* Trigger goal for a specific team (called when goals are detected) */
 function triggerGoal(teamName){
@@ -1063,22 +1072,29 @@ function getTarget(teamName){
 }
 
 /* Count goals — uses thresholds from sheet, then extrapolates beyond with 20% increments */
-function countGoals(progress, thresholds, dailyTarget){
+function countGoals(progress, thresholds, dailyTarget, isRet){
   if(!thresholds || thresholds.length === 0 || progress <= 0) return 0;
   let goals = 0;
-  /* Count defined thresholds met */
+  /* Count defined thresholds met (1 Goal … 6 Goals) */
   for(const t of thresholds){
     if(progress >= t) goals++;
     else return goals;
   }
-  /* Beyond defined thresholds: each +20% of dailyTarget = +1 goal */
-  if(dailyTarget > 0){
-    const increment = dailyTarget * 0.20;
-    let nextThreshold = thresholds[thresholds.length-1] + increment;
-    while(progress >= nextThreshold){
-      goals++;
-      nextThreshold += increment;
+  /* All 6 thresholds reached — extrapolate beyond the 6th */
+  const last = thresholds[thresholds.length-1];
+  if(isRet){
+    /* RET (revenue): past 6 goals, each +15% of the 2-day target = +1 goal */
+    if(dailyTarget > 0){
+      const increment = dailyTarget * 0.15;
+      let nextThreshold = last + increment;
+      while(progress >= nextThreshold - 0.005){
+        goals++;
+        nextThreshold += increment;
+      }
     }
+  } else {
+    /* FTD: past 6 goals, every extra sale = +1 goal */
+    goals += Math.floor(progress - last);
   }
   return goals;
 }
@@ -1167,7 +1183,7 @@ async function calcTeamGoals(teamName, matchDate){
     players.forEach(p=>{ progress += p.sales; });
   }
 
-  const goals = countGoals(progress, target.thresholds, target.dailyTarget);
+  const goals = countGoals(progress, target.thresholds, target.dailyTarget, isRet);
   const pct = target.dailyTarget > 0 ? Math.round((progress / target.dailyTarget) * 100) : 0;
 
   return { goals, progress, pct, dailyTarget: target.dailyTarget, isRet };
@@ -1415,7 +1431,7 @@ function parseDatetime(val){
   return null;
 }
 
-const INVALID_NAMES = /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|date|agent|owner|player|name|total|sum|amount|email|currency|country|business|full name|status)$/i;
+const INVALID_NAMES = /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|date|agent|owner|player|name|total|sum|amount|email|currency|country|business|full name|status|pool agent|agent name|conversion date)$/i;
 
 /* ─── Fetch player data ───
    Roster from col L (Full Name) + col M (Status)
@@ -1430,6 +1446,7 @@ function fetchPlayers(tabName, matchDate){
     const doProcess = (rows)=>{
       if(rows.length<1){ SHEET_DATA[cacheKey]=[]; return resolve([]); }
       const isRet = tabName.toUpperCase().includes('RET');
+      const isCanva = tabName.toLowerCase().includes('canva');
 
       /* Detect roster columns from GViz column labels (metadata, not data rows) */
       const colLabels = rows._cols || [];
@@ -1457,6 +1474,8 @@ function fetchPlayers(tabName, matchDate){
 
       /* Final fallback: hardcoded positions */
       if(nameCol === -1) nameCol = isRet ? 9 : 11;
+      /* Canva: roster & credit go by "Pool Agent" (column L), not "Agent Name" */
+      if(isCanva) nameCol = 11;
       if(statusCol === -1) statusCol = nameCol + 1;
 
       /* Determine where data starts — if first row IS a header ("Full Name"), skip it */
@@ -1491,7 +1510,8 @@ function fetchPlayers(tabName, matchDate){
           agentName = cellVal(cells[1]);
           amount = cellNum(cells[7]) || cellNum(cells[2]);
         } else {
-          agentName = cellVal(cells[0]);
+          /* Canva credits the Pool Agent (column L); other FTD teams use Agent Name (column A) */
+          agentName = isCanva ? cellVal(cells[11]) : cellVal(cells[0]);
           rowDate = cells[1]?.v || cells[1]?.f || '';
           amount = cellNum(cells[9]) || cellNum(cells[7]);
         }
