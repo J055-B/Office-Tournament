@@ -1395,7 +1395,7 @@ function extractDayMonth(val){
 }
 
 /* Check if a cell date matches a match date
-   FTD (Pool A): 8am match day → 7:59am next day
+   FTD (Pool A): full calendar day — 00:00 match day → 00:00 next day (midnight to midnight)
    RET (Pool B): full calendar day (dateMatches handles day only, 2-day sum done in calcTeamGoals)
 */
 function dateMatches(cellValue, matchDate, isTimeAware){
@@ -1404,12 +1404,12 @@ function dateMatches(cellValue, matchDate, isTimeAware){
   if(!target) return true;
 
   if(isTimeAware){
-    /* FTD: 8am to 8am window — need to parse full datetime */
+    /* FTD: full calendar day window — midnight to midnight */
     const dt = parseDatetime(cellValue);
     if(!dt) return false;
-    /* Match window: matchDay 08:00 → matchDay+1 08:00 */
-    const windowStart = new Date(2026, target.month-1, target.day, 8, 0, 0);
-    const windowEnd = new Date(2026, target.month-1, target.day+1, 8, 0, 0);
+    /* Match window: matchDay 00:00 → matchDay+1 00:00 */
+    const windowStart = new Date(2026, target.month-1, target.day, 0, 0, 0);
+    const windowEnd = new Date(2026, target.month-1, target.day+1, 0, 0, 0);
     return dt >= windowStart && dt < windowEnd;
   }
 
