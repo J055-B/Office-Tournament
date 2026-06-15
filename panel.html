@@ -1433,6 +1433,19 @@ function parseDatetime(val){
 
 const INVALID_NAMES = /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|date|agent|owner|player|name|total|sum|amount|email|currency|country|business|full name|status|pool agent|agent name|conversion date)$/i;
 
+/* Normalize a name so trivial variants merge into one person
+   (e.g. "Alejandra Mendoza." and "Alejandra Mendoza" → same key).
+   Collapses whitespace and strips leading/trailing dots and commas only;
+   internal punctuation (initials like "J. Smith") is preserved. */
+function canonName(name){
+  return String(name||'')
+    .replace(/\s+/g,' ')
+    .trim()
+    .replace(/[.,]+$/,'')
+    .replace(/^[.,]+/,'')
+    .trim();
+}
+
 /* ─── Fetch player data ───
    Roster from col L (Full Name) + col M (Status)
    Sales: FTD col A=Agent col B=Date col J=SUM | RET col A=Date col B=Owner col H=SUM
@@ -1447,6 +1460,7 @@ function fetchPlayers(tabName, matchDate){
       if(rows.length<1){ SHEET_DATA[cacheKey]=[]; return resolve([]); }
       const isRet = tabName.toUpperCase().includes('RET');
       const isCanva = tabName.toLowerCase().includes('canva');
+      const isRetILES = tabName.toUpperCase().includes('RET IL ES'); /* name-merge only for RET IL ES */
 
       /* Detect roster columns from GViz column labels (metadata, not data rows) */
       const colLabels = rows._cols || [];
@@ -1495,7 +1509,7 @@ function fetchPlayers(tabName, matchDate){
         const cells = r.c||[];
         const fullName = cellVal(cells[nameCol]);
         if(fullName && fullName.length>1 && !INVALID_NAMES.test(fullName.trim())){
-          const n = fullName.trim();
+          const n = isRetILES ? canonName(fullName) : fullName.trim();
           if(!roster[n]) roster[n] = {sales:0, amount:0};
         }
       });
@@ -1518,7 +1532,7 @@ function fetchPlayers(tabName, matchDate){
         if(matchDate && !dateMatches(rowDate, matchDate, !isRet)) return; /* FTD=timeAware, RET=dayOnly */
         if(!agentName || agentName.length<2 || INVALID_NAMES.test(agentName.trim())) return;
 
-        const clean = agentName.trim();
+        const clean = isRetILES ? canonName(agentName) : agentName.trim();
         let matched = false;
         for(const rName of Object.keys(roster)){
           /* Exact match */
