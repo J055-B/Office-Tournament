@@ -1154,11 +1154,13 @@ function isWeekendRollup(teamName, matchDate){
   return new Date(2026, month-1, day).getDay() === 0; /* 0 = Sunday */
 }
 
-/* Players for a match — merges Fri+Sat+Sun for weekend-rollup teams on Sundays,
-   otherwise the normal single-day fetch. Keeps goals + player tables consistent. */
+/* Players for a match — merges the full match window so the player tables,
+   the score and Results all use the SAME data:
+   - FTD BS ES on Sundays → Fri+Sat+Sun (weekend rollup)
+   - RET (Pool B) → match day + next day (RET plays 2 days)
+   - everyone else → the single match day */
 async function fetchTeamPlayersWindow(teamName, matchDate){
-  if(isWeekendRollup(teamName, matchDate)){
-    const days = [shiftDateStr(matchDate,-2), shiftDateStr(matchDate,-1), matchDate];
+  const mergeDays = async (days)=>{
     const merged = {};
     for(const d of days){
       const dp = await fetchTeamPlayers(teamName, d);
@@ -1169,7 +1171,18 @@ async function fetchTeamPlayersWindow(teamName, matchDate){
       });
     }
     return Object.entries(merged).map(([name,d])=>({name, sales:d.sales, amount:Math.round(d.amount*100)/100}));
+  };
+
+  if(isWeekendRollup(teamName, matchDate)){
+    return mergeDays([shiftDateStr(matchDate,-2), shiftDateStr(matchDate,-1), matchDate]);
   }
+
+  const tgt = getTarget(teamName);
+  if(matchDate && tgt && tgt.pool === 'poolB'){
+    /* RET: the match spans the match day + the next day */
+    return mergeDays([matchDate, getNextDay(matchDate)]);
+  }
+
   return fetchTeamPlayers(teamName, matchDate);
 }
 
@@ -1180,23 +1193,8 @@ async function calcTeamGoals(teamName, matchDate){
 
   const isRet = target.pool === 'poolB';
 
-  /* For Pool B: sum 2 days (match day + next day) */
-  let players;
-  if(isRet){
-    const day1 = await fetchTeamPlayers(teamName, matchDate);
-    const day2Date = getNextDay(matchDate);
-    const day2 = await fetchTeamPlayers(teamName, day2Date);
-    /* Merge day1 + day2 */
-    const merged = {};
-    [...day1, ...day2].forEach(p=>{
-      if(!merged[p.name]) merged[p.name] = {sales:0, amount:0};
-      merged[p.name].sales += p.sales;
-      merged[p.name].amount += p.amount;
-    });
-    players = Object.entries(merged).map(([name,d])=>({name, sales:d.sales, amount:d.amount}));
-  } else {
-    players = await fetchTeamPlayersWindow(teamName, matchDate);
-  }
+  /* Player stats over the full match window (RET = 2 days, weekend rollup, or single day) */
+  const players = await fetchTeamPlayersWindow(teamName, matchDate);
 
   let progress = 0;
   if(isRet){
