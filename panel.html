@@ -1548,7 +1548,7 @@ function fetchPlayers(tabName, matchDate){
         if(isRet){
           rowDate = cells[0]?.v || cells[0]?.f || '';
           agentName = cellVal(cells[1]);
-          amount = cellNum(cells[7]) || cellNum(cells[2]);
+          amount = cellNum(cells[6]); /* SUM column (G), already in EUR — currency (D) is ignored */
         } else {
           /* Canva credits the Pool Agent (column L); other FTD teams use Agent Name (column A) */
           agentName = isCanva ? cellVal(cells[11]) : cellVal(cells[0]);
