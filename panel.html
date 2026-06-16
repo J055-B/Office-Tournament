@@ -1768,6 +1768,10 @@ function setupPool(p, matches, carId, detId){
   /* Center = TODAY. Show today's matches if any; otherwise show today as an empty
      day — never pull a future match into the center (that's the Next Day panel's job). */
   let bestIdx = allDates.findIndex(isToday);
+  if(bestIdx === -1 && p === 'B'){
+    /* RET: a match started yesterday is still live on its 2nd day (today) → keep it centered */
+    bestIdx = allDates.findIndex(d => matchStatus(d, true) === 'live');
+  }
   if(bestIdx === -1){
     const now = new Date();
     const sep = (allDates[0] && allDates[0].includes(',')) ? ',' : '.';
@@ -2006,13 +2010,11 @@ async function renderYesterdayResults(){
     if(!st.dates || !st.dates.length) continue;
 
     /* Find yesterday's date (the date before the current selected date, or the last played date) */
-    const today = new Date(); today.setHours(0,0,0,0);
-    const parseD = (s)=>{ const pp=String(s).replace(/,/g,'.').split('.'); return new Date(2026, parseInt(pp[1])-1, parseInt(pp[0])); };
-
+    /* Previous = the most recent date whose match is actually finished
+       (a still-live RET match on its 2nd day is NOT "previous") */
     let ydDate = null;
     for(let i=st.dates.length-1; i>=0; i--){
-      const d = parseD(st.dates[i]);
-      if(d < today){ ydDate = st.dates[i]; break; }
+      if(matchStatus(st.dates[i], p==='B') === 'done'){ ydDate = st.dates[i]; break; }
     }
 
     const el = document.getElementById('ydResults'+p);
