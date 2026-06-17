@@ -1470,6 +1470,17 @@ function canonName(name){
     .trim();
 }
 
+/* Agents hidden from the panel, per sheet/tab. Matched on canonName, case-insensitive.
+   Excluded from the roster AND from sales attribution (won't appear even if they have sales). */
+const HIDDEN_PLAYERS = {
+  'FTD BS ES': ['isaac z','david z','veronica z','varonica z','ana t']
+};
+function isHidden(tabName, name){
+  const list = HIDDEN_PLAYERS[(tabName||'').trim()];
+  if(!list || !list.length) return false;
+  return list.includes(canonName(name).toLowerCase());
+}
+
 /* ─── Fetch player data ───
    Roster from col L (Full Name) + col M (Status)
    Sales: FTD col A=Agent col B=Date col J=SUM | RET col A=Date col B=Owner col H=SUM
@@ -1532,7 +1543,7 @@ function fetchPlayers(tabName, matchDate){
       dataRows.forEach(r=>{
         const cells = r.c||[];
         const fullName = cellVal(cells[nameCol]);
-        if(fullName && fullName.length>1 && !INVALID_NAMES.test(fullName.trim())){
+        if(fullName && fullName.length>1 && !INVALID_NAMES.test(fullName.trim()) && !isHidden(tabName, fullName)){
           const n = isRetILES ? canonName(fullName) : fullName.trim();
           if(!roster[n]) roster[n] = {sales:0, amount:0};
         }
@@ -1555,6 +1566,7 @@ function fetchPlayers(tabName, matchDate){
         }
         if(matchDate && !dateMatches(rowDate, matchDate, !isRet)) return; /* FTD=timeAware, RET=dayOnly */
         if(!agentName || agentName.length<2 || INVALID_NAMES.test(agentName.trim())) return;
+        if(isHidden(tabName, agentName)) return; /* hidden agents don't show even if they have sales */
 
         const clean = isRetILES ? canonName(agentName) : agentName.trim();
         let matched = false;
