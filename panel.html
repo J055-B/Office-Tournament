@@ -1622,6 +1622,22 @@ function weekdayLabel(dateStr){
   return ['SUN','MON','TUE','WED','THU','FRI','SAT'][dt.getDay()] || '';
 }
 
+/* Date label for the match-view pill.
+   RET (Pool B) matches span 2 days. The parentheses wrap the day that is NOT
+   today, with the "+" on the side facing the active day:
+   - on the FIRST day (or before):  "day1 · WD (+ day2 · WD)"
+   - on the SECOND day:             "(day1 · WD +) day2 · WD"
+   FTD (Pool A) is a single day → unchanged. */
+function matchDateLabel(date, pool, dayName){
+  const d1 = `${date} · ${dayName || weekdayLabel(date)}`;
+  if(pool !== 'poolB') return d1;
+  const sep = String(date).includes(',') ? ',' : '.';
+  const next = getNextDay(date).replace(/[.,]/g, sep); /* match the displayed separator */
+  const d2 = `${next} · ${weekdayLabel(next)}`;
+  if(isToday(next)) return `(${d1} +) ${d2}`;          /* 2nd day → first day in parens */
+  return `${d1} (+ ${d2})`;                            /* 1st day → second day in parens */
+}
+
 /* Results page — finished matches grouped by pool/date, expandable to show sellers */
 async function renderResults(){
   const toNum = (s)=>{ const pp=String(s).replace(/,/g,'.').split('.'); return parseInt(pp[1]||0)*100+parseInt(pp[0]||0); };
@@ -1831,7 +1847,7 @@ function showDate(p){
 
   /* Update date label */
   const m = matches[0];
-  document.getElementById('date'+p).textContent = `${date} · ${m?.day || weekdayLabel(date)}`;
+  document.getElementById('date'+p).textContent = matchDateLabel(date, p==='B'?'poolB':'poolA', m?.day);
 
   /* Update calendar active */
   document.querySelectorAll(`#calendar${p} .dc-chip`).forEach((c,i)=>{
