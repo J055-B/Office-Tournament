@@ -513,6 +513,46 @@
   .email-modal-actions button{background:rgba(245,197,24,0.12);border:1px solid rgba(245,197,24,0.4);color:var(--gold);border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:var(--font-b);}
   .email-modal-actions button:hover{background:rgba(245,197,24,0.22);}
   .email-modal iframe{flex:1;width:100%;border:0;background:#143d22;min-height:48vh;}
+
+  /* ══ BIG FINAL ══ */
+  .bigfinal{margin:0 0 30px;display:flex;justify-content:center;}
+  .bf-frame{position:relative;width:100%;max-width:900px;padding:24px 64px 28px;border-radius:18px;
+    background:radial-gradient(circle at 50% -10%, rgba(245,197,24,0.20), rgba(15,49,25,0.96) 68%), #0f3119;
+    border:2px solid var(--gold);box-shadow:0 0 42px rgba(245,197,24,0.28), inset 0 0 34px rgba(245,197,24,0.07);
+    overflow:hidden;text-align:center;}
+  .bf-frame::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(115deg,transparent 42%,rgba(245,197,24,0.16) 50%,transparent 58%);
+    background-size:250% 100%;animation:bfShine 4.5s linear infinite;}
+  @keyframes bfShine{0%{background-position:160% 0}100%{background-position:-160% 0}}
+  .bf-title{position:relative;font-family:var(--font-d);font-size:44px;letter-spacing:7px;color:var(--gold);text-shadow:0 2px 12px rgba(245,197,24,0.45);}
+  .bf-star{color:#fff;font-size:30px;vertical-align:middle;text-shadow:0 0 10px rgba(245,197,24,0.7);}
+  .bf-sub{font-family:var(--font-b);font-size:11px;letter-spacing:3px;color:#bfe6cb;margin-top:2px;margin-bottom:20px;}
+  .bf-deco{position:absolute;top:50%;transform:translateY(-50%);font-size:48px;opacity:.92;filter:drop-shadow(0 0 9px rgba(245,197,24,0.55));animation:bfFloat 3s ease-in-out infinite;}
+  .bf-deco-l{left:16px;}
+  .bf-deco-r{right:16px;animation-delay:1.5s;}
+  @keyframes bfFloat{0%,100%{transform:translateY(-50%) scale(1)}50%{transform:translateY(-62%) scale(1.08)}}
+  .bf-teams{display:flex;align-items:flex-start;justify-content:center;gap:34px;}
+  .bf-side{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;min-width:0;}
+  .bf-tag{font-family:var(--font-d);font-size:12px;letter-spacing:2px;padding:2px 12px;border-radius:10px;}
+  .bf-tag-a{color:var(--pool-a-soft);border:1px solid var(--pool-a);}
+  .bf-tag-b{color:var(--pool-b-soft);border:1px solid var(--pool-b);}
+  .bf-flag{width:96px;height:96px;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.4));}
+  .bf-flag img{width:100%!important;height:100%!important;}
+  .bf-name{font-family:var(--font-d);font-size:26px;letter-spacing:2px;color:#fff;}
+  .bf-mid{display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:24px;}
+  .bf-vs{font-family:var(--font-d);font-size:30px;color:var(--gold);}
+  .bf-score{font-family:var(--font-d);font-size:36px;color:#fff;letter-spacing:3px;}
+  .bf-status{font-family:var(--font-b);font-size:12px;letter-spacing:2px;color:#ff6b6b;font-weight:700;}
+  @media(max-width:640px){
+    .bf-frame{padding:20px 30px 24px;}
+    .bf-deco{font-size:30px;}.bf-deco-l{left:8px;}.bf-deco-r{right:8px;}
+    .bf-title{font-size:32px;letter-spacing:4px;}
+    .bf-teams{gap:12px;}
+    .bf-flag{width:64px;height:64px;}
+    .bf-name{font-size:18px;}
+    .bf-vs{font-size:22px;}.bf-mid{padding-top:20px;}
+    .bf-tag{font-size:9px;}
+  }
 </style>
 </head>
 <body>
@@ -618,6 +658,33 @@
       <div class="page" id="pg-fixtures">
         <div class="fx-controls" id="fxControls" style="display:none">
           <button class="btn" onclick="loadScheduleFromSheet()" id="btnRefreshFx">🔄 Refresh matches</button>
+        </div>
+
+        <!-- ══ BIG FINAL (only shows on June 30) ══ -->
+        <div class="bigfinal" id="bigFinal" style="display:none">
+          <div class="bf-frame">
+            <div class="bf-deco bf-deco-l">🏆</div>
+            <div class="bf-deco bf-deco-r">🏆</div>
+            <div class="bf-title"><span class="bf-star">★</span> BIG FINAL <span class="bf-star">★</span></div>
+            <div class="bf-sub">FTD CHAMPION&nbsp; vs &nbsp;RET CHAMPION</div>
+            <div class="bf-teams">
+              <div class="bf-side">
+                <div class="bf-tag bf-tag-a">FTD CHAMPION</div>
+                <div class="bf-flag" id="bfHomeFlag">🏳️</div>
+                <div class="bf-name" id="bfHomeName">—</div>
+              </div>
+              <div class="bf-mid">
+                <div class="bf-score" id="bfScore" style="display:none"><span id="bfHomeGoals">0</span> : <span id="bfAwayGoals">0</span></div>
+                <div class="bf-vs">VS</div>
+                <div class="bf-status" id="bfStatus">LIVE</div>
+              </div>
+              <div class="bf-side">
+                <div class="bf-tag bf-tag-b">RET CHAMPION</div>
+                <div class="bf-flag" id="bfAwayFlag">🏳️</div>
+                <div class="bf-name" id="bfAwayName">—</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- ══ POOL A — FTD ══ -->
@@ -1022,6 +1089,64 @@ let TEAMS = {poolA:{}, poolB:{}};
 /* ─────────────────────────────────────────────
    STANDINGS (auto desde fixtures finalizados)
 ───────────────────────────────────────────── */
+/* ─────────────────────────────────────────────
+   BIG FINAL — FTD champion vs RET champion, only on June 30.
+   Finalists = current #1 of each pool (group stage is over by then).
+   Scoring is wired separately once the final formula is confirmed.
+───────────────────────────────────────────── */
+async function renderBigFinal(){
+  const el = document.getElementById('bigFinal');
+  if(!el) return;
+  const now = new Date();
+  /* Show from June 30, 2026 onward, and keep it visible after the match ends */
+  const finalStart = new Date(2026, 5, 30); finalStart.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  if(today < finalStart){ el.style.display = 'none'; return; }
+  const isMatchDay = (today.getTime() === finalStart.getTime());
+  try{
+    const a = (await computeStandings('poolA'))[0]; /* FTD leader */
+    const b = (await computeStandings('poolB'))[0]; /* RET leader */
+    if(!a || !b){ el.style.display = 'none'; return; }
+    document.getElementById('bfHomeFlag').innerHTML = flagHTML(a.name, 96);
+    document.getElementById('bfHomeName').textContent = shortName(a.name);
+    document.getElementById('bfAwayFlag').innerHTML = flagHTML(b.name, 96);
+    document.getElementById('bfAwayName').textContent = shortName(b.name);
+    const st = document.getElementById('bfStatus');
+    if(st){
+      if(isMatchDay){ st.textContent = 'LIVE'; st.style.color = '#ff6b6b'; }
+      else { st.textContent = 'FULL TIME'; st.style.color = 'var(--gold)'; }
+    }
+    await renderBigFinalScore(a.name, b.name);
+    el.style.display = 'flex';
+  }catch(e){ el.style.display = 'none'; console.error('BigFinal:', e); }
+}
+
+/* Live score of the final. FTD finalist = goals scored on the final day (normal
+   mechanic) vs its FINAL thresholds; RET finalist = single-day revenue vs its
+   FINAL thresholds. Only shows a number when both finalists are in the FINAL table. */
+async function renderBigFinalScore(ftdName, retName){
+  const scoreEl = document.getElementById('bfScore');
+  const vsEl = document.querySelector('#bigFinal .bf-vs');
+  const hn = document.getElementById('bfHomeName'), an = document.getElementById('bfAwayName');
+  hn.style.color = an.style.color = '#fff';
+  const ftgt = getFinalTarget(ftdName), rtgt = getFinalTarget(retName);
+  if(!ftgt || !rtgt){ if(scoreEl) scoreEl.style.display='none'; if(vsEl) vsEl.style.display='block'; return; }
+  const FINAL_DATE = '30,06';
+  let ftdGoals = 0, retGoals = 0;
+  try{ const g = await calcTeamGoals(ftdName, FINAL_DATE); ftdGoals = countFinalGoals(g.goals, ftgt.thresholds); }catch(e){}
+  try{
+    const pls = await fetchTeamPlayers(retName, FINAL_DATE);
+    let rev = 0; pls.forEach(p=>{ rev += (p.amount||0); });
+    retGoals = countFinalGoals(rev, rtgt.thresholds);
+  }catch(e){}
+  document.getElementById('bfHomeGoals').textContent = ftdGoals;
+  document.getElementById('bfAwayGoals').textContent = retGoals;
+  if(scoreEl) scoreEl.style.display='block';
+  if(vsEl) vsEl.style.display='none';
+  if(ftdGoals > retGoals) hn.style.color = 'var(--gold)';
+  else if(retGoals > ftdGoals) an.style.color = 'var(--gold)';
+}
+
 async function computeStandings(pool){
   const table = {};
   const ensure = (name)=>{
@@ -1259,9 +1384,14 @@ async function fetchTargets(){
   const rows = await fetchTab('Target for goals');
   TARGETS = {};
   let currentPool = '';
+  let inFinalSection = false;
   rows.forEach(r=>{
     const cells = r.c||[];
     const colA = cellVal(cells[0]);
+    /* The FINAL table lives in this same tab but has a different layout;
+       it is read separately by fetchFinalTargets() — never as a group target. */
+    if(colA.includes('FINAL')) { inFinalSection = true; return; }
+    if(inFinalSection) return;
     /* Detect pool */
     if(colA.includes('POOL A')) { currentPool = 'poolA'; return; }
     if(colA.includes('POOL B')) { currentPool = 'poolB'; return; }
@@ -1282,6 +1412,49 @@ async function fetchTargets(){
     TARGETS[name] = { dailyTarget, thresholds, pool };
   });
   console.log('[Targets]', Object.keys(TARGETS).length, 'teams:', TARGETS);
+}
+
+/* ── FINAL table (same "Target for goals" tab, FINAL section) ──
+   Layout: A=Team, B=Real goals, C=Matches, D=Goal/Match, E=Equivalent,
+   F…O = 1 Goal … 10 Goals. Read verbatim from the sheet (no recompute). */
+let FINAL_TARGETS = {}; /* { teamName: { thresholds:[…up to 10], goalMatch, equivalent, pool } } */
+async function fetchFinalTargets(){
+  const rows = await fetchTab('Target for goals');
+  FINAL_TARGETS = {};
+  let inFinal = false;
+  rows.forEach(r=>{
+    const cells = r.c||[];
+    const colA = cellVal(cells[0]);
+    if(colA.includes('FINAL')){ inFinal = true; return; }
+    if(!inFinal) return;
+    if(!colA || colA.includes('Team') || colA.includes('%') || colA.includes('Goal') || colA.length < 3) return;
+    const name = colA.replace(/^\d+\.\s*/, '').trim();
+    if(!name) return;
+    const thresholds = [];
+    for(let i = 5; i <= 14; i++) thresholds.push(cellNum(cells[i])); /* F..O = 1..10 goals */
+    while(thresholds.length && thresholds[thresholds.length-1] <= 0) thresholds.pop();
+    if(thresholds.length === 0) return;
+    const pool = name.toUpperCase().startsWith('RET') ? 'poolB' : 'poolA';
+    FINAL_TARGETS[name] = { thresholds, goalMatch: cellNum(cells[3]), equivalent: cellNum(cells[4]), pool };
+  });
+  console.log('[FinalTargets]', FINAL_TARGETS);
+}
+function getFinalTarget(teamName){
+  const clean = (teamName||'').trim();
+  if(FINAL_TARGETS[clean]) return FINAL_TARGETS[clean];
+  const noPre = clean.replace(/^(FTD|RET)\s*/i,'').trim().toLowerCase();
+  for(const k of Object.keys(FINAL_TARGETS)){
+    const kc = k.replace(/^(FTD|RET)\s*/i,'').trim().toLowerCase();
+    if(kc === noPre || k.toLowerCase().includes(clean.toLowerCase()) || clean.toLowerCase().includes(k.toLowerCase())) return FINAL_TARGETS[k];
+  }
+  return null;
+}
+/* How many final goals a value reaches (consecutive thresholds from the 1st). */
+function countFinalGoals(value, thresholds){
+  if(!thresholds || !thresholds.length || value <= 0) return 0;
+  let g = 0;
+  for(const t of thresholds){ if(t > 0 && value >= t) g++; else break; }
+  return g;
 }
 
 /* Find target for a team (fuzzy match) */
@@ -1595,6 +1768,7 @@ async function loadScheduleFromSheet(){
   renderSchedule();
   renderResults();
   renderTicker();
+  renderBigFinal();
 }
 
 /* ─── Cell value helpers ─── */
@@ -2435,10 +2609,11 @@ startCarouselTimer();
 
 /* Load schedule and targets from Google Sheets on startup */
 fetchTargets();
+fetchFinalTargets();
 loadScheduleFromSheet();
 
 /* Auto-refresh every 5 minutes — clears cache, reloads data, rechecks goals */
-setInterval(()=>{ SHEET_DATA = {}; RAW_CACHE = {}; fetchTargets(); loadScheduleFromSheet(); }, 300000);
+setInterval(()=>{ SHEET_DATA = {}; RAW_CACHE = {}; fetchTargets(); fetchFinalTargets(); loadScheduleFromSheet(); }, 300000);
 
 /* Also check goals more frequently (every 60 seconds) for live matches */
 setInterval(()=>{
