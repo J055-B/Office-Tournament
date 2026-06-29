@@ -1314,11 +1314,26 @@ async function buildMundialEmailHTML(){
         `<div style="font-family:${EMAIL_DISP};font-size:52px;line-height:0.95;letter-spacing:3px;color:#ffffff;margin-top:6px;">CALLISTO MUNDIAL</div>`+
         `<div style="font-family:${EMAIL_BODY};font-size:13px;color:#bfe6cb;margin-top:12px;letter-spacing:1px;">STANDINGS &amp; FIXTURES &middot; MATCHDAY UPDATE</div>`+
       `</td></tr>`+
-      /* INTRO */
-      `<tr><td style="padding:26px 32px 6px;color:#e7f3ea;font-size:15px;line-height:1.6;font-family:${EMAIL_BODY};">`+
-        `<p style="margin:0 0 12px;">Team,</p>`+
-        `<p style="margin:0 0 12px;">We're deep in the competition and the table is tighter than ever. Every FTD, every retention and every single day on the board counts &mdash; a few sales can flip a whole matchday.</p>`+
-        `<p style="margin:0;">Here's where things stand right now and what's on the schedule. Let's keep fighting. &#128293;</p>`+
+      /* INTRO — Champion of Champions explainer */
+      `<tr><td style="padding:26px 32px 6px;color:#e7f3ea;font-family:${EMAIL_BODY};">`+
+        `<p style="margin:0 0 16px;font-size:18px;">Team,</p>`+
+        `<div style="font-family:${EMAIL_DISP};font-size:32px;letter-spacing:2px;color:#f5c518;line-height:1.05;margin:0 0 10px;">&#127942; CHAMPION OF CHAMPIONS</div>`+
+        `<p style="margin:0 0 18px;font-size:17px;line-height:1.7;">Here is how the final will be decided &mdash; a direct duel between the <strong style="color:#5fd47e;">#1 team of the FTD/Canva pool</strong> and the <strong style="color:#e8939a;">#1 team of the Retention pool</strong>.</p>`+
+        `<p style="margin:0 0 18px;font-size:18px;line-height:1.5;">The single principle governing this final is simple:&nbsp; <strong style="color:#f5c518;font-family:${EMAIL_DISP};font-size:30px;letter-spacing:2px;">OUTPERFORM.</strong></p>`+
+        `<p style="margin:0 0 6px;font-family:${EMAIL_DISP};font-size:20px;letter-spacing:1px;color:#f5c518;">HOW SCORING WORKS</p>`+
+        `<p style="margin:0 0 14px;font-size:17px;line-height:1.7;">For each finalist we take the <strong style="color:#ffffff;">average number of goals that team actually scored per match</strong> across the competition. Using our existing tables, that average is converted into a performance level shown as a <strong style="color:#f5c518;">percentage of daily target</strong>.</p>`+
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px;background:#13351f;border-left:4px solid #f5c518;border-radius:8px;"><tr><td style="padding:14px 18px;font-size:16px;line-height:1.8;color:#e7f3ea;">`+
+          `<strong style="color:#ffffff;">Example:</strong> a <strong style="color:#ffffff;">3.5-goal</strong> average in Retention &rarr; <strong style="color:#f5c518;font-size:19px;">107.5%</strong> of daily target.<br>A <strong style="color:#ffffff;">4-goal</strong> average in FTD/Canva &rarr; <strong style="color:#f5c518;font-size:19px;">115%</strong> of daily target.`+
+        `</td></tr></table>`+
+        `<p style="margin:0 0 18px;font-size:17px;line-height:1.7;">That figure becomes each team's <strong style="color:#f5c518;font-size:19px;">new 100% target for the final</strong> &mdash; a personalized benchmark reflecting the level it sustained all competition long. <strong style="color:#ffffff;">Each team races against its own proven standard.</strong></p>`+
+        `<p style="margin:0 0 10px;font-size:17px;">Goals in the final are awarded against that new target:</p>`+
+        `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 14px;">`+
+          `<tr><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#f5c518;text-align:right;">70% of target</td><td style="padding:5px 8px;color:#9fc7ab;font-size:18px;">&mdash;</td><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#ffffff;">1st goal</td></tr>`+
+          `<tr><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#f5c518;text-align:right;">85% of target</td><td style="padding:5px 8px;color:#9fc7ab;font-size:18px;">&mdash;</td><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#ffffff;">2nd goal</td></tr>`+
+          `<tr><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#f5c518;text-align:right;">100% of target</td><td style="padding:5px 8px;color:#9fc7ab;font-size:18px;">&mdash;</td><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#ffffff;">3rd goal</td></tr>`+
+        `</table>`+
+        `<p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#bfe6cb;text-align:center;">&hellip; and upward on the same scale, with <strong style="color:#f5c518;">no upper limit on goals</strong>.</p>`+
+        `<p style="margin:0;font-size:18px;line-height:1.7;text-align:center;">The team that outperforms its own benchmark by the widest margin is crowned<br><strong style="color:#f5c518;font-family:${EMAIL_DISP};font-size:26px;letter-spacing:2px;">&#127942; CHAMPION OF CHAMPIONS &#127942;</strong></p>`+
       `</td></tr>`+
       /* STANDINGS */
       emailSection('POOL A &middot; FTD', '#25a852', emailStandTable(sa))+
