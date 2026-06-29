@@ -516,6 +516,8 @@
 
   /* ══ BIG FINAL ══ */
   .bigfinal{margin:0 0 30px;display:flex;justify-content:center;}
+  .bf-divider{height:3px;background:linear-gradient(90deg,rgba(192,57,43,0) 0%,#c0392b 12%,#e74c3c 50%,#c0392b 88%,rgba(192,57,43,0) 100%);border-radius:2px;margin:0 0 26px;box-shadow:0 0 12px rgba(192,57,43,0.5);}
+  .bf-detail{margin:0 0 30px;}
   .bf-frame{position:relative;width:100%;max-width:900px;padding:24px 64px 28px;border-radius:18px;
     background:radial-gradient(circle at 50% -10%, rgba(245,197,24,0.20), rgba(15,49,25,0.96) 68%), #0f3119;
     border:2px solid var(--gold);box-shadow:0 0 42px rgba(245,197,24,0.28), inset 0 0 34px rgba(245,197,24,0.07);
@@ -684,6 +686,20 @@
                 <div class="bf-name" id="bfAwayName">—</div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- ══ BIG FINAL — divider + match detail (teams + players) ══ -->
+        <div class="bf-divider" id="bfDivider" style="display:none"></div>
+        <div class="match-detail bf-detail" id="detailFinal" style="display:none">
+          <div class="md-header">
+            <div class="md-team"><div class="md-flag" id="dFhFlag">🏳️</div><div class="md-tname" id="dFhName">—</div><div class="md-total" id="dFhTotal">0</div><div class="md-total-label">GOALS</div></div>
+            <div class="md-vs"><div class="md-score"><span id="dFhGoals">–</span> : <span id="dFaGoals">–</span></div><div class="md-status" id="dFstatus">—</div></div>
+            <div class="md-team"><div class="md-flag" id="dFaFlag">🏳️</div><div class="md-tname" id="dFaName">—</div><div class="md-total" id="dFaTotal">0</div><div class="md-total-label">GOALS</div></div>
+          </div>
+          <div class="md-players-wrap">
+            <div class="md-players-col"><div class="md-col-head" id="dFhHead">FTD CHAMPION</div><div id="dFhPlayers" class="md-player-list"></div></div>
+            <div class="md-players-col"><div class="md-col-head" id="dFaHead">RET CHAMPION</div><div id="dFaPlayers" class="md-player-list"></div></div>
           </div>
         </div>
 
@@ -1096,41 +1112,62 @@ let TEAMS = {poolA:{}, poolB:{}};
 ───────────────────────────────────────────── */
 async function renderBigFinal(){
   const el = document.getElementById('bigFinal');
+  const det = document.getElementById('detailFinal');
+  const div = document.getElementById('bfDivider');
   if(!el) return;
-  const now = new Date();
+  const hide = ()=>{ el.style.display='none'; if(det) det.style.display='none'; if(div) div.style.display='none'; };
   /* Show from June 30, 2026 onward, and keep it visible after the match ends */
   const finalStart = new Date(2026, 5, 30); finalStart.setHours(0,0,0,0);
   const today = new Date(); today.setHours(0,0,0,0);
-  if(today < finalStart){ el.style.display = 'none'; return; }
+  if(today < finalStart){ hide(); return; }
   const isMatchDay = (today.getTime() === finalStart.getTime());
+  const statusTxt = isMatchDay ? 'LIVE' : 'FULL TIME';
   try{
     const a = (await computeStandings('poolA'))[0]; /* FTD leader */
     const b = (await computeStandings('poolB'))[0]; /* RET leader */
-    if(!a || !b){ el.style.display = 'none'; return; }
+    if(!a || !b){ hide(); return; }
+
+    /* ── Card ── */
     document.getElementById('bfHomeFlag').innerHTML = flagHTML(a.name, 96);
     document.getElementById('bfHomeName').textContent = shortName(a.name);
     document.getElementById('bfAwayFlag').innerHTML = flagHTML(b.name, 96);
     document.getElementById('bfAwayName').textContent = shortName(b.name);
     const st = document.getElementById('bfStatus');
-    if(st){
-      if(isMatchDay){ st.textContent = 'LIVE'; st.style.color = '#ff6b6b'; }
-      else { st.textContent = 'FULL TIME'; st.style.color = 'var(--gold)'; }
+    if(st){ st.textContent = statusTxt; st.style.color = isMatchDay ? '#ff6b6b' : 'var(--gold)'; }
+
+    const score = await computeBigFinalScore(a.name, b.name);
+
+    const scoreEl = document.getElementById('bfScore');
+    const vsEl = document.querySelector('#bigFinal .bf-vs');
+    const hn = document.getElementById('bfHomeName'), an = document.getElementById('bfAwayName');
+    hn.style.color = an.style.color = '#fff';
+    if(score.hasScore){
+      document.getElementById('bfHomeGoals').textContent = score.ftdGoals;
+      document.getElementById('bfAwayGoals').textContent = score.retGoals;
+      if(scoreEl) scoreEl.style.display='block';
+      if(vsEl) vsEl.style.display='none';
+      if(score.ftdGoals > score.retGoals) hn.style.color='var(--gold)';
+      else if(score.retGoals > score.ftdGoals) an.style.color='var(--gold)';
+    } else {
+      if(scoreEl) scoreEl.style.display='none';
+      if(vsEl) vsEl.style.display='block';
     }
-    await renderBigFinalScore(a.name, b.name);
+
+    /* ── Detail (teams + players, like any other match) ── */
+    await renderBigFinalDetail(a.name, b.name, score, statusTxt);
+
     el.style.display = 'flex';
-  }catch(e){ el.style.display = 'none'; console.error('BigFinal:', e); }
+    if(div) div.style.display = 'block';
+    if(det) det.style.display = 'block';
+  }catch(e){ hide(); console.error('BigFinal:', e); }
 }
 
-/* Live score of the final. FTD finalist = goals scored on the final day (normal
-   mechanic) vs its FINAL thresholds; RET finalist = single-day revenue vs its
-   FINAL thresholds. Only shows a number when both finalists are in the FINAL table. */
-async function renderBigFinalScore(ftdName, retName){
-  const scoreEl = document.getElementById('bfScore');
-  const vsEl = document.querySelector('#bigFinal .bf-vs');
-  const hn = document.getElementById('bfHomeName'), an = document.getElementById('bfAwayName');
-  hn.style.color = an.style.color = '#fff';
+/* Final score: FTD finalist = goals scored on the final day (normal mechanic) vs its
+   FINAL thresholds; RET finalist = single-day revenue vs its FINAL thresholds.
+   hasScore is false when a finalist isn't in the FINAL table yet. */
+async function computeBigFinalScore(ftdName, retName){
   const ftgt = getFinalTarget(ftdName), rtgt = getFinalTarget(retName);
-  if(!ftgt || !rtgt){ if(scoreEl) scoreEl.style.display='none'; if(vsEl) vsEl.style.display='block'; return; }
+  if(!ftgt || !rtgt) return { hasScore:false, ftdGoals:0, retGoals:0 };
   const FINAL_DATE = '30,06';
   let ftdGoals = 0, retGoals = 0;
   try{ const g = await calcTeamGoals(ftdName, FINAL_DATE); ftdGoals = countFinalGoals(g.goals, ftgt.thresholds); }catch(e){}
@@ -1139,12 +1176,38 @@ async function renderBigFinalScore(ftdName, retName){
     let rev = 0; pls.forEach(p=>{ rev += (p.amount||0); });
     retGoals = countFinalGoals(rev, rtgt.thresholds);
   }catch(e){}
-  document.getElementById('bfHomeGoals').textContent = ftdGoals;
-  document.getElementById('bfAwayGoals').textContent = retGoals;
-  if(scoreEl) scoreEl.style.display='block';
-  if(vsEl) vsEl.style.display='none';
-  if(ftdGoals > retGoals) hn.style.color = 'var(--gold)';
-  else if(retGoals > ftdGoals) an.style.color = 'var(--gold)';
+  return { hasScore:true, ftdGoals, retGoals };
+}
+
+/* Renders the final as a full match detail (big flags + score + player tables). */
+async function renderBigFinalDetail(ftdName, retName, score, statusTxt){
+  const det = document.getElementById('detailFinal');
+  if(!det) return;
+  document.getElementById('dFhFlag').innerHTML = flagHTML(ftdName, 80);
+  document.getElementById('dFhName').textContent = shortName(ftdName);
+  document.getElementById('dFaFlag').innerHTML = flagHTML(retName, 80);
+  document.getElementById('dFaName').textContent = shortName(retName);
+  document.getElementById('dFhHead').textContent = shortName(ftdName) + ' — Players';
+  document.getElementById('dFaHead').textContent = shortName(retName) + ' — Players';
+  document.getElementById('dFstatus').textContent = `${statusTxt} · 30,06`;
+  document.getElementById('dFhGoals').textContent = score.hasScore ? score.ftdGoals : '–';
+  document.getElementById('dFaGoals').textContent = score.hasScore ? score.retGoals : '–';
+  document.getElementById('dFhTotal').textContent = score.hasScore ? `⚽ ${score.ftdGoals}` : '–';
+  document.getElementById('dFaTotal').textContent = score.hasScore ? `⚽ ${score.retGoals}` : '–';
+  try{
+    const [hp, ap] = await Promise.all([ fetchTeamPlayers(ftdName, '30,06'), fetchTeamPlayers(retName, '30,06') ]);
+    renderPlayers('dFhPlayers', hp, false);
+    renderPlayers('dFaPlayers', ap, false);
+  }catch(e){ console.error('BigFinal detail players:', e); }
+  /* Winner highlight only once the final is over (FULL TIME) */
+  const hTeam = document.getElementById('dFhFlag').closest('.md-team');
+  const aTeam = document.getElementById('dFaFlag').closest('.md-team');
+  hTeam.classList.remove('winner','loser'); aTeam.classList.remove('winner','loser');
+  if(statusTxt === 'FULL TIME' && score.hasScore && score.ftdGoals !== score.retGoals){
+    const ftdWins = score.ftdGoals > score.retGoals;
+    hTeam.classList.add(ftdWins ? 'winner' : 'loser');
+    aTeam.classList.add(ftdWins ? 'loser' : 'winner');
+  }
 }
 
 async function computeStandings(pool){
