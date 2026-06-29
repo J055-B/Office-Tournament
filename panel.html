@@ -1283,21 +1283,6 @@ function emailSection(title, accent, inner){
 }
 
 async function buildMundialEmailHTML(){
-  const [sa, sb] = await Promise.all([computeStandings('poolA'), computeStandings('poolB')]);
-
-  const todays = SCHEDULE.filter(m=> matchStatus(m.date, m.pool==='poolB')==='live')
-                         .sort((a,b)=> emailDnum(a.date)-emailDnum(b.date));
-  const week = SCHEDULE.filter(m=>{
-      if(matchStatus(m.date, m.pool==='poolB')!=='upcoming') return false;
-      const d = emailDaysFromToday(m.date); return d>=0 && d<=7;
-    }).sort((a,b)=> emailDnum(a.date)-emailDnum(b.date));
-
-  const todaysHTML = todays.length ? todays.map(emailFixtureCard).join('')
-    : `<div style="font-family:${EMAIL_BODY};color:#9fc7ab;font-size:14px;padding:4px 0;">No matches scheduled for today.</div>`;
-  const weekHTML = week.length
-    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${week.map((m,i)=>emailWeekRow(m, i===week.length-1)).join('')}</table>`
-    : `<div style="font-family:${EMAIL_BODY};color:#9fc7ab;font-size:14px;padding:4px 0;">No upcoming matches in the next 7 days.</div>`;
-
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">`+
     `<meta name="viewport" content="width=device-width,initial-scale=1">`+
     `<meta name="x-apple-disable-message-reformatting">`+
@@ -1328,21 +1313,18 @@ async function buildMundialEmailHTML(){
         `<p style="margin:0 0 18px;font-size:17px;line-height:1.7;">That figure becomes each team's <strong style="color:#f5c518;font-size:19px;">new 100% target for the final</strong> &mdash; a personalized benchmark reflecting the level it sustained all competition long. <strong style="color:#ffffff;">Each team races against its own proven standard.</strong></p>`+
         `<p style="margin:0 0 10px;font-size:17px;">Goals in the final are awarded against that new target:</p>`+
         `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 14px;">`+
-          `<tr><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#f5c518;text-align:right;">70% of target</td><td style="padding:5px 8px;color:#9fc7ab;font-size:18px;">&mdash;</td><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#ffffff;">1st goal</td></tr>`+
-          `<tr><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#f5c518;text-align:right;">85% of target</td><td style="padding:5px 8px;color:#9fc7ab;font-size:18px;">&mdash;</td><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#ffffff;">2nd goal</td></tr>`+
-          `<tr><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#f5c518;text-align:right;">100% of target</td><td style="padding:5px 8px;color:#9fc7ab;font-size:18px;">&mdash;</td><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#ffffff;">3rd goal</td></tr>`+
+          `<tr><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#f5c518;text-align:right;">70% of the NEW target</td><td style="padding:5px 8px;color:#9fc7ab;font-size:18px;">&mdash;</td><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#ffffff;">1st goal</td></tr>`+
+          `<tr><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#f5c518;text-align:right;">85% of the NEW target</td><td style="padding:5px 8px;color:#9fc7ab;font-size:18px;">&mdash;</td><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#ffffff;">2nd goal</td></tr>`+
+          `<tr><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#f5c518;text-align:right;">100% of the NEW target</td><td style="padding:5px 8px;color:#9fc7ab;font-size:18px;">&mdash;</td><td style="padding:5px 16px;font-family:${EMAIL_DISP};font-size:22px;color:#ffffff;">3rd goal</td></tr>`+
         `</table>`+
-        `<p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#bfe6cb;text-align:center;">&hellip; and upward on the same scale, with <strong style="color:#f5c518;">no upper limit on goals</strong>.</p>`+
-        `<p style="margin:0;font-size:18px;line-height:1.7;text-align:center;">The team that outperforms its own benchmark by the widest margin is crowned<br><strong style="color:#f5c518;font-family:${EMAIL_DISP};font-size:26px;letter-spacing:2px;">&#127942; CHAMPION OF CHAMPIONS &#127942;</strong></p>`+
+        `<p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#bfe6cb;text-align:center;">&hellip; and upward on the same scale, with <strong style="color:#f5c518;">no upper limit on goals</strong>.</p>`+
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;background:#3a1414;border:2px solid #e8743f;border-radius:10px;"><tr><td style="padding:16px 18px;text-align:center;">`+
+          `<div style="font-family:${EMAIL_DISP};font-size:16px;letter-spacing:2px;color:#ff9a6b;margin-bottom:6px;">&#9888;&#65039; MANDATORY</div>`+
+          `<div style="font-family:${EMAIL_BODY};font-size:18px;line-height:1.5;color:#ffffff;font-weight:bold;">A morning brief for the finalists is mandatory &mdash; rally them to give their best and walk them through the rules.</div>`+
+        `</td></tr></table>`+
+        `<p style="margin:0 0 14px;font-size:18px;line-height:1.7;text-align:center;">The team that outperforms its own benchmark by the widest margin is crowned<br><strong style="color:#f5c518;font-family:${EMAIL_DISP};font-size:26px;letter-spacing:2px;">&#127942; CHAMPION OF CHAMPIONS &#127942;</strong></p>`+
+        `<p style="margin:0;text-align:center;"><strong style="color:#ffffff;font-family:${EMAIL_DISP};font-size:26px;letter-spacing:2px;">&#11088; MAY THE BEST TEAM WIN &#11088;</strong></p>`+
       `</td></tr>`+
-      /* STANDINGS */
-      emailSection('POOL A &middot; FTD', '#25a852', emailStandTable(sa))+
-      emailSection('POOL B &middot; RET', '#c0392b', emailStandTable(sb))+
-      `<tr><td style="padding:8px 32px 0;"><div style="font-family:${EMAIL_BODY};font-size:11px;color:#9fc7ab;">RET matches are played over <strong style="color:#f5c518;">two days</strong> &mdash; both days count toward the same result.</div></td></tr>`+
-      /* TODAY */
-      emailSection('TODAY ON THE PITCH', '#f5c518', todaysHTML)+
-      /* THIS WEEK */
-      emailSection('THIS WEEK', '#25a852', weekHTML)+
       /* CTA */
       `<tr><td align="center" style="padding:30px 32px 8px;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#f5c518" style="border-radius:30px;">`+
         `<a href="${EMAIL_SITE}" target="_blank" style="display:inline-block;padding:14px 38px;font-size:18px;letter-spacing:2px;color:#143d22;border-radius:30px;font-family:${EMAIL_DISP};text-decoration:none;">&#9917; VIEW THE LIVE PANEL</a>`+
