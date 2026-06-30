@@ -1166,9 +1166,10 @@ let TEAMS = {poolA:{}, poolB:{}};
    Scoring is wired separately once the final formula is confirmed.
 ───────────────────────────────────────────── */
 /* ── BIG FINAL countdown ──
-   Target = when the final closes. Default: July 1, 2026 at 08:00 (the FTD 8am–8am
-   window closes then, so that's when the score locks). Change here if needed. */
-const FINAL_END = new Date(2026, 6, 1, 8, 0, 0);
+   Target = July 1, 2026 00:00 Israel time (IDT = UTC+3 in summer), pinned as a
+   fixed UTC instant so every screen counts down to the same moment regardless of
+   its own timezone. (00:00 IL = June 30 21:00 UTC.) Change here if the end moves. */
+const FINAL_END = new Date(Date.UTC(2026, 5, 30, 21, 0, 0));
 let finalCountdownTimer = null;
 function startFinalCountdown(){
   const clock = document.getElementById('fcClock');
@@ -1276,7 +1277,7 @@ async function computeBigFinalScore(ftdName, retName){
   if(!ftgt || !rtgt) return { hasScore:false, ftdGoals:0, retGoals:0 };
   const FINAL_DATE = '30,06';
   let ftdGoals = 0, retGoals = 0;
-  try{ const g = await calcTeamGoals(ftdName, FINAL_DATE); ftdGoals = countFinalGoals(g.goals, ftgt.thresholds); }catch(e){}
+  try{ const g = await calcTeamGoals(ftdName, FINAL_DATE); ftdGoals = countFinalGoals(g.progress, ftgt.thresholds); }catch(e){}
   try{
     const pls = await fetchTeamPlayers(retName, FINAL_DATE);
     let rev = 0; pls.forEach(p=>{ rev += (p.amount||0); });
