@@ -580,6 +580,14 @@
   .bf-tag{font-family:var(--font-d);font-size:12px;letter-spacing:2px;padding:2px 12px;border-radius:10px;}
   .bf-tag-a{color:var(--pool-a-soft);border:1px solid var(--pool-a);}
   .bf-tag-b{color:var(--pool-b-soft);border:1px solid var(--pool-b);}
+  .bf-winner{font-family:var(--font-d);font-size:14px;letter-spacing:2px;color:#0c2a16;background:var(--gold);padding:3px 16px;border-radius:11px;box-shadow:0 0 16px rgba(245,197,24,.65);animation:ccPulse 2s ease-in-out infinite;}
+  .final-thanks{position:relative;text-align:center;max-width:840px;margin:4px auto 30px;padding:32px 28px 36px;border-radius:18px;overflow:hidden;
+    background:radial-gradient(120% 150% at 50% 0%, rgba(245,197,24,.16) 0%, rgba(34,107,58,.34) 45%, rgba(8,26,16,.55) 100%);
+    border:1px solid var(--gold);box-shadow:0 0 34px rgba(245,197,24,.28), inset 0 0 50px rgba(245,197,24,.06);}
+  .final-thanks::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.10) 50%,transparent 68%);background-size:280% 100%;animation:ccShine 5s linear infinite;}
+  .ft-title{position:relative;z-index:2;font-family:var(--font-d);font-size:clamp(24px,3.4vw,42px);letter-spacing:3px;color:var(--gold);text-shadow:0 0 16px rgba(245,197,24,.5);margin-bottom:16px;}
+  .ft-body{position:relative;z-index:2;font-family:var(--font-b);font-size:15px;line-height:1.75;color:#e8f3ec;max-width:680px;margin:0 auto;}
+  .ft-highlight{position:relative;z-index:2;font-family:var(--font-d);font-size:clamp(20px,2.7vw,34px);letter-spacing:2px;color:var(--gold);text-shadow:0 0 16px rgba(245,197,24,.55);margin-top:18px;}
   .bf-flag{width:96px;height:96px;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.4));}
   .bf-flag img{width:100%!important;height:100%!important;}
   .bf-name{font-family:var(--font-d);font-size:26px;letter-spacing:2px;color:#fff;}
@@ -732,6 +740,7 @@
                 <div class="bf-tag bf-tag-a">FTD CHAMPION</div>
                 <div class="bf-flag" id="bfHomeFlag">🏳️</div>
                 <div class="bf-name" id="bfHomeName">—</div>
+                <div class="bf-winner" id="bfHomeWin" style="display:none">🏆 WINNER</div>
               </div>
               <div class="bf-mid">
                 <div class="bf-score" id="bfScore" style="display:none"><span id="bfHomeGoals">0</span> : <span id="bfAwayGoals">0</span></div>
@@ -742,6 +751,7 @@
                 <div class="bf-tag bf-tag-b">RET CHAMPION</div>
                 <div class="bf-flag" id="bfAwayFlag">🏳️</div>
                 <div class="bf-name" id="bfAwayName">—</div>
+                <div class="bf-winner" id="bfAwayWin" style="display:none">🏆 WINNER</div>
               </div>
             </div>
           </div>
@@ -763,6 +773,13 @@
             <div class="md-players-col"><div class="md-col-head" id="dFhHead">FTD CHAMPION</div><div id="dFhPlayers" class="md-player-list"></div></div>
             <div class="md-players-col"><div class="md-col-head" id="dFaHead">RET CHAMPION</div><div id="dFaPlayers" class="md-player-list"></div></div>
           </div>
+        </div>
+
+        <!-- ══ BIG FINAL — closing thank-you (replaces countdown + detail once it ends) ══ -->
+        <div class="final-thanks" id="finalThanks" style="display:none">
+          <div class="ft-title">🏆 THANK YOU TO EVERY TEAM 🏆</div>
+          <div class="ft-body">Thank you to all the teams for your effort, your participation, and the hard work you poured into this event &mdash; created with love. We know not everyone set out to finish in first place, but know this, with all our hearts:</div>
+          <div class="ft-highlight">★ EVERY SINGLE ONE OF YOU IS A WINNER ★</div>
         </div>
 
         <!-- ══ POOL A — FTD ══ -->
@@ -1228,7 +1245,7 @@ async function renderBigFinal(){
   const det = document.getElementById('detailFinal');
   const div = document.getElementById('bfDivider');
   if(!el) return;
-  const hide = ()=>{ el.style.display='none'; if(det) det.style.display='none'; if(div) div.style.display='none'; const cb=document.getElementById('championBanner'); if(cb) cb.style.display='none'; const fc=document.getElementById('finalCountdown'); if(fc) fc.style.display='none'; };
+  const hide = ()=>{ el.style.display='none'; if(det) det.style.display='none'; if(div) div.style.display='none'; const cb=document.getElementById('championBanner'); if(cb) cb.style.display='none'; const fc=document.getElementById('finalCountdown'); if(fc) fc.style.display='none'; const ft=document.getElementById('finalThanks'); if(ft) ft.style.display='none'; ['bfHomeWin','bfAwayWin'].forEach(id=>{ const w=document.getElementById(id); if(w) w.style.display='none'; }); };
   /* Show from June 30, 2026 onward, and keep it visible after the match ends */
   const finalStart = new Date(2026, 5, 30); finalStart.setHours(0,0,0,0);
   const today = new Date(); today.setHours(0,0,0,0);
@@ -1277,17 +1294,31 @@ async function renderBigFinal(){
       if(vsEl) vsEl.style.display='block';
     }
 
-    /* ── Detail (teams + players, like any other match) ── */
-    await renderBigFinalDetail(a.name, b.name, score, statusTxt);
+    /* WINNER badge on the card — only once the final is decided */
+    const homeWin = document.getElementById('bfHomeWin'), awayWin = document.getElementById('bfAwayWin');
+    if(homeWin) homeWin.style.display = (ended && score.hasScore && score.winner === 'ftd') ? 'block' : 'none';
+    if(awayWin) awayWin.style.display = (ended && score.hasScore && score.winner === 'ret') ? 'block' : 'none';
 
     /* ── Champion banner on Overview (only once the final is FULL TIME) ── */
     renderChampion(a, b, score, statusTxt);
 
     el.style.display = 'flex';
     if(div) div.style.display = 'block';
-    if(det) det.style.display = 'block';
+
+    /* Below the card: while LIVE → countdown + live detail. Once FULL TIME →
+       hide both and show the closing thank-you message instead. */
     const fc = document.getElementById('finalCountdown');
-    if(fc){ fc.style.display = 'block'; startFinalCountdown(); }
+    const thanks = document.getElementById('finalThanks');
+    if(ended){
+      if(fc) fc.style.display = 'none';
+      if(det) det.style.display = 'none';
+      if(thanks) thanks.style.display = 'block';
+    } else {
+      await renderBigFinalDetail(a.name, b.name, score, statusTxt);
+      if(det) det.style.display = 'block';
+      if(fc){ fc.style.display = 'block'; startFinalCountdown(); }
+      if(thanks) thanks.style.display = 'none';
+    }
   }catch(e){ hide(); console.error('BigFinal:', e); }
 }
 
@@ -1621,11 +1652,19 @@ function getFinalTarget(teamName){
   }
   return null;
 }
-/* How many final goals a value reaches (consecutive thresholds from the 1st). */
+/* How many final goals a value reaches. Counts the listed thresholds in order;
+   once every listed threshold is reached, it KEEPS scaling (unlimited) by adding
+   one goal per extra step, where the step = the last increment in the table
+   (so it follows the same +% rhythm without needing more columns). */
 function countFinalGoals(value, thresholds){
   if(!thresholds || !thresholds.length || value <= 0) return 0;
   let g = 0;
   for(const t of thresholds){ if(t > 0 && value >= t) g++; else break; }
+  if(g === thresholds.length && thresholds.length >= 2){
+    const last = thresholds[thresholds.length-1];
+    const step = last - thresholds[thresholds.length-2];
+    if(step > 0 && value > last) g += Math.floor((value - last) / step);
+  }
   return g;
 }
 
