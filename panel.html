@@ -1588,8 +1588,8 @@ async function fetchTargets(){
 
 /* ── FINAL table (same "Target for goals" tab, FINAL section) ──
    Layout: A=Team, B=Real goals, C=Matches, D=Goal/Match, E=Equivalent,
-   F…O = 1 Goal … 10 Goals. Read verbatim from the sheet (no recompute). */
-let FINAL_TARGETS = {}; /* { teamName: { thresholds:[…up to 10], goalMatch, equivalent, pool } } */
+   F…onward = 1 Goal, 2 Goals, … (however many columns exist). Read verbatim. */
+let FINAL_TARGETS = {}; /* { teamName: { thresholds:[…all goal cols], goalMatch, equivalent, pool } } */
 async function fetchFinalTargets(){
   const rows = await fetchTab('Target for goals');
   FINAL_TARGETS = {};
@@ -1603,7 +1603,7 @@ async function fetchFinalTargets(){
     const name = colA.replace(/^\d+\.\s*/, '').trim();
     if(!name) return;
     const thresholds = [];
-    for(let i = 5; i <= 14; i++) thresholds.push(cellNum(cells[i])); /* F..O = 1..10 goals */
+    for(let i = 5; i < cells.length; i++) thresholds.push(cellNum(cells[i])); /* F.. = 1..N goals (reads every goal column) */
     while(thresholds.length && thresholds[thresholds.length-1] <= 0) thresholds.pop();
     if(thresholds.length === 0) return;
     const pool = name.toUpperCase().startsWith('RET') ? 'poolB' : 'poolA';
