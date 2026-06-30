@@ -525,6 +525,8 @@
   .fc-clock{font-family:var(--font-d);font-size:clamp(36px,6vw,64px);letter-spacing:4px;color:var(--gold);
     text-shadow:0 0 18px rgba(245,197,24,.5);line-height:1;font-variant-numeric:tabular-nums;}
   .fc-clock.fc-done{color:#ff6b6b;text-shadow:0 0 18px rgba(255,107,107,.5);}
+  .md-pct{font-family:var(--font-b);font-size:12px;font-weight:700;letter-spacing:.5px;color:#bfe6cb;margin-top:4px;}
+  .md-pct.pct-lead{color:var(--gold);}
 
   /* ══ CHAMPION OF CHAMPIONS ══ */
   .champion-banner{position:relative;margin:30px 0 6px;padding:36px 24px 40px;border-radius:20px;overflow:hidden;
@@ -748,9 +750,9 @@
         </div>
         <div class="match-detail bf-detail" id="detailFinal" style="display:none">
           <div class="md-header">
-            <div class="md-team"><div class="md-flag" id="dFhFlag">🏳️</div><div class="md-tname" id="dFhName">—</div><div class="md-total" id="dFhTotal">0</div><div class="md-total-label">GOALS</div></div>
+            <div class="md-team"><div class="md-flag" id="dFhFlag">🏳️</div><div class="md-tname" id="dFhName">—</div><div class="md-total" id="dFhTotal">0</div><div class="md-total-label">GOALS</div><div class="md-pct" id="dFhPct"></div></div>
             <div class="md-vs"><div class="md-score"><span id="dFhGoals">–</span> : <span id="dFaGoals">–</span></div><div class="md-status" id="dFstatus">—</div></div>
-            <div class="md-team"><div class="md-flag" id="dFaFlag">🏳️</div><div class="md-tname" id="dFaName">—</div><div class="md-total" id="dFaTotal">0</div><div class="md-total-label">GOALS</div></div>
+            <div class="md-team"><div class="md-flag" id="dFaFlag">🏳️</div><div class="md-tname" id="dFaName">—</div><div class="md-total" id="dFaTotal">0</div><div class="md-total-label">GOALS</div><div class="md-pct" id="dFaPct"></div></div>
           </div>
           <div class="md-players-wrap">
             <div class="md-players-col"><div class="md-col-head" id="dFhHead">FTD CHAMPION</div><div id="dFhPlayers" class="md-player-list"></div></div>
@@ -1248,8 +1250,8 @@ async function renderBigFinal(){
       document.getElementById('bfAwayGoals').textContent = score.retGoals;
       if(scoreEl) scoreEl.style.display='block';
       if(vsEl) vsEl.style.display='none';
-      if(score.ftdGoals > score.retGoals) hn.style.color='var(--gold)';
-      else if(score.retGoals > score.ftdGoals) an.style.color='var(--gold)';
+      if(score.winner === 'ftd') hn.style.color='var(--gold)';
+      else if(score.winner === 'ret') an.style.color='var(--gold)';
     } else {
       if(scoreEl) scoreEl.style.display='none';
       if(vsEl) vsEl.style.display='block';
@@ -1269,21 +1271,30 @@ async function renderBigFinal(){
   }catch(e){ hide(); console.error('BigFinal:', e); }
 }
 
-/* Final score: FTD finalist = goals scored on the final day (normal mechanic) vs its
-   FINAL thresholds; RET finalist = single-day revenue vs its FINAL thresholds.
+/* Final score. FTD finalist = FTDs done on the final day vs its FINAL thresholds;
+   RET finalist = single-day revenue vs its FINAL thresholds. Also computes each
+   side's % of its NEW TARGET (the "Equivalent" column) — used as the tiebreaker
+   when both finish on the same number of goals: higher % wins.
    hasScore is false when a finalist isn't in the FINAL table yet. */
 async function computeBigFinalScore(ftdName, retName){
   const ftgt = getFinalTarget(ftdName), rtgt = getFinalTarget(retName);
-  if(!ftgt || !rtgt) return { hasScore:false, ftdGoals:0, retGoals:0 };
+  if(!ftgt || !rtgt) return { hasScore:false, ftdGoals:0, retGoals:0, ftdPct:0, retPct:0, winner:'tie' };
   const FINAL_DATE = '30,06';
-  let ftdGoals = 0, retGoals = 0;
-  try{ const g = await calcTeamGoals(ftdName, FINAL_DATE); ftdGoals = countFinalGoals(g.progress, ftgt.thresholds); }catch(e){}
+  let ftdGoals = 0, retGoals = 0, ftdVal = 0, retVal = 0;
+  try{ const g = await calcTeamGoals(ftdName, FINAL_DATE); ftdVal = g.progress; ftdGoals = countFinalGoals(ftdVal, ftgt.thresholds); }catch(e){}
   try{
     const pls = await fetchTeamPlayers(retName, FINAL_DATE);
-    let rev = 0; pls.forEach(p=>{ rev += (p.amount||0); });
-    retGoals = countFinalGoals(rev, rtgt.thresholds);
+    retVal = pls.reduce((s,p)=> s + (p.amount||0), 0);
+    retGoals = countFinalGoals(retVal, rtgt.thresholds);
   }catch(e){}
-  return { hasScore:true, ftdGoals, retGoals };
+  const ftdPct = ftgt.equivalent > 0 ? (ftdVal / ftgt.equivalent) * 100 : 0;
+  const retPct = rtgt.equivalent > 0 ? (retVal / rtgt.equivalent) * 100 : 0;
+  let winner = 'tie';
+  if(ftdGoals > retGoals) winner = 'ftd';
+  else if(retGoals > ftdGoals) winner = 'ret';
+  else if(ftdPct > retPct) winner = 'ftd';   /* tie on goals → higher % of target wins */
+  else if(retPct > ftdPct) winner = 'ret';
+  return { hasScore:true, ftdGoals, retGoals, ftdPct, retPct, winner };
 }
 
 /* Renders the final as a full match detail (big flags + score + player tables). */
@@ -1301,6 +1312,14 @@ async function renderBigFinalDetail(ftdName, retName, score, statusTxt){
   document.getElementById('dFaGoals').textContent = score.hasScore ? score.retGoals : '–';
   document.getElementById('dFhTotal').textContent = score.hasScore ? `⚽ ${score.ftdGoals}` : '–';
   document.getElementById('dFaTotal').textContent = score.hasScore ? `⚽ ${score.retGoals}` : '–';
+  /* % of NEW TARGET (the Equivalent) — tiebreaker reference, always shown */
+  const hPctEl = document.getElementById('dFhPct'), aPctEl = document.getElementById('dFaPct');
+  if(score.hasScore){
+    hPctEl.textContent = `${score.ftdPct.toFixed(1)}% of target`;
+    aPctEl.textContent = `${score.retPct.toFixed(1)}% of target`;
+    hPctEl.classList.toggle('pct-lead', score.ftdPct >= score.retPct);
+    aPctEl.classList.toggle('pct-lead', score.retPct >= score.ftdPct);
+  } else { hPctEl.textContent = ''; aPctEl.textContent = ''; }
   try{
     const [hp, ap] = await Promise.all([ fetchTeamPlayers(ftdName, '30,06'), fetchTeamPlayers(retName, '30,06') ]);
     renderPlayers('dFhPlayers', hp, false);
@@ -1310,8 +1329,8 @@ async function renderBigFinalDetail(ftdName, retName, score, statusTxt){
   const hTeam = document.getElementById('dFhFlag').closest('.md-team');
   const aTeam = document.getElementById('dFaFlag').closest('.md-team');
   hTeam.classList.remove('winner','loser'); aTeam.classList.remove('winner','loser');
-  if(statusTxt === 'FULL TIME' && score.hasScore && score.ftdGoals !== score.retGoals){
-    const ftdWins = score.ftdGoals > score.retGoals;
+  if(statusTxt === 'FULL TIME' && score.hasScore && score.winner !== 'tie'){
+    const ftdWins = score.winner === 'ftd';
     hTeam.classList.add(ftdWins ? 'winner' : 'loser');
     aTeam.classList.add(ftdWins ? 'loser' : 'winner');
   }
@@ -1322,11 +1341,11 @@ async function renderBigFinalDetail(ftdName, retName, score, statusTxt){
 function renderChampion(a, b, score, statusTxt){
   const cb = document.getElementById('championBanner');
   if(!cb) return;
-  if(statusTxt !== 'FULL TIME' || !score.hasScore || score.ftdGoals === score.retGoals){
+  if(statusTxt !== 'FULL TIME' || !score.hasScore || score.winner === 'tie'){
     cb.style.display = 'none';
     return;
   }
-  const ftdWins = score.ftdGoals > score.retGoals;
+  const ftdWins = score.winner === 'ftd';
   const win = ftdWins ? a : b;
   const winG = ftdWins ? score.ftdGoals : score.retGoals;
   const loseG = ftdWins ? score.retGoals : score.ftdGoals;
@@ -1336,7 +1355,14 @@ function renderChampion(a, b, score, statusTxt){
   document.getElementById('ccFlagR').innerHTML = sideFlag;
   document.getElementById('ccName').textContent = shortName(win.name);
   document.getElementById('ccSub').textContent = `${ftdWins ? 'FTD' : 'RET'} Champion · Winner of the Big Final`;
-  document.getElementById('ccScore').textContent = `Big Final won ${winG} : ${loseG}`;
+  /* If tied on goals, the title was decided on % of target — make it explicit */
+  if(score.ftdGoals === score.retGoals){
+    const wPct = (ftdWins ? score.ftdPct : score.retPct).toFixed(1);
+    const lPct = (ftdWins ? score.retPct : score.ftdPct).toFixed(1);
+    document.getElementById('ccScore').textContent = `Tied ${winG} : ${loseG} — won on target % (${wPct}% vs ${lPct}%)`;
+  } else {
+    document.getElementById('ccScore').textContent = `Big Final won ${winG} : ${loseG}`;
+  }
   cb.style.display = 'flex';
 }
 
