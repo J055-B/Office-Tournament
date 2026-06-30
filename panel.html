@@ -518,6 +518,36 @@
   .bigfinal{margin:0 0 30px;display:flex;justify-content:center;}
   .bf-divider{height:3px;background:linear-gradient(90deg,rgba(192,57,43,0) 0%,#c0392b 12%,#e74c3c 50%,#c0392b 88%,rgba(192,57,43,0) 100%);border-radius:2px;margin:0 0 26px;box-shadow:0 0 12px rgba(192,57,43,0.5);}
   .bf-detail{margin:0 0 30px;}
+
+  /* ══ CHAMPION OF CHAMPIONS ══ */
+  .champion-banner{position:relative;margin:30px 0 6px;padding:36px 24px 40px;border-radius:20px;overflow:hidden;
+    background:radial-gradient(120% 150% at 50% 0%, rgba(245,197,24,.20) 0%, rgba(34,107,58,.38) 45%, rgba(8,26,16,.62) 100%);
+    border:2px solid var(--gold);box-shadow:0 0 42px rgba(245,197,24,.35), inset 0 0 70px rgba(245,197,24,.08);
+    display:flex;align-items:center;justify-content:center;gap:44px;}
+  .champion-banner::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.13) 48%,transparent 66%);
+    background-size:280% 100%;animation:ccShine 4.5s linear infinite;}
+  @keyframes ccShine{0%{background-position:200% 0}100%{background-position:-90% 0}}
+  .cc-core{position:relative;z-index:2;text-align:center;}
+  .cc-title{font-family:var(--font-d);font-size:clamp(28px,4.4vw,56px);letter-spacing:3px;color:var(--gold);
+    text-shadow:0 0 18px rgba(245,197,24,.6);line-height:1;margin-bottom:18px;}
+  .cc-winflag{margin:0 auto 14px;width:118px;height:118px;}
+  .cc-winflag img{width:118px;height:118px;filter:drop-shadow(0 0 24px rgba(245,197,24,.7));animation:ccPulse 2.4s ease-in-out infinite;}
+  @keyframes ccPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .cc-name{font-family:var(--font-d);font-size:clamp(26px,3.6vw,44px);letter-spacing:2px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5);}
+  .cc-sub{font-family:var(--font-b);font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#bfe6cb;margin-top:6px;}
+  .cc-score{font-family:var(--font-d);font-size:22px;letter-spacing:2px;color:var(--gold);margin-top:10px;}
+  .cc-flag{position:relative;z-index:2;width:86px;height:86px;flex:0 0 auto;}
+  .cc-flag img{width:86px;height:86px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.45));}
+  .cc-flag-l img{animation:ccWaveL 3s ease-in-out infinite;}
+  .cc-flag-r img{animation:ccWaveR 3s ease-in-out infinite;}
+  @keyframes ccWaveL{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-12px) rotate(6deg)}}
+  @keyframes ccWaveR{0%,100%{transform:translateY(0) rotate(6deg)}50%{transform:translateY(-12px) rotate(-6deg)}}
+  @media(max-width:760px){
+    .champion-banner{gap:14px;padding:24px 10px 28px;}
+    .cc-flag,.cc-flag img{width:46px;height:46px;}
+    .cc-winflag,.cc-winflag img{width:84px;height:84px;}
+  }
   .bf-frame{position:relative;width:100%;max-width:900px;padding:24px 64px 28px;border-radius:18px;
     background:radial-gradient(circle at 50% -10%, rgba(245,197,24,0.20), rgba(15,49,25,0.96) 68%), #0f3119;
     border:2px solid var(--gold);box-shadow:0 0 42px rgba(245,197,24,0.28), inset 0 0 34px rgba(245,197,24,0.07);
@@ -654,12 +684,26 @@
           </div>
         </div>
         <p style="font-size:10px;color:var(--dim);margin-top:12px;letter-spacing:.5px" id="adminHintTeams"></p>
+
+        <!-- ══ CHAMPION OF CHAMPIONS — shows only once the Big Final (30,06) is over ══ -->
+        <div class="champion-banner" id="championBanner" style="display:none">
+          <div class="cc-flag cc-flag-l" id="ccFlagL"></div>
+          <div class="cc-core">
+            <div class="cc-title">🏆 CHAMPION OF CHAMPIONS 🏆</div>
+            <div class="cc-winflag" id="ccWinFlag">🏳️</div>
+            <div class="cc-name" id="ccName">—</div>
+            <div class="cc-sub" id="ccSub">Winner of the Big Final</div>
+            <div class="cc-score" id="ccScore"></div>
+          </div>
+          <div class="cc-flag cc-flag-r" id="ccFlagR"></div>
+        </div>
       </div>
 
       <!-- ═══ FIXTURES ═══ -->
       <div class="page" id="pg-fixtures">
         <div class="fx-controls" id="fxControls" style="display:none">
           <button class="btn" onclick="loadScheduleFromSheet()" id="btnRefreshFx">🔄 Refresh matches</button>
+          <button class="btn" onclick="togglePoolFixtures()" id="btnTogglePools">👁️ Show pool fixtures</button>
         </div>
 
         <!-- ══ BIG FINAL (only shows on June 30) ══ -->
@@ -704,7 +748,7 @@
         </div>
 
         <!-- ══ POOL A — FTD ══ -->
-        <div class="pool-section">
+        <div class="pool-section" id="poolSectionA" style="display:none">
           <div class="slabel">Pool A — FTD</div>
           <div class="pool-top-row">
             <div class="pool-yesterday" id="yesterdayA">
@@ -740,7 +784,7 @@
         </div>
 
         <!-- ══ POOL B — RET ══ -->
-        <div class="pool-section" style="margin-top:28px">
+        <div class="pool-section" id="poolSectionB" style="display:none;margin-top:28px">
           <div class="slabel">Pool B — RET</div>
           <div class="pool-top-row">
             <div class="pool-yesterday" id="yesterdayB">
@@ -1110,12 +1154,34 @@ let TEAMS = {poolA:{}, poolB:{}};
    Finalists = current #1 of each pool (group stage is over by then).
    Scoring is wired separately once the final formula is confirmed.
 ───────────────────────────────────────────── */
+/* Show/hide the per-pool fixture blocks on the Fixtures page. Controlled by an
+   admin toggle synced through Firebase (settings/hidePoolFixtures), so hiding
+   them applies to every screen. Default = hidden (group stage is over). */
+function setPoolFixtures(visible){
+  ['poolSectionA','poolSectionB'].forEach(id=>{
+    const s = document.getElementById(id);
+    if(s) s.style.display = visible ? '' : 'none';
+  });
+}
+function updatePoolFixturesBtn(hidden){
+  const b = document.getElementById('btnTogglePools');
+  if(b) b.textContent = hidden ? '👁️ Show pool fixtures' : '🙈 Hide pool fixtures';
+}
+function togglePoolFixtures(){
+  if(!isAdmin) return;
+  db.ref('settings/hidePoolFixtures').once('value').then(s=>{
+    const cur = s.exists() ? (s.val() === true) : true;
+    db.ref('settings/hidePoolFixtures').set(!cur);
+    toast(!cur ? 'Pool fixtures hidden' : 'Pool fixtures shown');
+  });
+}
+
 async function renderBigFinal(){
   const el = document.getElementById('bigFinal');
   const det = document.getElementById('detailFinal');
   const div = document.getElementById('bfDivider');
   if(!el) return;
-  const hide = ()=>{ el.style.display='none'; if(det) det.style.display='none'; if(div) div.style.display='none'; };
+  const hide = ()=>{ el.style.display='none'; if(det) det.style.display='none'; if(div) div.style.display='none'; const cb=document.getElementById('championBanner'); if(cb) cb.style.display='none'; };
   /* Show from June 30, 2026 onward, and keep it visible after the match ends */
   const finalStart = new Date(2026, 5, 30); finalStart.setHours(0,0,0,0);
   const today = new Date(); today.setHours(0,0,0,0);
@@ -1155,6 +1221,9 @@ async function renderBigFinal(){
 
     /* ── Detail (teams + players, like any other match) ── */
     await renderBigFinalDetail(a.name, b.name, score, statusTxt);
+
+    /* ── Champion banner on Overview (only once the final is FULL TIME) ── */
+    renderChampion(a, b, score, statusTxt);
 
     el.style.display = 'flex';
     if(div) div.style.display = 'block';
@@ -1208,6 +1277,29 @@ async function renderBigFinalDetail(ftdName, retName, score, statusTxt){
     hTeam.classList.add(ftdWins ? 'winner' : 'loser');
     aTeam.classList.add(ftdWins ? 'loser' : 'winner');
   }
+}
+
+/* CHAMPION OF CHAMPIONS — only shown once the Big Final has finished (FULL TIME)
+   and is decided. Celebrates the single winner with waving flags on both sides. */
+function renderChampion(a, b, score, statusTxt){
+  const cb = document.getElementById('championBanner');
+  if(!cb) return;
+  if(statusTxt !== 'FULL TIME' || !score.hasScore || score.ftdGoals === score.retGoals){
+    cb.style.display = 'none';
+    return;
+  }
+  const ftdWins = score.ftdGoals > score.retGoals;
+  const win = ftdWins ? a : b;
+  const winG = ftdWins ? score.ftdGoals : score.retGoals;
+  const loseG = ftdWins ? score.retGoals : score.ftdGoals;
+  const sideFlag = flagHTML(win.name, 86);
+  document.getElementById('ccWinFlag').innerHTML = flagHTML(win.name, 118);
+  document.getElementById('ccFlagL').innerHTML = sideFlag;
+  document.getElementById('ccFlagR').innerHTML = sideFlag;
+  document.getElementById('ccName').textContent = shortName(win.name);
+  document.getElementById('ccSub').textContent = `${ftdWins ? 'FTD' : 'RET'} Champion · Winner of the Big Final`;
+  document.getElementById('ccScore').textContent = `Big Final won ${winG} : ${loseG}`;
+  cb.style.display = 'flex';
 }
 
 async function computeStandings(pool){
@@ -2661,6 +2753,14 @@ db.ref('teams').on('value', snap=>{
 /* No longer listening to Firebase fixtures — schedule comes from Sheet */
 db.ref('.info/connected').on('value', s=>{
   document.getElementById('syncDot').classList.toggle('on', s.val()===true);
+});
+
+/* Pool fixtures visibility — synced across all screens. Default hidden: the
+   group stage is over and only the Big Final remains. Admin toggles it. */
+db.ref('settings/hidePoolFixtures').on('value', s=>{
+  const hidden = s.exists() ? (s.val() === true) : true;
+  setPoolFixtures(!hidden);
+  updatePoolFixturesBtn(hidden);
 });
 
 bindPrizes();
