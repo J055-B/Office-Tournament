@@ -528,34 +528,37 @@
   .md-pct{font-family:var(--font-b);font-size:12px;font-weight:700;letter-spacing:.5px;color:#bfe6cb;margin-top:4px;}
   .md-pct.pct-lead{color:var(--gold);}
 
-  /* ══ CHAMPION OF CHAMPIONS ══ */
-  .champion-banner{position:relative;margin:30px 0 6px;padding:36px 24px 40px;border-radius:20px;overflow:hidden;
-    background:radial-gradient(120% 150% at 50% 0%, rgba(245,197,24,.20) 0%, rgba(34,107,58,.38) 45%, rgba(8,26,16,.62) 100%);
-    border:2px solid var(--gold);box-shadow:0 0 42px rgba(245,197,24,.35), inset 0 0 70px rgba(245,197,24,.08);
-    display:flex;align-items:center;justify-content:center;gap:44px;}
+  /* ══ CHAMPION OF CHAMPIONS — grand finale ══ */
+  .champion-banner{position:relative;margin:30px 0 6px;padding:38px 24px 42px;border-radius:20px;overflow:hidden;
+    background:radial-gradient(120% 150% at 50% 0%, rgba(245,197,24,.22) 0%, rgba(34,107,58,.40) 45%, rgba(8,26,16,.66) 100%);
+    border:2px solid var(--gold);box-shadow:0 0 46px rgba(245,197,24,.4), inset 0 0 80px rgba(245,197,24,.10);
+    display:flex;align-items:center;justify-content:center;gap:36px;}
   .champion-banner::before{content:"";position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.13) 48%,transparent 66%);
+    background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.15) 48%,transparent 66%);
     background-size:280% 100%;animation:ccShine 4.5s linear infinite;}
   @keyframes ccShine{0%{background-position:200% 0}100%{background-position:-90% 0}}
   .cc-core{position:relative;z-index:2;text-align:center;}
-  .cc-title{font-family:var(--font-d);font-size:clamp(28px,4.4vw,56px);letter-spacing:3px;color:var(--gold);
-    text-shadow:0 0 18px rgba(245,197,24,.6);line-height:1;margin-bottom:18px;}
-  .cc-winflag{margin:0 auto 14px;width:118px;height:118px;}
-  .cc-winflag img{width:118px;height:118px;filter:drop-shadow(0 0 24px rgba(245,197,24,.7));animation:ccPulse 2.4s ease-in-out infinite;}
+  .cc-logo{width:118px;height:auto;margin:0 auto 8px;display:block;filter:drop-shadow(0 0 22px rgba(245,197,24,.55));animation:ccPulse 2.6s ease-in-out infinite;}
+  .cc-title{font-family:var(--font-d);font-size:clamp(24px,3.8vw,46px);letter-spacing:3px;color:var(--gold);
+    text-shadow:0 0 18px rgba(245,197,24,.6);line-height:1;margin-bottom:14px;}
+  .cc-winflag{margin:0 auto 12px;width:96px;height:96px;}
+  .cc-winflag img{width:96px;height:96px;filter:drop-shadow(0 0 24px rgba(245,197,24,.7));animation:ccPulse 2.4s ease-in-out infinite;}
   @keyframes ccPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-  .cc-name{font-family:var(--font-d);font-size:clamp(26px,3.6vw,44px);letter-spacing:2px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5);}
-  .cc-sub{font-family:var(--font-b);font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#bfe6cb;margin-top:6px;}
+  .cc-congrats{font-family:var(--font-d);font-size:clamp(26px,3.8vw,48px);letter-spacing:2px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5);line-height:1.05;}
+  .cc-congrats span{color:var(--gold);}
+  .cc-tagline{font-family:var(--font-d);font-size:clamp(18px,2.4vw,30px);letter-spacing:3px;color:var(--gold);text-shadow:0 0 14px rgba(245,197,24,.5);margin-top:6px;}
+  .cc-sub{font-family:var(--font-b);font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#bfe6cb;margin-top:8px;}
   .cc-score{font-family:var(--font-d);font-size:22px;letter-spacing:2px;color:var(--gold);margin-top:10px;}
-  .cc-flag{position:relative;z-index:2;width:86px;height:86px;flex:0 0 auto;}
-  .cc-flag img{width:86px;height:86px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.45));}
-  .cc-flag-l img{animation:ccWaveL 3s ease-in-out infinite;}
-  .cc-flag-r img{animation:ccWaveR 3s ease-in-out infinite;}
+  .cc-checker{position:relative;z-index:2;width:112px;height:auto;flex:0 0 auto;filter:drop-shadow(0 6px 14px rgba(0,0,0,.45));}
+  .cc-checker-l{animation:ccWaveL 3s ease-in-out infinite;}
+  .cc-checker-r{animation:ccWaveR 3s ease-in-out infinite;}
   @keyframes ccWaveL{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-12px) rotate(6deg)}}
   @keyframes ccWaveR{0%,100%{transform:translateY(0) rotate(6deg)}50%{transform:translateY(-12px) rotate(-6deg)}}
   @media(max-width:760px){
-    .champion-banner{gap:14px;padding:24px 10px 28px;}
-    .cc-flag,.cc-flag img{width:46px;height:46px;}
-    .cc-winflag,.cc-winflag img{width:84px;height:84px;}
+    .champion-banner{gap:10px;padding:24px 10px 28px;}
+    .cc-checker{width:54px;}
+    .cc-winflag,.cc-winflag img{width:74px;height:74px;}
+    .cc-logo{width:92px;}
   }
   .bf-frame{position:relative;width:100%;max-width:900px;padding:24px 64px 28px;border-radius:18px;
     background:radial-gradient(circle at 50% -10%, rgba(245,197,24,0.20), rgba(15,49,25,0.96) 68%), #0f3119;
@@ -694,17 +697,19 @@
         </div>
         <p style="font-size:10px;color:var(--dim);margin-top:12px;letter-spacing:.5px" id="adminHintTeams"></p>
 
-        <!-- ══ CHAMPION OF CHAMPIONS — shows only once the Big Final (30,06) is over ══ -->
+        <!-- ══ CHAMPION OF CHAMPIONS — grand finale (shows once the final ends) ══ -->
         <div class="champion-banner" id="championBanner" style="display:none">
-          <div class="cc-flag cc-flag-l" id="ccFlagL"></div>
+          <img src="assets/flag-left.gif" alt="" class="cc-checker cc-checker-l" onerror="this.style.display='none'">
           <div class="cc-core">
+            <img src="assets/callisto.png" alt="Callisto Mundial" class="cc-logo" onerror="this.style.display='none'">
             <div class="cc-title">🏆 CHAMPION OF CHAMPIONS 🏆</div>
             <div class="cc-winflag" id="ccWinFlag">🏳️</div>
-            <div class="cc-name" id="ccName">—</div>
-            <div class="cc-sub" id="ccSub">Winner of the Big Final</div>
+            <div class="cc-congrats">CONGRATULATIONS TO <span id="ccName">—</span>!</div>
+            <div class="cc-tagline">★ YOU'RE THE WINNER BETWEEN WINNERS ★</div>
+            <div class="cc-sub" id="ccSub">For this amazing contest</div>
             <div class="cc-score" id="ccScore"></div>
           </div>
-          <div class="cc-flag cc-flag-r" id="ccFlagR"></div>
+          <img src="assets/flag-right.gif" alt="" class="cc-checker cc-checker-r" onerror="this.style.display='none'">
         </div>
       </div>
 
@@ -1172,7 +1177,9 @@ let TEAMS = {poolA:{}, poolB:{}};
    fixed UTC instant so every screen counts down to the same moment regardless of
    its own timezone. (00:00 IL = June 30 21:00 UTC.) Change here if the end moves. */
 const FINAL_END = new Date(Date.UTC(2026, 5, 30, 21, 0, 0));
+let FINAL_RESULT = null;        /* frozen score snapshot once the final ends */
 let finalCountdownTimer = null;
+let finalEndTriggered = false;  /* ensures the 00:00 flip fires only once */
 function startFinalCountdown(){
   const clock = document.getElementById('fcClock');
   if(!clock) return;
@@ -1183,13 +1190,15 @@ function startFinalCountdown(){
       clock.textContent = '00:00:00';
       clock.classList.add('fc-done');
       if(finalCountdownTimer){ clearInterval(finalCountdownTimer); finalCountdownTimer = null; }
+      /* At the exact second the final ends: flip to FULL TIME, freeze + celebrate */
+      if(!finalEndTriggered){ finalEndTriggered = true; renderBigFinal(); }
       return;
     }
     const tot = Math.floor(ms/1000);
     clock.textContent = `${pad(Math.floor(tot/3600))}:${pad(Math.floor((tot%3600)/60))}:${pad(tot%60)}`;
   };
   tick();
-  if(!finalCountdownTimer) finalCountdownTimer = setInterval(tick, 1000);
+  if(Date.now() < FINAL_END.getTime() && !finalCountdownTimer) finalCountdownTimer = setInterval(tick, 1000);
 }
 
 /* Show/hide the per-pool fixture blocks on the Fixtures page. Controlled by an
@@ -1224,8 +1233,8 @@ async function renderBigFinal(){
   const finalStart = new Date(2026, 5, 30); finalStart.setHours(0,0,0,0);
   const today = new Date(); today.setHours(0,0,0,0);
   if(today < finalStart){ hide(); return; }
-  const isMatchDay = (today.getTime() === finalStart.getTime());
-  const statusTxt = isMatchDay ? 'LIVE' : 'FULL TIME';
+  const ended = Date.now() >= FINAL_END.getTime();   /* exact midnight IL cutoff */
+  const statusTxt = ended ? 'FULL TIME' : 'LIVE';
   try{
     const a = (await computeStandings('poolA'))[0]; /* FTD leader */
     const b = (await computeStandings('poolB'))[0]; /* RET leader */
@@ -1237,9 +1246,20 @@ async function renderBigFinal(){
     document.getElementById('bfAwayFlag').innerHTML = flagHTML(b.name, 96);
     document.getElementById('bfAwayName').textContent = shortName(b.name);
     const st = document.getElementById('bfStatus');
-    if(st){ st.textContent = statusTxt; st.style.color = isMatchDay ? '#ff6b6b' : 'var(--gold)'; }
+    if(st){ st.textContent = statusTxt; st.style.color = ended ? 'var(--gold)' : '#ff6b6b'; }
 
-    const score = await computeBigFinalScore(a.name, b.name);
+    /* Once the final has ended, the result is frozen: reuse the snapshot saved at
+       midnight (synced via Firebase) so it can't drift afterwards. */
+    let score;
+    if(ended && FINAL_RESULT){
+      score = FINAL_RESULT;
+    } else {
+      score = await computeBigFinalScore(a.name, b.name);
+      if(ended && !FINAL_RESULT && score.hasScore){
+        FINAL_RESULT = score;
+        try{ db.ref('settings/finalResult').set(score); }catch(e){}
+      }
+    }
 
     const scoreEl = document.getElementById('bfScore');
     const vsEl = document.querySelector('#bigFinal .bf-vs');
@@ -1312,14 +1332,19 @@ async function renderBigFinalDetail(ftdName, retName, score, statusTxt){
   document.getElementById('dFaGoals').textContent = score.hasScore ? score.retGoals : '–';
   document.getElementById('dFhTotal').textContent = score.hasScore ? `⚽ ${score.ftdGoals}` : '–';
   document.getElementById('dFaTotal').textContent = score.hasScore ? `⚽ ${score.retGoals}` : '–';
-  /* % of NEW TARGET (the Equivalent) — tiebreaker reference, always shown */
+  /* % of target is a SECRET tiebreaker metric — only revealed if the final ends
+     tied on goals (so it explains who won). Hidden the rest of the time. */
   const hPctEl = document.getElementById('dFhPct'), aPctEl = document.getElementById('dFaPct');
-  if(score.hasScore){
+  const showPct = statusTxt === 'FULL TIME' && score.hasScore && score.ftdGoals === score.retGoals;
+  if(showPct){
     hPctEl.textContent = `${score.ftdPct.toFixed(1)}% of target`;
     aPctEl.textContent = `${score.retPct.toFixed(1)}% of target`;
     hPctEl.classList.toggle('pct-lead', score.ftdPct >= score.retPct);
     aPctEl.classList.toggle('pct-lead', score.retPct >= score.ftdPct);
-  } else { hPctEl.textContent = ''; aPctEl.textContent = ''; }
+  } else {
+    hPctEl.textContent = ''; aPctEl.textContent = '';
+    hPctEl.classList.remove('pct-lead'); aPctEl.classList.remove('pct-lead');
+  }
   try{
     const [hp, ap] = await Promise.all([ fetchTeamPlayers(ftdName, '30,06'), fetchTeamPlayers(retName, '30,06') ]);
     renderPlayers('dFhPlayers', hp, false);
@@ -1349,12 +1374,9 @@ function renderChampion(a, b, score, statusTxt){
   const win = ftdWins ? a : b;
   const winG = ftdWins ? score.ftdGoals : score.retGoals;
   const loseG = ftdWins ? score.retGoals : score.ftdGoals;
-  const sideFlag = flagHTML(win.name, 86);
-  document.getElementById('ccWinFlag').innerHTML = flagHTML(win.name, 118);
-  document.getElementById('ccFlagL').innerHTML = sideFlag;
-  document.getElementById('ccFlagR').innerHTML = sideFlag;
+  document.getElementById('ccWinFlag').innerHTML = flagHTML(win.name, 96);
   document.getElementById('ccName').textContent = shortName(win.name);
-  document.getElementById('ccSub').textContent = `${ftdWins ? 'FTD' : 'RET'} Champion · Winner of the Big Final`;
+  document.getElementById('ccSub').textContent = `${ftdWins ? 'FTD' : 'RET'} Champion · For this amazing contest`;
   /* If tied on goals, the title was decided on % of target — make it explicit */
   if(score.ftdGoals === score.retGoals){
     const wPct = (ftdWins ? score.ftdPct : score.retPct).toFixed(1);
@@ -1434,72 +1456,6 @@ function addTeam(pool){
 const EMAIL_SITE = 'https://mundial-callisto.vercel.app';
 const EMAIL_DISP = "'Bebas Neue','Arial Narrow','Helvetica Neue',Arial,sans-serif";
 const EMAIL_BODY = "'Inter','Helvetica Neue',Arial,sans-serif";
-
-function emailFlag(team){
-  const s = flagSrc(team);
-  return s ? `<img src="${EMAIL_SITE}/${s}" width="20" height="20" alt="" style="border-radius:50%;vertical-align:middle;margin-right:6px;">` : '';
-}
-function emailDnum(s){ const p=String(s).replace(/,/g,'.').split('.'); return parseInt(p[1]||0)*100+parseInt(p[0]||0); }
-function emailDaysFromToday(dateStr){
-  const p = String(dateStr).replace(/,/g,'.').split('.');
-  const d = new Date(2026, parseInt(p[1])-1, parseInt(p[0]));
-  const t = new Date(); t.setHours(0,0,0,0);
-  return Math.round((d - t)/86400000);
-}
-
-function emailStandTable(rows){
-  const h = (txt,w)=>`<td style="color:#f5c518;font-size:13px;padding:10px 4px;text-align:center;${w?'width:'+w+';':''}font-family:${EMAIL_DISP};letter-spacing:1px;">${txt}</td>`;
-  let body;
-  if(!rows.length){
-    body = `<tr><td colspan="7" style="padding:14px;text-align:center;color:#3a5043;font-family:${EMAIL_BODY};font-size:13px;">No teams yet</td></tr>`;
-  } else {
-    body = rows.map((r,i)=>{
-      const bg = i%2===0 ? '#fbfdfb' : '#f1f6f2';
-      const c = `font-family:${EMAIL_BODY};font-size:13px;color:#3a5043;text-align:center;padding:10px 4px;`;
-      return `<tr bgcolor="${bg}">`+
-        `<td style="text-align:center;padding:10px 6px;color:#226b3a;font-weight:bold;font-family:${EMAIL_BODY};">${i+1}</td>`+
-        `<td style="padding:10px 8px;color:#10271a;font-weight:bold;font-size:14px;font-family:${EMAIL_BODY};">${emailFlag(r.name)}${escapeHtml(shortName(r.name))}</td>`+
-        `<td style="${c}">${r.p}</td><td style="${c}">${r.w}</td><td style="${c}">${r.d}</td><td style="${c}">${r.l}</td>`+
-        `<td style="text-align:center;color:#226b3a;font-weight:bold;font-size:16px;font-family:${EMAIL_DISP};padding:10px 6px;">${r.pts}</td>`+
-      `</tr>`;
-    }).join('');
-  }
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-radius:10px;overflow:hidden;background:#ffffff;">`+
-    `<tr bgcolor="#1a5530">`+
-      `<td style="color:#f5c518;font-size:13px;padding:10px 6px;text-align:center;width:34px;font-family:${EMAIL_DISP};letter-spacing:1px;">#</td>`+
-      `<td style="color:#f5c518;font-size:13px;padding:10px 8px;text-align:left;font-family:${EMAIL_DISP};letter-spacing:1px;">TEAM</td>`+
-      h('PL','32px')+h('W','28px')+h('D','28px')+h('L','28px')+h('PTS','40px')+
-    `</tr>${body}</table>`;
-}
-
-function emailFixtureCard(m){
-  const tag = m.pool==='poolA' ? 'FTD' : 'RET';
-  const label = matchDateLabel(m.date, m.pool, m.day);
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#13351f;border:1px solid rgba(245,197,24,0.25);border-radius:12px;margin-bottom:10px;">`+
-    `<tr><td style="padding:14px 16px;">`+
-      `<div style="font-family:${EMAIL_BODY};font-size:11px;color:#f5c518;letter-spacing:1px;font-weight:bold;">${tag} &middot; ${label}</div>`+
-      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;"><tr>`+
-        `<td style="font-family:${EMAIL_DISP};font-size:18px;color:#ffffff;text-align:left;width:42%;">${emailFlag(m.home)}${escapeHtml(shortName(m.home))}</td>`+
-        `<td style="font-family:${EMAIL_DISP};font-size:13px;color:#f5c518;text-align:center;width:16%;">VS</td>`+
-        `<td style="font-family:${EMAIL_DISP};font-size:18px;color:#ffffff;text-align:right;width:42%;">${escapeHtml(shortName(m.away))}${emailFlag(m.away)}</td>`+
-      `</tr></table>`+
-    `</td></tr></table>`;
-}
-
-function emailWeekRow(m, last){
-  const label = matchDateLabel(m.date, m.pool, m.day);
-  return `<tr><td style="padding:8px 0;${last?'':'border-bottom:1px solid rgba(255,255,255,0.08);'}font-family:${EMAIL_BODY};font-size:14px;color:#e7f3ea;">`+
-    `<span style="color:#f5c518;font-family:${EMAIL_DISP};font-size:15px;letter-spacing:1px;">${label}</span>`+
-    `&nbsp;&nbsp;${emailFlag(m.home)}${escapeHtml(shortName(m.home))} <span style="color:#9fc7ab;">vs</span> ${escapeHtml(shortName(m.away))}${emailFlag(m.away)}`+
-  `</td></tr>`;
-}
-
-function emailSection(title, accent, inner){
-  return `<tr><td style="padding:24px 32px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>`+
-    `<td style="font-family:${EMAIL_DISP};font-size:22px;letter-spacing:2px;color:#f5c518;border-left:4px solid ${accent};padding-left:10px;">${title}</td>`+
-    `</tr></table></td></tr>`+
-    `<tr><td style="padding:10px 32px 0;">${inner}</td></tr>`;
-}
 
 async function buildMundialEmailHTML(){
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">`+
@@ -2826,6 +2782,10 @@ db.ref('settings/hidePoolFixtures').on('value', s=>{
   setPoolFixtures(!hidden);
   updatePoolFixturesBtn(hidden);
 });
+
+/* Frozen Big Final result — captured at midnight, shared so every screen and any
+   reload shows the exact same final score and champion. */
+db.ref('settings/finalResult').on('value', s=>{ if(s.exists()) FINAL_RESULT = s.val(); });
 
 bindPrizes();
 bindSettings();
