@@ -519,6 +519,13 @@
   .bf-divider{height:3px;background:linear-gradient(90deg,rgba(192,57,43,0) 0%,#c0392b 12%,#e74c3c 50%,#c0392b 88%,rgba(192,57,43,0) 100%);border-radius:2px;margin:0 0 26px;box-shadow:0 0 12px rgba(192,57,43,0.5);}
   .bf-detail{margin:0 0 30px;}
 
+  /* ══ BIG FINAL — countdown ══ */
+  .final-countdown{text-align:center;margin:0 0 24px;}
+  .fc-label{font-family:var(--font-b);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#bfe6cb;margin-bottom:6px;}
+  .fc-clock{font-family:var(--font-d);font-size:clamp(36px,6vw,64px);letter-spacing:4px;color:var(--gold);
+    text-shadow:0 0 18px rgba(245,197,24,.5);line-height:1;font-variant-numeric:tabular-nums;}
+  .fc-clock.fc-done{color:#ff6b6b;text-shadow:0 0 18px rgba(255,107,107,.5);}
+
   /* ══ CHAMPION OF CHAMPIONS ══ */
   .champion-banner{position:relative;margin:30px 0 6px;padding:36px 24px 40px;border-radius:20px;overflow:hidden;
     background:radial-gradient(120% 150% at 50% 0%, rgba(245,197,24,.20) 0%, rgba(34,107,58,.38) 45%, rgba(8,26,16,.62) 100%);
@@ -735,6 +742,10 @@
 
         <!-- ══ BIG FINAL — divider + match detail (teams + players) ══ -->
         <div class="bf-divider" id="bfDivider" style="display:none"></div>
+        <div class="final-countdown" id="finalCountdown" style="display:none">
+          <div class="fc-label">⏱ TIME LEFT — BIG FINAL</div>
+          <div class="fc-clock" id="fcClock">--:--:--</div>
+        </div>
         <div class="match-detail bf-detail" id="detailFinal" style="display:none">
           <div class="md-header">
             <div class="md-team"><div class="md-flag" id="dFhFlag">🏳️</div><div class="md-tname" id="dFhName">—</div><div class="md-total" id="dFhTotal">0</div><div class="md-total-label">GOALS</div></div>
@@ -1154,6 +1165,30 @@ let TEAMS = {poolA:{}, poolB:{}};
    Finalists = current #1 of each pool (group stage is over by then).
    Scoring is wired separately once the final formula is confirmed.
 ───────────────────────────────────────────── */
+/* ── BIG FINAL countdown ──
+   Target = when the final closes. Default: July 1, 2026 at 08:00 (the FTD 8am–8am
+   window closes then, so that's when the score locks). Change here if needed. */
+const FINAL_END = new Date(2026, 6, 1, 8, 0, 0);
+let finalCountdownTimer = null;
+function startFinalCountdown(){
+  const clock = document.getElementById('fcClock');
+  if(!clock) return;
+  const pad = n => String(n).padStart(2,'0');
+  const tick = ()=>{
+    const ms = FINAL_END.getTime() - Date.now();
+    if(ms <= 0){
+      clock.textContent = '00:00:00';
+      clock.classList.add('fc-done');
+      if(finalCountdownTimer){ clearInterval(finalCountdownTimer); finalCountdownTimer = null; }
+      return;
+    }
+    const tot = Math.floor(ms/1000);
+    clock.textContent = `${pad(Math.floor(tot/3600))}:${pad(Math.floor((tot%3600)/60))}:${pad(tot%60)}`;
+  };
+  tick();
+  if(!finalCountdownTimer) finalCountdownTimer = setInterval(tick, 1000);
+}
+
 /* Show/hide the per-pool fixture blocks on the Fixtures page. Controlled by an
    admin toggle synced through Firebase (settings/hidePoolFixtures), so hiding
    them applies to every screen. Default = hidden (group stage is over). */
@@ -1181,7 +1216,7 @@ async function renderBigFinal(){
   const det = document.getElementById('detailFinal');
   const div = document.getElementById('bfDivider');
   if(!el) return;
-  const hide = ()=>{ el.style.display='none'; if(det) det.style.display='none'; if(div) div.style.display='none'; const cb=document.getElementById('championBanner'); if(cb) cb.style.display='none'; };
+  const hide = ()=>{ el.style.display='none'; if(det) det.style.display='none'; if(div) div.style.display='none'; const cb=document.getElementById('championBanner'); if(cb) cb.style.display='none'; const fc=document.getElementById('finalCountdown'); if(fc) fc.style.display='none'; };
   /* Show from June 30, 2026 onward, and keep it visible after the match ends */
   const finalStart = new Date(2026, 5, 30); finalStart.setHours(0,0,0,0);
   const today = new Date(); today.setHours(0,0,0,0);
@@ -1228,6 +1263,8 @@ async function renderBigFinal(){
     el.style.display = 'flex';
     if(div) div.style.display = 'block';
     if(det) det.style.display = 'block';
+    const fc = document.getElementById('finalCountdown');
+    if(fc){ fc.style.display = 'block'; startFinalCountdown(); }
   }catch(e){ hide(); console.error('BigFinal:', e); }
 }
 
